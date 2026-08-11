@@ -1,10 +1,11 @@
 ﻿namespace Domain.Enum
 {
-    public enum TicketSatus
+    internal enum TicketSatus
     {
-        Pending,
-        Completed,
         Cancelled,
-        OnProgress
+        Pending,
+        OnProgress,
+        Completed,
+        Done
     }
 }

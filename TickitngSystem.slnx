@@ -2,7 +2,7 @@
   <Project Path="Application/ApplicationServices.csproj" />
   <Project Path="Controller/Controller.csproj" />
   <Project Path="Domain/Domain.csproj" />
-  <Project Path="Infrastrucure/Infrastrucure.csproj" />
+  <Project Path="Infrastrucure/Infrastructure.csproj" />
   <Project Path="Testing/Testing.csproj" />
   <Project Path="TickitngSystem/TickitngSystem.csproj" />
 </Solution>
