@@ -9,7 +9,6 @@
   <ItemGroup>
     <Folder Include="Enum\" />
     <Folder Include="Interfaces\" />
-    <Folder Include="EntityManager\" />
   </ItemGroup>
 
 </Project>
