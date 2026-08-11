@@ -9,7 +9,7 @@ namespace Domain.Entities
         private DateTime CreatedTime = DateTime.Now;
 
         private TicketSatus ticketStatus = TicketSatus.Pending;
-        public IEnumerable<Employee> EmployeeAssignedTicket { get; set; }
+        public IEnumerable<Employee> EmployeeAssignedTicket { get; set; } = null!;
         public int ProjectId { get; set; }
 
         public void SetAsOnProgress() => ticketStatus = TicketSatus.OnProgress;
