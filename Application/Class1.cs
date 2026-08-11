@@ -1,4 +1,4 @@
-﻿namespace Application
+﻿namespace ApplicationServices
 {
     public class Class1
     {

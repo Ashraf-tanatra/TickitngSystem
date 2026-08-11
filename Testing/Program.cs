@@ -1,8 +1,24 @@
 
-﻿class Program
+using Domain.Entities;
+
+namespace Testing
 {
-    public static void Main(string[] args)
+    class Program
     {
-        Console.WriteLine("Hello, World!");
+        public static void Main(string[] args)
+        {
+            var ticket = new Ticket
+            {
+                TicketId = 1,
+                TicketTitle = "Test"
+            };
+            Console.WriteLine(ticket);
+
+            ticket.SetAsOnProgress();
+
+            Console.WriteLine(ticket);
+
+            Console.ReadKey();
+        }
     }
- }
+}
