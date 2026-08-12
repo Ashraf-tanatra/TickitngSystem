@@ -1,4 +1,6 @@
-﻿namespace Domain.Entities;
+﻿using Domain.Enum;
+namespace Domain.Entities;
+
 
 public class Employee
 {
@@ -9,11 +11,12 @@ public class Employee
 
     public string Phone { get; private set; }
     public string Gender { get; private set; }
+    public Account Account { get; private set; }
 
-    public Role Role { get; private set; }
+    private EmployeeRole Role { get; }
 
-    public bool IsAvailable { get; private set; }
-    public bool IsDeleted { get; private set; }
+    public bool IsAvailable { get; private set; } = true;
+    public bool IsDeleted { get; private set; } = false;
 
     private Employee() { }
 
@@ -22,12 +25,14 @@ public class Employee
         string lName,
         string phone,
         string gender,
-        Role role)
+        Account account,
+        EmployeeRole role)
     {
         FName = fName;
         LName = lName;
         Phone = phone;
         Gender = gender;
         Role = role;
+        IsAvailable = true;
     }
 }
