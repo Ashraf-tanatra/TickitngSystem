@@ -9,7 +9,7 @@ namespace Domain.Entities
         public required string TicketTitle { get; set; }
         public DateTime? DueTo { get; set; }
 
-        private TicketSatus ticketStatus = TicketSatus.Pending;
+        private TicketStatus ticketStatus = TicketStatus.Pending;
         public Employee? TicketAssignedToEmployee { get; set; }
         public string? Description { get; set; }
 
@@ -22,10 +22,10 @@ namespace Domain.Entities
         private DateTime CreatedTime = DateTime.Now;
 
         // Used by Employee and project manager
-        public void SetAsOnProgress() => ticketStatus = TicketSatus.OnProgress;
-        public void TicketCompleted() => ticketStatus = TicketSatus.Completed;
-        public void TicketCancelled() => ticketStatus = TicketSatus.Cancelled;
-        public void TicketDone() => ticketStatus = TicketSatus.Done;
+        public void SetAsOnProgress() => ticketStatus = TicketStatus.OnProgress;
+        public void TicketCompleted() => ticketStatus = TicketStatus.Completed;
+        public void TicketCancelled() => ticketStatus = TicketStatus.Cancelled;
+        public void TicketDone() => ticketStatus = TicketStatus.Done;
 
         // Used by Project Manager only
         public void SetPriorityToHigh() => Priority = TicketPriority.High;
