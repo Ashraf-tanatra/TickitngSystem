@@ -10,7 +10,7 @@ namespace Domain.Entities
         public DateTime? DueTo { get; set; }
 
         private TicketSatus ticketStatus = TicketSatus.Pending;
-        public Employee? TicketAssignedToEmpolyee { get; set; }
+        public Employee? TicketAssignedToEmployee { get; set; }
         public string? Description { get; set; }
 
         private TicketPriority Priority = TicketPriority.Low;
