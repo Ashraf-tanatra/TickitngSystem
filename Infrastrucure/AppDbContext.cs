@@ -10,6 +10,7 @@ namespace Infrastructure
             base.OnConfiguring(optionsBuilder);
             var config = new ConfigurationBuilder().AddJsonFile("appsettings.json")
                .Build();
+            var connectionString = config.GetSection("constr").Value;
         }
     }
 }
