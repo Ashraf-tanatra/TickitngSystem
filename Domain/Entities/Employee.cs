@@ -12,6 +12,7 @@ public class Employee
     public string Phone { get; private set; }
     public string Gender { get; private set; }
     public Account Account { get; private set; }
+    public IEnumerable<Ticket>? Tickets { get; set; }
 
     private EmployeeRole Role { get; }
 
