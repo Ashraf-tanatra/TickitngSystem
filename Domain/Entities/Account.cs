@@ -1,9 +1,15 @@
-﻿namespace Domain.Entities
+﻿public class Account
 {
-    public class Account
-    {
-        public string Email { get; set; }
+    public int Id { get; set; }
 
-        public string Password { get; set; }
+    public string Email { get; set; } = string.Empty;
+
+    public string PasswordHash { get; set; } = string.Empty;
+
+    public int EmployeeId { get; set; }
+
+    public Account()
+    {
+
     }
 }
