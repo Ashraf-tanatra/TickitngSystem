@@ -8,7 +8,6 @@ public class Employee
 
     public string FName { get; private set; }
     public string LName { get; private set; }
-
     public string Phone { get; private set; }
     public string Gender { get; private set; }
     public Account Account { get; private set; }
@@ -18,6 +17,8 @@ public class Employee
     // public bool IsAvailable { get; private set; } = true;
     public bool IsDeleted { get; private set; } = false;
     public ICollection<Ticket>? Tickets { get; set; }
+    public ICollection<Project>? Projects { get; set; }
+    public int ProjId { get; private set; }
 
 
     private Employee() { }

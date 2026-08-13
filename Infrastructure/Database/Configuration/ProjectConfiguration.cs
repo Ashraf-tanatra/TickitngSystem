@@ -14,6 +14,8 @@ namespace Infrastructure.Database.Configuration
             builder.Property(x => x.ProjectName).HasColumnType("varchar").HasMaxLength(125);
             builder.Property(x => x.ProjectDescription).HasColumnType("varchar").HasMaxLength(255);
 
+            builder.HasMany(x => x.Employees).WithMany(x => x.Projects).UsingEntity(j => j.ToTable("ProjectEmployees"));
+
             builder.ToTable("Projects");
 
         }
