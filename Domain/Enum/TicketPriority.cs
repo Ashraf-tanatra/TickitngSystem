@@ -1,6 +1,6 @@
 ﻿namespace Domain.Enum
 {
-    internal enum TicketPriority
+    public enum TicketPriority
     {
         Low,
         Medium,

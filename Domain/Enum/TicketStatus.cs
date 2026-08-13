@@ -1,6 +1,6 @@
 ﻿namespace Domain.Enum
 {
-    internal enum TicketStatus
+    public enum TicketStatus
     {
         Pending,
         OnProgress,
