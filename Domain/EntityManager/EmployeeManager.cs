@@ -1,33 +1,31 @@
 ﻿using ApplicationServices.DTOs;
 using Domain.Interfaces;
 
-
-
 namespace Domain.EntityManager
 {
     public class EmployeeManager : IEmployeeManager
     {
-        public Task<EmployeeResponse> CreateAsync(CreateEmployeeRequest request)
+        public EmployeeResponse Create(CreateEmployeeRequest request)
         {
             throw new NotImplementedException();
         }
 
-        public Task<bool> DeleteAsync(int id)
+        public bool Delete(int id)
         {
             throw new NotImplementedException();
         }
 
-        public Task<IEnumerable<EmployeeResponse>> GetAllAsync()
+        public IEnumerable<EmployeeResponse> GetAll()
         {
             throw new NotImplementedException();
         }
 
-        public Task<EmployeeResponse?> GetByIdAsync(int id)
+        public EmployeeResponse? GetById(int id)
         {
             throw new NotImplementedException();
         }
 
-        public Task<EmployeeResponse?> UpdateAsync(int id, UpdateEmployeeRequest request)
+        public EmployeeResponse? Update(int id, UpdateEmployeeRequest request)
         {
             throw new NotImplementedException();
         }

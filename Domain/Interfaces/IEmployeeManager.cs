@@ -1,19 +1,19 @@
-﻿
-using ApplicationServices.DTOs;
+﻿using ApplicationServices.DTOs;
+
 namespace Domain.Interfaces
 {
     public interface IEmployeeManager
     {
-        Task<EmployeeResponse> CreateAsync(CreateEmployeeRequest request);
+        EmployeeResponse Create(CreateEmployeeRequest request);
 
-        Task<EmployeeResponse?> GetByIdAsync(int id);
+        EmployeeResponse? GetById(int id);
 
-        Task<IEnumerable<EmployeeResponse>> GetAllAsync();
+        IEnumerable<EmployeeResponse> GetAll();
 
-        Task<EmployeeResponse?> UpdateAsync(
+        EmployeeResponse? Update(
             int id,
             UpdateEmployeeRequest request);
 
-        Task<bool> DeleteAsync(int id);
+        bool Delete(int id);
     }
 }

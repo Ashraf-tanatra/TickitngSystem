@@ -13,10 +13,10 @@ public class Employee
     public string Gender { get; private set; }
     public Account Account { get; private set; }
     public IEnumerable<Ticket>? Tickets { get; set; }
-
     private EmployeeRole Role { get; }
 
-    public bool IsAvailable { get; private set; } = true;
+
+    // public bool IsAvailable { get; private set; } = true;
     public bool IsDeleted { get; private set; } = false;
 
     private Employee() { }
@@ -34,6 +34,6 @@ public class Employee
         Phone = phone;
         Gender = gender;
         Role = role;
-        IsAvailable = true;
+        // IsAvailable = true;
     }
 }

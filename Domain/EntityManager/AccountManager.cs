@@ -1,24 +1,26 @@
-﻿using ApplicationServices.Interfaces;
-namespace Domain.EntityManager
+﻿using ApplicationServices.DTOs;
+using ApplicationServices.Interfaces;
+
+namespace ApplicationServices.Services
 {
     public class AccountManager : IAccountManager
     {
-        Task<AccountResponse> IAccountManager.CreateAccountAsync(CreateAccountRequest request)
+        public AccountResponse CreateAccount(CreateAccountRequest request)
         {
             throw new NotImplementedException();
         }
 
-        Task<bool> IAccountManager.DeleteAsync(string email)
+        public bool Delete(string email)
         {
             throw new NotImplementedException();
         }
 
-        Task<bool> IAccountManager.ExistsAsync(string email)
+        public bool Exists(string email)
         {
             throw new NotImplementedException();
         }
 
-        Task<AccountResponse?> IAccountManager.GetByEmailAsync(string email)
+        public AccountResponse? GetByEmail(string email)
         {
             throw new NotImplementedException();
         }

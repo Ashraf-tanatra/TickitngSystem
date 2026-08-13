@@ -1,14 +1,15 @@
-﻿namespace ApplicationServices.Interfaces
-{
+﻿using ApplicationServices.DTOs;
 
+namespace ApplicationServices.Interfaces
+{
     public interface IAccountManager
     {
-        Task<AccountResponse> CreateAccountAsync(CreateAccountRequest request);
+        AccountResponse CreateAccount(CreateAccountRequest request);
 
-        Task<AccountResponse?> GetByEmailAsync(string email);
+        AccountResponse? GetByEmail(string email);
 
-        Task<bool> ExistsAsync(string email);
+        bool Exists(string email);
 
-        Task<bool> DeleteAsync(string email);
+        bool Delete(string email);
     }
 }
