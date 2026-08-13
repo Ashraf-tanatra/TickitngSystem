@@ -18,6 +18,8 @@ public class Employee
 
     // public bool IsAvailable { get; private set; } = true;
     public bool IsDeleted { get; private set; } = false;
+    public ICollection<Ticket>? Tickets { get; set; }
+
 
     private Employee() { }
 

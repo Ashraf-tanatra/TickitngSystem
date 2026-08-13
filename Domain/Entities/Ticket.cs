@@ -7,19 +7,21 @@ namespace Domain.Entities
         // Used by Employee
         public required int TicketId { get; set; } //Auto Generated 
         public required string TicketTitle { get; set; }
-        public DateTime? DueTo { get; set; }
 
-        private TicketStatus ticketStatus = TicketStatus.Pending;
-        public Employee? TicketAssignedToEmployee { get; set; }
+        public DateTime? DueTo { get; set; }
+        public DateTime CreatedTime { get; } = DateTime.Now;
+
+        public TicketStatus ticketStatus { get; private set; } = TicketStatus.Pending;
+        public TicketPriority Priority { get; private set; } = TicketPriority.Low;
+
         public string? Description { get; set; }
 
-        private TicketPriority Priority = TicketPriority.Low;
-        public string? Type { get; set; }
-
-        // Used by Project Manager
+        public Employee? Employee { get; set; }
+        public int EmployeeId { get; set; }
         public required int ProjectId { get; set; }
+        //public Employee TicketCreatedBy { get; set; }
+        public Project Project { get; set; }
 
-        private DateTime CreatedTime = DateTime.Now;
 
         // Used by Employee and project manager
         public void SetAsOnProgress() => ticketStatus = TicketStatus.OnProgress;
