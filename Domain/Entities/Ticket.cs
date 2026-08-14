@@ -11,16 +11,17 @@ namespace Domain.Entities
         public DateTime? DueTo { get; set; }
         public DateTime CreatedTime { get; set; } = DateTime.Now;
 
-        public TicketStatus ticketStatus { get;  set; } = TicketStatus.Pending;
+        public TicketStatus TicketStatus { get;  set; } = TicketStatus.Pending;
         public TicketPriority Priority { get;  set; } = TicketPriority.Low;
 
         public string? Description { get; set; }
 
         public Employee? Employee { get; set; }
+        public int EmployeeId { get; set; }
         public int TicketCreatedById { get; set; }
         public Employee TicketCreatedBy { get; set; }
 
-        public int EmployeeId { get; set; }
+        
         public required int ProjectId { get; set; }
 
         //public Employee TicketCreatedBy { get; set; }
@@ -28,10 +29,10 @@ namespace Domain.Entities
 
 
         // Used by Employee and project manager
-        public void SetAsOnProgress() => ticketStatus = TicketStatus.InProgress;
-        public void TicketCompleted() => ticketStatus = TicketStatus.Completed;
-        public void TicketCancelled() => ticketStatus = TicketStatus.Cancelled;
-        public void TicketDone() => ticketStatus = TicketStatus.Done;
+        public void SetAsOnProgress() => TicketStatus = TicketStatus.InProgress;
+        public void TicketCompleted() => TicketStatus = TicketStatus.Completed;
+        public void TicketCancelled() => TicketStatus = TicketStatus.Cancelled;
+        public void TicketDone() => TicketStatus = TicketStatus.Done;
 
         // Used by Project Manager only
         public void SetPriorityToHigh() => Priority = TicketPriority.High;
@@ -42,7 +43,7 @@ namespace Domain.Entities
         public override string ToString()
         {
             return $"{TicketId} Ticket Title: {TicketTitle} Created On:{CreatedTime}\n" +
-                $"Ticket Status: {ticketStatus}";
+                $"Ticket Status: {TicketStatus}";
         }
     }
 }

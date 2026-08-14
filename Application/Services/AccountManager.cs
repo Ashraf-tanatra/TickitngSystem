@@ -1,43 +1,92 @@
 ﻿using ApplicationServices.DTOs;
 using ApplicationServices.Interfaces;
+using Domain.Entities;
 using Domain.Interfaces;
 
 namespace ApplicationServices.Managers
 {
-    public class EmployeeManager : IEmployeeManager
+    public class AccountManager : IAccountManager
     {
-        private readonly IEmployeeRepository _employeeRepository;
+        private readonly IAccountRepository _accountRepository;
 
-        public EmployeeManager(IEmployeeRepository employeeRepository)
+        public AccountManager(IAccountRepository accountRepository)
         {
-            _employeeRepository = employeeRepository;
+            _accountRepository = accountRepository;
         }
 
-        public EmployeeResponse Create(CreateEmployeeRequest request)
+        public AccountResponse CreateAccount(CreateAccountRequest request)
         {
-            throw new NotImplementedException();
+            // 1. Validate request
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            if (string.IsNullOrWhiteSpace(request.Email))
+                throw new ArgumentException("Email is required.");
+
+            if (string.IsNullOrWhiteSpace(request.Password))
+                throw new ArgumentException("Password is required.");
+
+            // 2. Check duplicate email
+            if (_accountRepository.GetByEmail(request.Email) != null)
+            {
+                throw new InvalidOperationException(
+                    "An account with this email already exists.");
+            }
+
+            // 3. Create Account
+            var account = new Account
+            {
+                Email = request.Email,
+                PasswordHash = request.Password
+            };
+
+            // 4. Save
+            _accountRepository.Add(account);
+
+            // 5. Return response
+            return new AccountResponse
+            {
+                Email = account.Email
+            };
         }
 
-        public EmployeeResponse? GetById(int id)
+        public AccountResponse? GetByEmail(string email)
         {
-            throw new NotImplementedException();
+            if (string.IsNullOrWhiteSpace(email))
+                throw new ArgumentException("Email is required.");
+
+            var account = _accountRepository.GetByEmail(email);
+
+            if (account == null)
+                return null;
+
+            return new AccountResponse
+            {
+                Email = account.Email
+            };
         }
 
-        public IEnumerable<EmployeeResponse> GetAll()
+        public bool Exists(string email)
         {
-            throw new NotImplementedException();
+            if (string.IsNullOrWhiteSpace(email))
+                return false;
+
+            return _accountRepository.GetByEmail(email) != null;
         }
 
-        public EmployeeResponse? Update(
-            int id,
-            UpdateEmployeeRequest request)
+        public bool Delete(string email)
         {
-            throw new NotImplementedException();
-        }
+            if (string.IsNullOrWhiteSpace(email))
+                return false;
 
-        public bool Delete(int id)
-        {
-            throw new NotImplementedException();
+            var account = _accountRepository.GetByEmail(email);
+
+            if (account == null)
+                return false;
+
+            _accountRepository.Delete(account);
+
+            return true;
         }
     }
 }

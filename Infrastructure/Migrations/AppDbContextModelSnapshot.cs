@@ -64,26 +64,25 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("FName")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Gender")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasColumnType("nvarchar(1)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<string>("LName")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Phone")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
 
                     b.Property<int>("Role")
                         .HasColumnType("int");
@@ -163,6 +162,9 @@ namespace Infrastructure.Migrations
                     b.Property<int>("ProjectId")
                         .HasColumnType("int");
 
+                    b.Property<int>("TicketCreatedById")
+                        .HasColumnType("int");
+
                     b.Property<string>("TicketTitle")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -177,6 +179,8 @@ namespace Infrastructure.Migrations
                     b.HasIndex("EmployeeId");
 
                     b.HasIndex("ProjectId");
+
+                    b.HasIndex("TicketCreatedById");
 
                     b.ToTable("Tickets", (string)null);
                 });
@@ -236,9 +240,17 @@ namespace Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Domain.Entities.Employee", "TicketCreatedBy")
+                        .WithMany()
+                        .HasForeignKey("TicketCreatedById")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Employee");
 
                     b.Navigation("Project");
+
+                    b.Navigation("TicketCreatedBy");
                 });
 
             modelBuilder.Entity("Domain.Entities.Employee", b =>

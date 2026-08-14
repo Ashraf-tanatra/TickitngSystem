@@ -40,5 +40,23 @@ namespace Infrastructure.Repositories
             _context.Employees.Remove(employee);
             _context.SaveChanges();
         }
+
+        public bool ExistsByEmail(string email)
+        {
+            return _context.Employees
+                .Any(e => e.Account.Email == email);
+        }
+
+        public bool ExistsByPhone(string phone)
+        {
+            return _context.Employees
+                .Any(e => e.Phone == phone);
+        }
+
+        public bool ExistsByPhoneExcept(string phone, int employeeId)
+        {
+            return _context.Employees
+                .Any(e => e.Phone == phone && e.Id != employeeId);
+        }
     }
 }
