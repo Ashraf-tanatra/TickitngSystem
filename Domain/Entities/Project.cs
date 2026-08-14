@@ -7,10 +7,13 @@
         public string? ProjectDescription { get; set; }
 
         public int ProjectManagerId { get; private set; }
-        public ICollection<Employee>? Employees { get; set; }
+
+        public Employee? ProjectManager { get; private set; } = null;
+
         public ICollection<Ticket>? ProjectTickets { get; set; }
 
-        public override string ToString() => $"Project Id: {Id}\nProject Name: {ProjectName}\nDetails:{ProjectDescription}";
+        public ICollection<ProjectEmployee> ProjectEmployees { get; set; } = new List<ProjectEmployee>();
 
+        public override string ToString() => $"Project Id: {Id}\nProject Name: {ProjectName}\nDetails:{ProjectDescription}";
     }
 }

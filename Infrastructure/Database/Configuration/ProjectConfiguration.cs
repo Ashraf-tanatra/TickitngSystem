@@ -9,15 +9,26 @@ namespace Infrastructure.Database.Configuration
         public void Configure(EntityTypeBuilder<Project> builder)
         {
             builder.HasKey(x => x.Id);
-            builder.Property(x => x.Id).ValueGeneratedOnAdd();
 
-            builder.Property(x => x.ProjectName).HasColumnType("varchar").HasMaxLength(125);
-            builder.Property(x => x.ProjectDescription).HasColumnType("varchar").HasMaxLength(255);
+            builder.Property(x => x.Id)
+                   .ValueGeneratedOnAdd();
+
+            builder.Property(x => x.ProjectName)
+                   .HasColumnType("varchar")
+                   .HasMaxLength(125);
+
+            builder.Property(x => x.ProjectDescription)
+                   .HasColumnType("varchar")
+                   .HasMaxLength(255);
+
+            builder.HasOne(x => x.ProjectManager)
+        .WithMany()
+        .HasForeignKey(x => x.ProjectManagerId)
+        .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasMany(x => x.Employees).WithMany(x => x.Projects).UsingEntity(j => j.ToTable("ProjectEmployees"));
 
             builder.ToTable("Projects");
-
         }
     }
 }

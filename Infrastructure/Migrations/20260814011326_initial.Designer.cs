@@ -12,8 +12,13 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
+<<<<<<<< HEAD:Infrastructure/Migrations/20260813112805_Initial.Designer.cs
     [Migration("20260813112805_Initial")]
     partial class Initial
+========
+    [Migration("20260814011326_initial")]
+    partial class initial
+>>>>>>>> 1feb93f (Implement employee repository and manager read operations):Infrastructure/Migrations/20260814011326_initial.Designer.cs
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -88,14 +93,12 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<int?>("ProjectId")
+                    b.Property<int>("Role")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProjectId");
-
-                    b.ToTable("Employee");
+                    b.ToTable("Employees");
                 });
 
             modelBuilder.Entity("Domain.Entities.Project", b =>
@@ -120,7 +123,24 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ProjectManagerId");
+
                     b.ToTable("Projects", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.ProjectEmployee", b =>
+                {
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ProjectId", "EmployeeId");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.ToTable("ProjectEmployees");
                 });
 
             modelBuilder.Entity("Domain.Entities.Ticket", b =>
@@ -171,18 +191,43 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Account", b =>
                 {
-                    b.HasOne("Domain.Entities.Employee", null)
+                    b.HasOne("Domain.Entities.Employee", "Employee")
                         .WithOne("Account")
                         .HasForeignKey("Account", "EmployeeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Employee");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Employee", b =>
+            modelBuilder.Entity("Domain.Entities.Project", b =>
                 {
-                    b.HasOne("Domain.Entities.Project", null)
-                        .WithMany("Employees")
-                        .HasForeignKey("ProjectId");
+                    b.HasOne("Domain.Entities.Employee", "ProjectManager")
+                        .WithMany()
+                        .HasForeignKey("ProjectManagerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ProjectManager");
+                });
+
+            modelBuilder.Entity("Domain.Entities.ProjectEmployee", b =>
+                {
+                    b.HasOne("Domain.Entities.Employee", "Employee")
+                        .WithMany("ProjectEmployees")
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Project", "Project")
+                        .WithMany("ProjectEmployees")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("Project");
                 });
 
             modelBuilder.Entity("Domain.Entities.Ticket", b =>
@@ -209,12 +254,14 @@ namespace Infrastructure.Migrations
                     b.Navigation("Account")
                         .IsRequired();
 
+                    b.Navigation("ProjectEmployees");
+
                     b.Navigation("Tickets");
                 });
 
             modelBuilder.Entity("Domain.Entities.Project", b =>
                 {
-                    b.Navigation("Employees");
+                    b.Navigation("ProjectEmployees");
 
                     b.Navigation("ProjectTickets");
                 });

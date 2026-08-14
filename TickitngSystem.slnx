@@ -3,6 +3,7 @@
   <Project Path="Controller/Controller.csproj" />
   <Project Path="Domain/Domain.csproj" />
   <Project Path="Infrastructure/Infrastructure.csproj" />
+  <Project Path="Test/Test.csproj" Id="8a380441-d6da-481f-be4e-1a702f0609c2" />
   <Project Path="Testing/Testing.csproj" Id="1f5c7fea-34c4-4f60-aa28-9ee655b2ca63" />
   <Project Path="TickitngSystem/TickitngSystem.csproj" />
 </Solution>

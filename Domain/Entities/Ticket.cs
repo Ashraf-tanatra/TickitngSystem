@@ -19,6 +19,7 @@ namespace Domain.Entities
         public Employee? Employee { get; set; }
         public int EmployeeId { get; set; }
         public required int ProjectId { get; set; }
+
         //public Employee TicketCreatedBy { get; set; }
         public Project Project { get; set; }
 
@@ -40,6 +41,5 @@ namespace Domain.Entities
             return $"{TicketId} Ticket Title: {TicketTitle} Created On:{CreatedTime}\n" +
                 $"Ticket Status: {ticketStatus}";
         }
-
     }
 }

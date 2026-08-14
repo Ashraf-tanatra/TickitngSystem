@@ -1,7 +1,10 @@
 ﻿using Domain.Enum;
+
 namespace Domain.Entities;
 
-
+// Deleted Employees from Project because we use ProjectEmployee now.
+// Updated ProjectEmployee to connect Project and Employee.
+// Added ProjectEmployees navigation property in Project and Employee.
 public class Employee
 {
     public int Id { get; private set; }
@@ -11,8 +14,9 @@ public class Employee
     public string Phone { get; private set; }
     public string Gender { get; private set; }
     public Account Account { get; private set; }
-    private EmployeeRole Role { get; }
+    public EmployeeRole Role { get; }
 
+    public ICollection<ProjectEmployee> ProjectEmployees { get; set; } = new List<ProjectEmployee>();
 
     // public bool IsAvailable { get; private set; } = true;
     public bool IsDeleted { get; private set; } = false;

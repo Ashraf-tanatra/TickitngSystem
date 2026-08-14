@@ -1,4 +1,6 @@
-﻿public class Account
+﻿using Domain.Entities;
+
+public class Account
 {
     public int Id { get; set; }
 
@@ -7,6 +9,8 @@
     public string PasswordHash { get; set; } = string.Empty;
 
     public int EmployeeId { get; set; }
+
+    public Employee Employee { get; set; } = null!;
 
     public Account()
     {

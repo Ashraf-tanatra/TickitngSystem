@@ -1,6 +1,4 @@
-﻿namespace ApplicationServices.DTOs;
-
-public class EmployeeResponse
+﻿public class EmployeeResponse
 {
     public int Id { get; set; }
 
@@ -12,9 +10,7 @@ public class EmployeeResponse
 
     public string Gender { get; set; } = string.Empty;
 
-    public int RoleId { get; set; }
+    public string Role { get; set; } = string.Empty;
 
-    public string RoleName { get; set; } = string.Empty;
-
-    public bool IsAvailable { get; set; }
+    public bool IsDeleted { get; set; }
 }

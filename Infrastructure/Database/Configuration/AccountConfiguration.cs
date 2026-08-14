@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Database.Configuration
@@ -8,7 +9,6 @@ namespace Infrastructure.Database.Configuration
     {
         public void Configure(EntityTypeBuilder<Account> builder)
         {
-
             builder.HasKey(a => a.Id);
 
             builder.Property(a => a.Id)
@@ -24,6 +24,11 @@ namespace Infrastructure.Database.Configuration
             builder.Property(a => a.PasswordHash)
                    .IsRequired()
                    .HasMaxLength(500);
+
+            builder.HasOne(a => a.Employee)
+                   .WithOne(e => e.Account)
+                   .HasForeignKey<Account>(a => a.EmployeeId)
+                   .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Database.Configuration
-
 {
     internal class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
     {
