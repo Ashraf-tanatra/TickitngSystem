@@ -3,7 +3,7 @@
     public enum TicketStatus
     {
         Pending,
-        OnProgress,
+        InProgress,
         Completed,
         Cancelled,
         Done

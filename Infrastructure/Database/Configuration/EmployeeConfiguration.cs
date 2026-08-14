@@ -11,16 +11,13 @@ namespace Infrastructure.Database.Configuration
             builder.HasKey(e => e.Id);
 
             builder.Property(e => e.FName)
-                   .HasMaxLength(100);
+                   .HasMaxLength(50);
 
             builder.Property(e => e.LName)
-                   .HasMaxLength(100);
+                   .HasMaxLength(50);
 
             builder.Property(e => e.Phone)
-                   .HasMaxLength(20);
-
-            builder.Property(e => e.Gender)
-                   .HasMaxLength(20);
+                   .HasMaxLength(10);
         }
     }
 }

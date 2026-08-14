@@ -12,8 +12,4 @@ public class Account
 
     public Employee Employee { get; set; } = null!;
 
-    public Account()
-    {
-
-    }
 }

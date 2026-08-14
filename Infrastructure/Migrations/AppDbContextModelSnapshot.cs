@@ -51,7 +51,7 @@ namespace Infrastructure.Migrations
                     b.HasIndex("EmployeeId")
                         .IsUnique();
 
-                    b.ToTable("Account");
+                    b.ToTable("Accounts");
                 });
 
             modelBuilder.Entity("Domain.Entities.Employee", b =>
@@ -132,7 +132,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("EmployeeId");
 
-                    b.ToTable("ProjectEmployees");
+                    b.ToTable("ProjectEmployees", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.Ticket", b =>

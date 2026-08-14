@@ -1,6 +1,6 @@
 ﻿using ApplicationServices.DTOs;
 
-namespace Domain.Interfaces
+namespace ApplicationServices.Interfaces
 {
     public interface IEmployeeManager
     {

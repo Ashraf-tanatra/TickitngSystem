@@ -5,18 +5,21 @@ namespace Domain.Entities
     public class Ticket
     {
         // Used by Employee
-        public required int TicketId { get; set; } //Auto Generated 
+        public  int TicketId { get;  } //Auto Generated 
         public required string TicketTitle { get; set; }
 
         public DateTime? DueTo { get; set; }
-        public DateTime CreatedTime { get; } = DateTime.Now;
+        public DateTime CreatedTime { get; set; } = DateTime.Now;
 
-        public TicketStatus ticketStatus { get; private set; } = TicketStatus.Pending;
-        public TicketPriority Priority { get; private set; } = TicketPriority.Low;
+        public TicketStatus ticketStatus { get;  set; } = TicketStatus.Pending;
+        public TicketPriority Priority { get;  set; } = TicketPriority.Low;
 
         public string? Description { get; set; }
 
         public Employee? Employee { get; set; }
+        public int TicketCreatedById { get; set; }
+        public Employee TicketCreatedBy { get; set; }
+
         public int EmployeeId { get; set; }
         public required int ProjectId { get; set; }
 
@@ -25,7 +28,7 @@ namespace Domain.Entities
 
 
         // Used by Employee and project manager
-        public void SetAsOnProgress() => ticketStatus = TicketStatus.OnProgress;
+        public void SetAsOnProgress() => ticketStatus = TicketStatus.InProgress;
         public void TicketCompleted() => ticketStatus = TicketStatus.Completed;
         public void TicketCancelled() => ticketStatus = TicketStatus.Cancelled;
         public void TicketDone() => ticketStatus = TicketStatus.Done;

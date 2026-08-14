@@ -1,38 +1,45 @@
 ﻿
-using Domain.Interfaces;
-using Infrastructure;
-using Infrastructure.Database;
-using Infrastructure.Repositories;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
+//using Domain.Interfaces;
+////using Infrastructure;
+////using Infrastructure.Database;
+////using Infrastructure.Repositories;
+////using Microsoft.EntityFrameworkCore;
+////using Microsoft.Extensions.Configuration;
 
-var configuration = new ConfigurationBuilder()
-    .SetBasePath(Directory.GetCurrentDirectory())
-    .AddJsonFile("appsettings.json")
-    .Build();
+using Infrastructure.Database.Data;
 
-var connectionString = configuration["constr"];
-
-var options = new DbContextOptionsBuilder<AppDbContext>()
-    .UseSqlServer(connectionString)
-    .Options;
-
-using var context = new AppDbContext(options);
-
-IEmployeeRepository repository = new EmployeeRepository(context);
+///
+DataSeeder.RecreateCleanDatabase();
+DataSeeder.PopulateDatabase();
 
 
-// Test GetAll
-Console.WriteLine("===== ALL EMPLOYEES =====");
+////var configuration = new ConfigurationBuilder()
+////    .SetBasePath(Directory.GetCurrentDirectory())
+////    .AddJsonFile("appsettings.json")
+////    .Build();
 
-var employees = repository.GetAll();
+////var connectionString = configuration["constr"];
 
-foreach (var employee in employees)
-{
-    Console.WriteLine(
-        $"{employee.Id} - {employee.FName} {employee.LName}"
-    );
-}
+////var options = new DbContextOptionsBuilder<AppDbContext>()
+////    .UseSqlServer(connectionString)
+////    .Options;
+
+////using var context = new AppDbContext(options);
+
+////IEmployeeRepository repository = new EmployeeRepository(context);
+
+
+////// Test GetAll
+////Console.WriteLine("===== ALL EMPLOYEES =====");
+
+////var employees = repository.GetAll();
+
+////foreach (var employee in employees)
+////{
+////    Console.WriteLine(
+////        $"{employee.Id} - {employee.FName} {employee.LName}"
+////    );
+////}
 //using Microsoft.Extensions.Configuration;
 //using Infrastructure.Database;
 //using Microsoft.EntityFrameworkCore;
@@ -44,19 +51,7 @@ foreach (var employee in employees)
 //{
 //    private static void Main(string[] args)
 //    {
-//        var configuration = new ConfigurationBuilder()
-//    .SetBasePath(Directory.GetCurrentDirectory())
-//    .AddJsonFile("appsettings.json")
-//    .Build();
-
-//        var connectionString = configuration["constr"];
-
-//        var options = new DbContextOptionsBuilder<AppDbContext>()
-//            .UseSqlServer(connectionString)
-//            .Options;
-
-//        using var context = new AppDbContext(options);
-
+//        using var context = new AppDbContext();
 
 //        Console.WriteLine("Connected to database!");
 

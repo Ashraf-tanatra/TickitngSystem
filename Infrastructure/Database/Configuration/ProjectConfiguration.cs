@@ -4,7 +4,8 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Database.Configuration
 {
-    public class ProjectConfiguration : IEntityTypeConfiguration<Project>
+    public class ProjectConfiguration
+        : IEntityTypeConfiguration<Project>
     {
         public void Configure(EntityTypeBuilder<Project> builder)
         {
@@ -15,18 +16,17 @@ namespace Infrastructure.Database.Configuration
 
             builder.Property(x => x.ProjectName)
                    .HasColumnType("varchar")
-                   .HasMaxLength(125);
+                   .HasMaxLength(125)
+                   .IsRequired();
 
             builder.Property(x => x.ProjectDescription)
                    .HasColumnType("varchar")
                    .HasMaxLength(255);
 
             builder.HasOne(x => x.ProjectManager)
-        .WithMany()
-        .HasForeignKey(x => x.ProjectManagerId)
-        .OnDelete(DeleteBehavior.Restrict);
-
-            builder.HasMany(x => x.Employees).WithMany(x => x.Projects).UsingEntity(j => j.ToTable("ProjectEmployees"));
+                   .WithMany()
+                   .HasForeignKey(x => x.ProjectManagerId)
+                   .OnDelete(DeleteBehavior.Restrict);
 
             builder.ToTable("Projects");
         }

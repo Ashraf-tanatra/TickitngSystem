@@ -2,18 +2,27 @@
 {
     public class Project
     {
-        public required int Id { get; set; } //Auto Generated
+        public  int Id { get; set; }
+
         public required string ProjectName { get; set; }
+
         public string? ProjectDescription { get; set; }
 
-        public int ProjectManagerId { get; private set; }
+        public int ProjectManagerId { get;  set; }
 
-        public Employee? ProjectManager { get; private set; } = null;
+        public Employee? ProjectManager { get; private set; }
 
-        public ICollection<Ticket>? ProjectTickets { get; set; }
+        public ICollection<Ticket> ProjectTickets { get; set; }
+            = new List<Ticket>();
 
-        public ICollection<ProjectEmployee> ProjectEmployees { get; set; } = new List<ProjectEmployee>();
+        public ICollection<ProjectEmployee> ProjectEmployees { get; set; }
+            = new List<ProjectEmployee>();
 
-        public override string ToString() => $"Project Id: {Id}\nProject Name: {ProjectName}\nDetails:{ProjectDescription}";
+        public override string ToString()
+        {
+            return $"Project Id: {Id}\n" +
+                   $"Project Name: {ProjectName}\n" +
+                   $"Details: {ProjectDescription}";
+        }
     }
 }

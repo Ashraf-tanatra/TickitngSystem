@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260813113811_v1")]
-    partial class v1
+    [Migration("20260814121412_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -54,7 +54,7 @@ namespace Infrastructure.Migrations
                     b.HasIndex("EmployeeId")
                         .IsUnique();
 
-                    b.ToTable("Account");
+                    b.ToTable("Accounts");
                 });
 
             modelBuilder.Entity("Domain.Entities.Employee", b =>
@@ -88,12 +88,12 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<int>("ProjId")
+                    b.Property<int>("Role")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Employee");
+                    b.ToTable("Employees");
                 });
 
             modelBuilder.Entity("Domain.Entities.Project", b =>
@@ -118,7 +118,24 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ProjectManagerId");
+
                     b.ToTable("Projects", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.ProjectEmployee", b =>
+                {
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ProjectId", "EmployeeId");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.ToTable("ProjectEmployees", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.Ticket", b =>
@@ -167,28 +184,45 @@ namespace Infrastructure.Migrations
                     b.ToTable("Tickets", (string)null);
                 });
 
-            modelBuilder.Entity("EmployeeProject", b =>
-                {
-                    b.Property<int>("EmployeesId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ProjectsId")
-                        .HasColumnType("int");
-
-                    b.HasKey("EmployeesId", "ProjectsId");
-
-                    b.HasIndex("ProjectsId");
-
-                    b.ToTable("ProjectEmployees", (string)null);
-                });
-
             modelBuilder.Entity("Account", b =>
                 {
-                    b.HasOne("Domain.Entities.Employee", null)
+                    b.HasOne("Domain.Entities.Employee", "Employee")
                         .WithOne("Account")
                         .HasForeignKey("Account", "EmployeeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Employee");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Project", b =>
+                {
+                    b.HasOne("Domain.Entities.Employee", "ProjectManager")
+                        .WithMany()
+                        .HasForeignKey("ProjectManagerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ProjectManager");
+                });
+
+            modelBuilder.Entity("Domain.Entities.ProjectEmployee", b =>
+                {
+                    b.HasOne("Domain.Entities.Employee", "Employee")
+                        .WithMany("ProjectEmployees")
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Project", "Project")
+                        .WithMany("ProjectEmployees")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("Project");
                 });
 
             modelBuilder.Entity("Domain.Entities.Ticket", b =>
@@ -210,31 +244,20 @@ namespace Infrastructure.Migrations
                     b.Navigation("Project");
                 });
 
-            modelBuilder.Entity("EmployeeProject", b =>
-                {
-                    b.HasOne("Domain.Entities.Employee", null)
-                        .WithMany()
-                        .HasForeignKey("EmployeesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Domain.Entities.Project", null)
-                        .WithMany()
-                        .HasForeignKey("ProjectsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Domain.Entities.Employee", b =>
                 {
                     b.Navigation("Account")
                         .IsRequired();
+
+                    b.Navigation("ProjectEmployees");
 
                     b.Navigation("Tickets");
                 });
 
             modelBuilder.Entity("Domain.Entities.Project", b =>
                 {
+                    b.Navigation("ProjectEmployees");
+
                     b.Navigation("ProjectTickets");
                 });
 #pragma warning restore 612, 618

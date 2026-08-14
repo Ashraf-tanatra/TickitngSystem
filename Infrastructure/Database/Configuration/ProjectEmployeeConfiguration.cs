@@ -16,15 +16,19 @@ namespace Infrastructure.Database.Configuration
                 pe.EmployeeId
             });
 
-            // Project relationship
+            // Project -> ProjectEmployees
             builder.HasOne(pe => pe.Project)
                    .WithMany(p => p.ProjectEmployees)
-                   .HasForeignKey(pe => pe.ProjectId);
+                   .HasForeignKey(pe => pe.ProjectId)
+                   .OnDelete(DeleteBehavior.Cascade);
 
-            // Employee relationship
+            // Employee -> ProjectEmployees
             builder.HasOne(pe => pe.Employee)
                    .WithMany(e => e.ProjectEmployees)
-                   .HasForeignKey(pe => pe.EmployeeId);
+                   .HasForeignKey(pe => pe.EmployeeId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            builder.ToTable("ProjectEmployees");
         }
     }
 }

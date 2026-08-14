@@ -1,4 +1,5 @@
 ﻿using ApplicationServices.DTOs;
+using ApplicationServices.Interfaces;
 using Domain.Interfaces;
 
 namespace Domain.EntityManager
