@@ -18,5 +18,7 @@ namespace Domain.Interfaces
 
         bool ExistsByPhone(string phone);
         bool ExistsByPhoneExcept(string phone, int employeeId);
+        IEnumerable<Project> GetProjects(int employeeId);
+
     }
 }

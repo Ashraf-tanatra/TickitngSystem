@@ -8,12 +8,14 @@ namespace Domain.Interfaces
 
         Ticket? GetById(int id);
 
-        IEnumerable<Ticket> GetByProjectId(int projectId);
-
         void Add(Ticket ticket);
 
         void Update(Ticket ticket);
 
         void Delete(Ticket ticket);
+
+        bool EmployeeExists(int employeeId);
+
+        bool ProjectExists(int projectId);
     }
 }

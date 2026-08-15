@@ -23,13 +23,6 @@ namespace Infrastructure.Repositories
             return _context.Tickets.FirstOrDefault(t => t.TicketId == id);
         }
 
-        public IEnumerable<Ticket> GetByProjectId(int projectId)
-        {
-            return _context.Tickets
-                           .Where(t => t.ProjectId == projectId)
-                           .ToList();
-        }
-
         public void Add(Ticket ticket)
         {
             _context.Tickets.Add(ticket);
@@ -46,6 +39,16 @@ namespace Infrastructure.Repositories
         {
             _context.Tickets.Remove(ticket);
             _context.SaveChanges();
+        }
+
+        public bool EmployeeExists(int employeeId)
+        {
+            return _context.Employees.Any(e => e.Id == employeeId);
+        }
+
+        public bool ProjectExists(int projectId)
+        {
+            return _context.Projects.Any(p => p.Id == projectId);
         }
     }
 }

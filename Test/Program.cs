@@ -6,40 +6,44 @@
 ////using Microsoft.EntityFrameworkCore;
 ////using Microsoft.Extensions.Configuration;
 
-using Infrastructure.Database.Data;
-
-///
-DataSeeder.RecreateCleanDatabase();
-DataSeeder.PopulateDatabase();
+//using Infrastructure.Database.Data;
 
 
-////var configuration = new ConfigurationBuilder()
-////    .SetBasePath(Directory.GetCurrentDirectory())
-////    .AddJsonFile("appsettings.json")
-////    .Build();
-
-////var connectionString = configuration["constr"];
-
-////var options = new DbContextOptionsBuilder<AppDbContext>()
-////    .UseSqlServer(connectionString)
-////    .Options;
-
-////using var context = new AppDbContext(options);
-
-////IEmployeeRepository repository = new EmployeeRepository(context);
+//DataSeeder.RecreateCleanDatabase();
+//DataSeeder.PopulateDatabase();
 
 
-////// Test GetAll
-////Console.WriteLine("===== ALL EMPLOYEES =====");
+using Domain.Interfaces;
+using Infrastructure;
+using Infrastructure.Repositories;
 
-////var employees = repository.GetAll();
+//var configuration = new ConfigurationBuilder()
+//    .SetBasePath(Directory.GetCurrentDirectory())
+//    .AddJsonFile("appsettings.json")
+//    .Build();
 
-////foreach (var employee in employees)
-////{
-////    Console.WriteLine(
-////        $"{employee.Id} - {employee.FName} {employee.LName}"
-////    );
-////}
+//var connectionString = configuration["constr"];
+
+//var options = new DbContextOptionsBuilder<AppDbContext>()
+//    .UseSqlServer(connectionString)
+//    .Options;
+
+using var context = new AppDbContext();
+
+IEmployeeRepository repository = new EmployeeRepository(context);
+
+
+// Test GetAll
+Console.WriteLine("===== ALL EMPLOYEES =====");
+
+var employees = repository.GetAll();
+
+foreach (var employee in employees)
+{
+    Console.WriteLine(
+        $"{employee.Id} - {employee.FName} {employee.LName}"
+    );
+}
 //using Microsoft.Extensions.Configuration;
 //using Infrastructure.Database;
 //using Microsoft.EntityFrameworkCore;

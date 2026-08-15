@@ -1,15 +1,23 @@
-﻿using Domain.Entities;
+﻿using ApplicationServices.DTOs;
 
 namespace Domain.EntityManager
 {
     public interface IProjectManager
     {
-        public void CreateNewProject(Project project);
-        public void DeleteProject(int projectId);
-        public void EditProject(Project project);
-        public IEnumerable<Project> Projects();
-        public Project GetProjectByID(int Id);
+        ProjectResponse Create(CreateProjectRequest request);
 
+        IEnumerable<ProjectResponse> GetAll();
 
+        ProjectResponse? GetById(int id);
+
+        ProjectResponse Update(
+            int id,
+            UpdateProjectRequest request);
+
+        bool Delete(int id);
+
+        IEnumerable<EmployeeResponse> GetEmployees(int projectId);
+
+        IEnumerable<TicketResponse> GetTickets(int projectId);
     }
 }

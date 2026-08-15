@@ -192,5 +192,27 @@ namespace Domain.EntityManager
                 IsDeleted = employee.IsDeleted
             };
         }
+
+        public IEnumerable<ProjectResponse> GetProjects(int employeeId)
+        {
+            var projects = _EmployeeRepository.GetProjects(employeeId);
+
+            return projects.Select(project => new ProjectResponse
+            {
+                Id = project.Id,
+                ProjectName = project.ProjectName,
+                ProjectDescription = project.ProjectDescription,
+                ProjectManagerId = project.ProjectManagerId,
+
+                ProjectManagerName = project.ProjectManager == null
+                    ? null
+                    : $"{project.ProjectManager.FName} {project.ProjectManager.LName}",
+
+                EmployeeCount = project.ProjectEmployees.Count,
+                TicketCount = project.ProjectTickets.Count
+            });
+        }
+
+       
     }
 }

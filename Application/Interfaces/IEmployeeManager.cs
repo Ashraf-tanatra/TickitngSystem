@@ -1,4 +1,5 @@
 ﻿using ApplicationServices.DTOs;
+using Domain.Entities;
 
 namespace ApplicationServices.Interfaces
 {
@@ -15,5 +16,9 @@ namespace ApplicationServices.Interfaces
             UpdateEmployeeRequest request);
 
         bool Delete(int id);
+        IEnumerable<ProjectResponse> GetProjects(int employeeId);
+
+
+
     }
 }

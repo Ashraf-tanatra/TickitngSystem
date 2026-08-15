@@ -1,5 +1,6 @@
 ﻿using ApplicationServices.DTOs;
 using ApplicationServices.Interfaces;
+using Domain.EntityManager;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Controller
@@ -10,9 +11,10 @@ namespace Controller
     {
         private readonly IEmployeeManager _employeeManager;
 
-        public EmployeeController(IEmployeeManager employeeManager)
+        public EmployeeController(IEmployeeManager employeeManager )
         {
             _employeeManager = employeeManager;
+
         }
 
         // GET: api/Employee
@@ -36,6 +38,15 @@ namespace Controller
             return Ok(employee);
         }
 
+        [HttpGet("{id}/projects")]
+        public ActionResult<IEnumerable<ProjectResponse>> GetProjects(int id)
+        {
+            var projects = _employeeManager.GetProjects(id);
+
+            return Ok(projects);
+        
+        }
+
         // POST: api/Employee
         [HttpPost]
         public ActionResult<EmployeeResponse> Create( CreateEmployeeRequest request)
@@ -50,9 +61,7 @@ namespace Controller
 
         // PUT: api/Employee/5
         [HttpPut("{id}")]
-        public ActionResult<EmployeeResponse> Update(
-            int id,
-            UpdateEmployeeRequest request)
+        public ActionResult<EmployeeResponse> Update(int id,UpdateEmployeeRequest request)
         {
             var employee = _employeeManager.Update(id, request);
 
@@ -73,5 +82,6 @@ namespace Controller
 
             return NoContent();
         }
+
     }
 }

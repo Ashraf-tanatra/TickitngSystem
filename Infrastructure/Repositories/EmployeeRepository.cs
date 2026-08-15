@@ -1,6 +1,7 @@
 ﻿using Domain.Entities;
 using Domain.Interfaces;
 using Infrastructure.Database;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories
 {
@@ -57,6 +58,17 @@ namespace Infrastructure.Repositories
         {
             return _context.Employees
                 .Any(e => e.Phone == phone && e.Id != employeeId);
+        }
+        public IEnumerable<Project> GetProjects(int employeeId)
+        {
+            return _context.Projects
+                .Where(p => p.ProjectEmployees
+                    .Any(pe => pe.EmployeeId == employeeId))
+                .Include(p => p.ProjectManager)
+                .Include(p => p.ProjectEmployees)
+                    .ThenInclude(pe => pe.Employee)
+                .Include(p => p.ProjectTickets)
+                .ToList();
         }
     }
 }
