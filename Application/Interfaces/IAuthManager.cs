@@ -1,4 +1,11 @@
-﻿public interface IAuthManager
+﻿using ApplicationServices.DTOs;
+
+namespace ApplicationServices.Interfaces
 {
-    LoginResponse Login(LoginRequest request);
+    public interface IAuthManager
+    {
+        AccountResponse SignUp(SignUpRequest request);
+
+        LoginResponse Login(LoginRequest request);
+    }
 }

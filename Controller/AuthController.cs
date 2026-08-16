@@ -15,12 +15,44 @@ namespace Controller
             _authManager = authManager;
         }
 
-        [HttpPost("login")]
-        public ActionResult<LoginResponse> Login(LoginRequest request)
+        // POST: api/Auth/signup
+        [HttpPost("signup")]
+        public ActionResult<AccountResponse> SignUp(
+            SignUpRequest request)
         {
-            var response = _authManager.Login(request);
+            try
+            {
+                var account = _authManager.SignUp(request);
 
-            return Ok(response);
+                return StatusCode(201, account);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("login")]
+        public ActionResult<LoginResponse> Login(
+     LoginRequest request)
+        {
+            try
+            {
+                var response = _authManager.Login(request);
+
+                return Ok(response);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return StatusCode(401, new
+                {
+                    message = ex.Message
+                });
+            }
         }
     }
 }

@@ -152,6 +152,8 @@ namespace Domain.EntityManager
             return GetById(project.Id)!;
         }
 
+
+
         //GET TICKETS
         public IEnumerable<TicketResponse> GetTickets(int projectId)
         {
@@ -182,5 +184,30 @@ namespace Domain.EntityManager
 
             return true;
         }
+
+        // GET TICKET BY ID
+        public TicketResponse? GetTicket(int projectId, int ticketId)
+        {
+            var tickets = _projectRepository.GetTickets(projectId);
+
+            var ticket = tickets.FirstOrDefault(t => t.TicketId == ticketId);
+
+            if (ticket == null)
+                return null;
+
+            return new TicketResponse
+            {
+                TicketId = ticket.TicketId,
+                TicketTitle = ticket.TicketTitle,
+                DueTo = ticket.DueTo,
+                TicketStatus = ticket.TicketStatus.ToString(),
+                Priority = ticket.Priority.ToString(),
+                Description = ticket.Description,
+                EmployeeId = ticket.EmployeeId,
+                ProjectId = ticket.ProjectId
+            };
+        }
+
+
     }
 }

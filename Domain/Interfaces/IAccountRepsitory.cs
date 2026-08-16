@@ -1,22 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-using Domain.Entities;
+﻿using Domain.Entities;
 
 namespace Domain.Interfaces
 {
     public interface IAccountRepository
     {
-        IEnumerable<Account> GetAll();
-
-        Account? GetById(int id);
-
         Account? GetByEmail(string email);
 
-        void Add(Account account);
+        bool EmailExists(string email);
 
-        void Update(Account account);
+        bool EmployeeExists(int employeeId);
+
+        void Add(Account account);
 
         void Delete(Account account);
     }

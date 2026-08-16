@@ -1,6 +1,7 @@
 ﻿using Domain.Entities;
 using Domain.Interfaces;
 using Infrastructure.Database;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories
 {
@@ -13,30 +14,28 @@ namespace Infrastructure.Repositories
             _context = context;
         }
 
-        public IEnumerable<Account> GetAll()
-        {
-            return _context.Accounts.ToList();
-        }
-
-        public Account? GetById(int id)
-        {
-            return _context.Accounts.FirstOrDefault(a => a.Id == id);
-        }
-
         public Account? GetByEmail(string email)
         {
-            return _context.Accounts.FirstOrDefault(a => a.Email == email);
+            return _context.Accounts
+                .Include(a => a.Employee)
+                .FirstOrDefault(a => a.Email == email);
+        }
+
+        public bool EmailExists(string email)
+        {
+            return _context.Accounts
+                .Any(a => a.Email == email);
+        }
+
+        public bool EmployeeExists(int employeeId)
+        {
+            return _context.Employees
+                .Any(e => e.Id == employeeId);
         }
 
         public void Add(Account account)
         {
             _context.Accounts.Add(account);
-            _context.SaveChanges();
-        }
-
-        public void Update(Account account)
-        {
-            _context.Accounts.Update(account);
             _context.SaveChanges();
         }
 

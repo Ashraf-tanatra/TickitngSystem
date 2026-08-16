@@ -87,6 +87,18 @@ namespace Controller
             return Ok(tickets);
         }
 
+        // GET: api/Project/5/tickets/10
+        [HttpGet("{projectId}/tickets/{ticketId}")]
+        public ActionResult<TicketResponse> GetTicket(int projectId, int ticketId)
+        {
+            var ticket = _projectManager.GetTicket(projectId, ticketId);
+
+            if (ticket == null)
+                return NotFound();
+
+            return Ok(ticket);
+        }
+
         // DELETE: api/Project/5
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)

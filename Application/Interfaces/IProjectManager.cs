@@ -19,5 +19,7 @@ namespace Domain.EntityManager
         IEnumerable<EmployeeResponse> GetEmployees(int projectId);
 
         IEnumerable<TicketResponse> GetTickets(int projectId);
+
+        TicketResponse? GetTicket(int projectId , int TicketId);
     }
 }
