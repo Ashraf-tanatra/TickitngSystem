@@ -1,6 +1,5 @@
-﻿using ApplicationServices.DTOs;
+﻿using ApplicationServices.DTOs.Account;
 using ApplicationServices.Interfaces;
-using Domain.Entities;
 using Domain.Interfaces;
 
 namespace ApplicationServices.Services

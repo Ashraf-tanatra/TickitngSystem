@@ -1,10 +1,11 @@
-﻿using ApplicationServices.DTOs;
+﻿using ApplicationServices.DTOs.Employee;
+using ApplicationServices.DTOs.Project;
 using ApplicationServices.Interfaces;
 using Domain.Entities;
 using Domain.Enum;
 using Domain.Interfaces;
 
-namespace Domain.EntityManager
+namespace ApplicationServices.Services
 {
     public class EmployeeManager : IEmployeeManager
     {
@@ -139,7 +140,7 @@ namespace Domain.EntityManager
             };
         }
 
-        public EmployeeResponse? Update(int id , UpdateEmployeeRequest request)
+        public EmployeeResponse? Update(int id, UpdateEmployeeRequest request)
         {
             // 1. Validate request
             if (request == null)
@@ -164,8 +165,8 @@ namespace Domain.EntityManager
 
             // 4. Check if phone belongs to another employee
             if (_EmployeeRepository.ExistsByPhoneExcept(request.Phone, id))
-            {  
-                throw new InvalidOperationException( "This phone number is already in use.");
+            {
+                throw new InvalidOperationException("This phone number is already in use.");
             }
 
 
@@ -213,6 +214,6 @@ namespace Domain.EntityManager
             });
         }
 
-       
+
     }
 }

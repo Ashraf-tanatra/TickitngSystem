@@ -1,5 +1,5 @@
-﻿using ApplicationServices.DTOs;
-using Domain.EntityManager;
+﻿using ApplicationServices.DTOs.Ticket;
+using ApplicationServices.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Controller

@@ -6,16 +6,16 @@
 ////using Microsoft.EntityFrameworkCore;
 ////using Microsoft.Extensions.Configuration;
 
-//using Infrastructure.Database.Data;
-
-
-//DataSeeder.RecreateCleanDatabase();
-//DataSeeder.PopulateDatabase();
-
-
-using Domain.Interfaces;
 using Infrastructure;
-using Infrastructure.Repositories;
+
+
+DataSeeder.RecreateCleanDatabase();
+DataSeeder.PopulateDatabase();
+
+
+//using Domain.Interfaces;
+//using Infrastructure;
+//using Infrastructure.Repositories;
 
 //var configuration = new ConfigurationBuilder()
 //    .SetBasePath(Directory.GetCurrentDirectory())
@@ -28,22 +28,22 @@ using Infrastructure.Repositories;
 //    .UseSqlServer(connectionString)
 //    .Options;
 
-using var context = new AppDbContext();
+//using var context = new AppDbContext();
 
-IEmployeeRepository repository = new EmployeeRepository(context);
+//IEmployeeRepository repository = new EmployeeRepository(context);
 
 
-// Test GetAll
-Console.WriteLine("===== ALL EMPLOYEES =====");
+//// Test GetAll
+//Console.WriteLine("===== ALL EMPLOYEES =====");
 
-var employees = repository.GetAll();
+//var employees = repository.GetAll();
 
-foreach (var employee in employees)
-{
-    Console.WriteLine(
-        $"{employee.Id} - {employee.FName} {employee.LName}"
-    );
-}
+//foreach (var employee in employees)
+//{
+//    Console.WriteLine(
+//        $"{employee.Id} - {employee.FName} {employee.LName}"
+//    );
+//}
 //using Microsoft.Extensions.Configuration;
 //using Infrastructure.Database;
 //using Microsoft.EntityFrameworkCore;

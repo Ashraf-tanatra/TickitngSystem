@@ -1,9 +1,8 @@
-﻿using ApplicationServices.DTOs;
+﻿using ApplicationServices.DTOs.Account;
 using ApplicationServices.Interfaces;
-using Domain.Entities;
 using Domain.Interfaces;
 
-namespace ApplicationServices.Managers
+namespace ApplicationServices.Services
 {
     public class AccountManager : IAccountManager
     {

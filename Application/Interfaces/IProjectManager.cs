@@ -1,6 +1,7 @@
-﻿using ApplicationServices.DTOs;
+﻿using ApplicationServices.DTOs.Project;
+using ApplicationServices.DTOs.Ticket;
 
-namespace Domain.EntityManager
+namespace ApplicationServices.Interfaces
 {
     public interface IProjectManager
     {

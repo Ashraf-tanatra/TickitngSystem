@@ -1,4 +1,6 @@
-﻿public class EmployeeResponse
+﻿using Domain.Enum;
+
+public class EmployeeResponse
 {
     public int Id { get; set; }
 
@@ -8,7 +10,7 @@
 
     public string Phone { get; set; } = string.Empty;
 
-    public char Gender { get; set; } 
+    public Gender Gender { get; set; }
 
     public string Role { get; set; } = string.Empty;
 

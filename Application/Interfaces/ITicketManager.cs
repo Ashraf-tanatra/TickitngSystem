@@ -1,6 +1,6 @@
-﻿using ApplicationServices.DTOs;
+﻿using ApplicationServices.DTOs.Ticket;
 
-namespace Domain.EntityManager
+namespace ApplicationServices.Interfaces
 {
     public interface ITicketManager
     {

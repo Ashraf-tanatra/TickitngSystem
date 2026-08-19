@@ -1,5 +1,5 @@
 using ApplicationServices.Interfaces;
-using Domain.EntityManager;
+using ApplicationServices.Services;
 using Domain.Interfaces;
 using Infrastructure;
 using Infrastructure.Repositories;

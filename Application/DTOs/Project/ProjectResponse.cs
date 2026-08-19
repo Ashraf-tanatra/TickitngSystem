@@ -1,4 +1,4 @@
-﻿namespace ApplicationServices.DTOs
+﻿namespace ApplicationServices.DTOs.Project
 {
     public class ProjectResponse
     {

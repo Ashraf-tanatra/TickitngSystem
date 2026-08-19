@@ -1,4 +1,6 @@
-﻿namespace ApplicationServices.DTOs;
+﻿using Domain.Enum;
+
+namespace ApplicationServices.DTOs.Employee;
 
 public class CreateEmployeeRequest
 {
@@ -8,7 +10,7 @@ public class CreateEmployeeRequest
 
     public string Phone { get; set; } = string.Empty;
 
-    public char Gender { get; set; } 
+    public Gender Gender { get; set; }
 
     public int RoleId { get; set; }
 

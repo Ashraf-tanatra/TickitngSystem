@@ -1,7 +1,7 @@
 ﻿using Domain.Entities;
 using Domain.Enum;
 
-namespace Infrastructure.Database.Data
+namespace Infrastructure
 {
     public static class DataSeeder
     {
@@ -48,9 +48,9 @@ namespace Infrastructure.Database.Data
         }
         public static List<Employee> LoadEmployee() => new()
         {
-        new Employee { FName = "John", LName = "Smith", Gender = 'M', Phone = "555-0101", IsDeleted = false },
-        new Employee { FName = "Sarah",LName = "Johnson",Gender = 'F',Phone = "555-0102",IsDeleted = false},
-        new Employee { FName = "Michael",LName = "Brown",Gender = 'M',Phone = "555-0103",IsDeleted = false}
+        new Employee { FName = "John", LName = "Smith", Gender = Gender.M, Phone = "555-0101", IsDeleted = false },
+        new Employee { FName = "Sarah",LName = "Johnson",Gender = Gender.F,Phone = "555-0102",IsDeleted = false},
+        new Employee { FName = "Michael",LName = "Brown",Gender = Gender.M,Phone = "555-0103",IsDeleted = false}
         };
 
         public static List<Account> loadAccounts() => new()

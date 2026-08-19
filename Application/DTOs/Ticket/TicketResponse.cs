@@ -1,4 +1,4 @@
-﻿namespace ApplicationServices.DTOs
+﻿namespace ApplicationServices.DTOs.Ticket
 {
     public class TicketResponse
     {
