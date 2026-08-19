@@ -27,7 +27,6 @@ namespace ApplicationServices.Services
                 LName = employee.LName,
                 Phone = employee.Phone,
                 Gender = employee.Gender,
-                Role = employee.Role.ToString(),
                 IsDeleted = employee.IsDeleted
             });
         }
@@ -94,12 +93,12 @@ namespace ApplicationServices.Services
                     "The specified Project Manager does not exist.");
             }
 
-            if (!_projectRepository.IsManager(
-                    request.ProjectManagerId))
-            {
-                throw new ArgumentException(
-                    "The specified employee is not a Project Manager.");
-            }
+            //if (!_projectRepository.IsManager(
+            //        request.ProjectManagerId))
+            //{
+            //    throw new ArgumentException(
+            //        "The specified employee is not a Project Manager.");
+            //}
 
             var project = new Project
             {
@@ -138,12 +137,12 @@ namespace ApplicationServices.Services
                     "The specified Project Manager does not exist.");
             }
 
-            if (!_projectRepository.IsManager(
-                    request.ProjectManagerId))
-            {
-                throw new ArgumentException(
-                    "The specified employee is not a Project Manager.");
-            }
+            //if (!_projectRepository.IsManager(
+            //        request.ProjectManagerId))
+            //{
+            //    throw new ArgumentException(
+            //        "The specified employee is not a Project Manager.");
+            //}
 
             project.ProjectName = request.ProjectName;
             project.ProjectDescription = request.ProjectDescription;

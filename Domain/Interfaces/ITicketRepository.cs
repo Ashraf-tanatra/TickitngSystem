@@ -14,8 +14,8 @@ namespace Domain.Interfaces
 
         void Delete(Ticket ticket);
 
-        bool EmployeeExists(int employeeId);
+        bool EmployeeExists(int employeeId); // ?
 
-        bool ProjectExists(int projectId);
+        bool ProjectExists(int projectId); // ?
     }
 }

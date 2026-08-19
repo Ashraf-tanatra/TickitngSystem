@@ -62,14 +62,16 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("FName")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<string>("Gender")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("Gender")
+                        .HasColumnType("int");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
@@ -83,9 +85,6 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
-
-                    b.Property<int>("Role")
-                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -127,6 +126,9 @@ namespace Infrastructure.Migrations
                     b.Property<int>("EmployeeId")
                         .HasColumnType("int");
 
+                    b.Property<int>("Role")
+                        .HasColumnType("int");
+
                     b.HasKey("ProjectId", "EmployeeId");
 
                     b.HasIndex("EmployeeId");
@@ -142,11 +144,14 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TicketId"));
 
+                    b.Property<string>("AttachmentURL")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("CreatedTime")
                         .HasColumnType("datetime");
 
                     b.Property<string>("Description")
-                        .HasMaxLength(255)
+                        .HasMaxLength(2500)
                         .HasColumnType("varchar");
 
                     b.Property<DateTime?>("DueTo")
@@ -183,6 +188,52 @@ namespace Infrastructure.Migrations
                     b.HasIndex("TicketCreatedById");
 
                     b.ToTable("Tickets", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.TicketHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ActionByEmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("FromEmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("NewValue")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OldValue")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TicketId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ToEmployeeId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActionByEmployeeId");
+
+                    b.HasIndex("FromEmployeeId");
+
+                    b.HasIndex("TicketId");
+
+                    b.HasIndex("ToEmployeeId");
+
+                    b.ToTable("TicketHistories");
                 });
 
             modelBuilder.Entity("Account", b =>
@@ -253,12 +304,47 @@ namespace Infrastructure.Migrations
                     b.Navigation("TicketCreatedBy");
                 });
 
+            modelBuilder.Entity("Domain.Entities.TicketHistory", b =>
+                {
+                    b.HasOne("Domain.Entities.Employee", "ActionByEmployee")
+                        .WithMany()
+                        .HasForeignKey("ActionByEmployeeId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Employee", "FromEmployee")
+                        .WithMany()
+                        .HasForeignKey("FromEmployeeId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Domain.Entities.Ticket", "Ticket")
+                        .WithMany("TicketHistories")
+                        .HasForeignKey("TicketId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Employee", "ToEmployee")
+                        .WithMany("TicketHistories")
+                        .HasForeignKey("ToEmployeeId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("ActionByEmployee");
+
+                    b.Navigation("FromEmployee");
+
+                    b.Navigation("Ticket");
+
+                    b.Navigation("ToEmployee");
+                });
+
             modelBuilder.Entity("Domain.Entities.Employee", b =>
                 {
                     b.Navigation("Account")
                         .IsRequired();
 
                     b.Navigation("ProjectEmployees");
+
+                    b.Navigation("TicketHistories");
 
                     b.Navigation("Tickets");
                 });
@@ -268,6 +354,11 @@ namespace Infrastructure.Migrations
                     b.Navigation("ProjectEmployees");
 
                     b.Navigation("ProjectTickets");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Ticket", b =>
+                {
+                    b.Navigation("TicketHistories");
                 });
 #pragma warning restore 612, 618
         }

@@ -23,20 +23,25 @@ namespace Domain.Entities
         public Employee TicketCreatedBy { get; set; }
 
         public required int ProjectId { get; set; }
-
-        //public Employee TicketCreatedBy { get; set; }
         public Project Project { get; set; }
+        public ICollection<TicketHistory> TicketHistories { get; set; } = new List<TicketHistory>();
 
         // Used by Employee and project manager
         public void SetAsOnProgress() => TicketStatus = TicketStatus.InProgress;
         public void TicketCompleted() => TicketStatus = TicketStatus.Completed;
         public void TicketCancelled() => TicketStatus = TicketStatus.Cancelled;
         public void TicketDone() => TicketStatus = TicketStatus.Done;
+        public void TicketReOpened() => TicketStatus = TicketStatus.Reopened;
 
         // Used by Project Manager only
         public void SetPriorityToHigh() => Priority = TicketPriority.High;
         public void SetPriorityToLow() => Priority = TicketPriority.Low;
         public void SetPriorityToMedium() => Priority = TicketPriority.Medium;
 
+        public override string ToString()
+        {
+            return $"{TicketId} Ticket Title: {TicketTitle} Created On: {CreatedTime}\n" +
+                   $"Ticket Status: {TicketStatus}";
+        }
     }
 }

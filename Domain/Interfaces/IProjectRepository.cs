@@ -14,9 +14,9 @@ namespace Domain.Interfaces
 
         void Delete(Project project);
 
-        bool EmployeeExists(int employeeId);
+        bool EmployeeExists(int employeeId); // ?
 
-        bool IsManager(int employeeId);
+        //bool IsManager(int employeeId); // ?
         IEnumerable<Employee> GetEmployees(int projectId);
         IEnumerable<Ticket> GetTickets(int projectId);
     }

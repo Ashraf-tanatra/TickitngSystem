@@ -12,7 +12,7 @@ namespace Domain.Interfaces
 
         ProjectEmployee? Get(int projectId, int employeeId);
 
-        bool Exists(int projectId, int employeeId);
+        bool Exists(int projectId, int employeeId); // ?
 
         void Add(ProjectEmployee projectEmployee);
 

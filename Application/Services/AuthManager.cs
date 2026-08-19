@@ -86,8 +86,7 @@ namespace ApplicationServices.Services
             return new LoginResponse
             {
                 EmployeeId = account.EmployeeId,
-                Email = account.Email,
-                Role = account.Employee.Role.ToString()
+                Email = account.Email
             };
         }
     }

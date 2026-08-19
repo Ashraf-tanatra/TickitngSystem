@@ -2,7 +2,6 @@
 using ApplicationServices.DTOs.Project;
 using ApplicationServices.Interfaces;
 using Domain.Entities;
-using Domain.Enum;
 using Domain.Interfaces;
 
 namespace ApplicationServices.Services
@@ -66,9 +65,7 @@ namespace ApplicationServices.Services
                 FName = request.FName,
                 LName = request.LName,
                 Phone = request.Phone,
-                Gender = request.Gender,
-                Role = EmployeeRole.Employee,
-                Account = account
+                Gender = request.Gender
             };
 
 
@@ -84,7 +81,6 @@ namespace ApplicationServices.Services
                 LName = employee.LName,
                 Phone = employee.Phone,
                 Gender = employee.Gender,
-                Role = employee.Role.ToString(),
                 IsDeleted = employee.IsDeleted
             };
         }
@@ -116,7 +112,6 @@ namespace ApplicationServices.Services
                 LName = employee.LName,
                 Phone = employee.Phone,
                 Gender = employee.Gender,
-                Role = employee.Role.ToString(),
                 IsDeleted = employee.IsDeleted
             });
         }
@@ -135,7 +130,6 @@ namespace ApplicationServices.Services
                 LName = employee.LName,
                 Phone = employee.Phone,
                 Gender = employee.Gender,
-                Role = employee.Role.ToString(),
                 IsDeleted = employee.IsDeleted
             };
         }
@@ -189,7 +183,6 @@ namespace ApplicationServices.Services
                 LName = employee.LName,
                 Phone = employee.Phone,
                 Gender = employee.Gender,
-                Role = employee.Role.ToString(),
                 IsDeleted = employee.IsDeleted
             };
         }

@@ -1,6 +1,4 @@
-﻿using Domain.Entities;
-
-namespace Domain.Interfaces
+﻿namespace Domain.Interfaces
 {
     public interface IAccountRepository
     {
@@ -8,7 +6,7 @@ namespace Domain.Interfaces
 
         bool EmailExists(string email);
 
-        bool EmployeeExists(int employeeId);
+        bool EmployeeExists(int employeeId); //?
 
         void Add(Account account);
 

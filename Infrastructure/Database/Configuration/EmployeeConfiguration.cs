@@ -1,5 +1,4 @@
 ﻿using Domain.Entities;
-using Domain.Enum;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -19,12 +18,6 @@ namespace Infrastructure.Database.Configuration
 
             builder.Property(e => e.Phone)
                    .HasMaxLength(10);
-
-            builder.Property(x => x.Gender)
-                   .HasConversion(
-                       x => x.ToString(),
-                       x => (Gender)Enum.Parse(
-                           typeof(Gender), x));
         }
     }
 }

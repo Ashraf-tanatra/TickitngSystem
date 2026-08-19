@@ -2,13 +2,13 @@
 {
     public class Project
     {
-        public  int Id { get; set; }
+        public int Id { get; set; }
 
         public required string ProjectName { get; set; }
 
         public string? ProjectDescription { get; set; }
 
-        public int ProjectManagerId { get;  set; }
+        public int ProjectManagerId { get; set; }
 
         public Employee? ProjectManager { get; private set; }
 

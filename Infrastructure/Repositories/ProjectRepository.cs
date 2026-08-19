@@ -1,7 +1,5 @@
 ﻿using Domain.Entities;
-using Domain.Enum;
 using Domain.Interfaces;
-using Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories
@@ -59,12 +57,12 @@ namespace Infrastructure.Repositories
                 .Any(e => e.Id == employeeId);
         }
 
-        public bool IsManager(int employeeId)
-        {
-            return _context.Employees
-                .Any(e => e.Id == employeeId &&
-                         e.Role == EmployeeRole.Manager);
-        }
+        //public bool IsManager(int employeeId)
+        //{
+        //    return _context.Employees
+        //        .Any(e => e.Id == employeeId &&
+        //                 e.Role == EmployeeRole.Manager);
+        //}
 
         public IEnumerable<Employee> GetEmployees(int projectId)
         {
