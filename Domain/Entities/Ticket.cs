@@ -31,12 +31,12 @@ namespace Domain.Entities
         // Status operations
         public void SetAsOnProgress() => TicketStatus = TicketStatus.InProgress;
         public void TicketCompleted()=> TicketStatus = TicketStatus.Completed;
-        public void TicketCancelled()=> TicketStatus = TicketStatus.Cancelled;public void TicketDone()=> TicketStatus = TicketStatus.Done;
+        public void TicketCancelled()=> TicketStatus = TicketStatus.Cancelled;
+        public void TicketDone()=> TicketStatus = TicketStatus.Done;
         // Priority operations
         public void SetPriorityToHigh()=> Priority = TicketPriority.High;
         public void SetPriorityToLow()=> Priority = TicketPriority.Low;
-        public void SetPriorityToMedium()
-            => Priority = TicketPriority.Medium;
+        public void SetPriorityToMedium() => Priority = TicketPriority.Medium;
 
 
         public override string ToString()

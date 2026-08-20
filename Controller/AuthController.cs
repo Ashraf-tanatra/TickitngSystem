@@ -16,14 +16,16 @@ namespace Controller
             _authManager = authManager;
         }
 
-
+        // =========================
         // POST: api/Auth/signup
+        // =========================
         [HttpPost("signup")]
-        public async Task<ActionResult<AccountResponse>> SignUp(SignUpRequest request)
+        public async Task<ActionResult<AccountResponse>> SignUp(
+            [FromBody] SignUpRequest request)
         {
             try
             {
-                var account =await _authManager.SignUp(request);
+                var account = await _authManager.SignUp(request);
 
                 return StatusCode(201, account);
             }
@@ -37,11 +39,12 @@ namespace Controller
             }
         }
 
-
+        // =========================
         // POST: api/Auth/verify-email
+        // =========================
         [HttpPost("verify-email")]
         public ActionResult VerifyEmail(
-            VerifyEmailRequest request)
+            [FromBody] VerifyEmailRequest request)
         {
             try
             {
@@ -66,11 +69,12 @@ namespace Controller
             }
         }
 
-
+        // =========================
         // POST: api/Auth/resend-verification-code
+        // =========================
         [HttpPost("resend-verification-code")]
         public async Task<IActionResult> ResendVerificationCode(
-            ResendVerificationCodeRequest request)
+            [FromBody] ResendVerificationCodeRequest request)
         {
             try
             {
@@ -95,16 +99,16 @@ namespace Controller
             }
         }
 
-
+        // =========================
         // POST: api/Auth/login
+        // =========================
         [HttpPost("login")]
         public ActionResult<LoginResponse> Login(
-            LoginRequest request)
+            [FromBody] LoginRequest request)
         {
             try
             {
-                var response =
-                    _authManager.Login(request);
+                var response = _authManager.Login(request);
 
                 return Ok(response);
             }

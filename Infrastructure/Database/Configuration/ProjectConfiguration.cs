@@ -15,35 +15,28 @@ namespace Infrastructure.Database.Configuration
             builder.Property(p => p.Id)
                    .ValueGeneratedOnAdd();
 
-
             // Project Name
             builder.Property(p => p.ProjectName)
                    .HasColumnType("varchar")
                    .HasMaxLength(125)
                    .IsRequired();
 
-
             // Project Description
             builder.Property(p => p.ProjectDescription)
                    .HasColumnType("varchar")
                    .HasMaxLength(255);
 
-
-            // Project -> ProjectEmployees
-            builder.HasMany(p => p.ProjectEmployees)
-                   .WithOne(pe => pe.Project)
-                   .HasForeignKey(pe => pe.ProjectId)
-                   .OnDelete(DeleteBehavior.Cascade);
-
+            // Project Manager
+            builder.HasOne(p => p.ProjectManager)
+                   .WithMany()
+                   .HasForeignKey(p => p.ProjectManagerId)
+                   .OnDelete(DeleteBehavior.NoAction);
 
             // Project -> Tickets
             builder.HasMany(p => p.ProjectTickets)
                    .WithOne(t => t.Project)
                    .HasForeignKey(t => t.ProjectId)
                    .OnDelete(DeleteBehavior.Restrict);
-
-
-
 
             builder.ToTable("Projects");
         }

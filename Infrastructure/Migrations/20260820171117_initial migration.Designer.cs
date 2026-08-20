@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260819190621_initial")]
-    partial class initial
+    [Migration("20260820171117_initial migration")]
+    partial class initialmigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -33,9 +33,6 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime");
-
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -46,9 +43,6 @@ namespace Infrastructure.Migrations
 
                     b.Property<int>("EmployeeId")
                         .HasColumnType("int");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
@@ -123,12 +117,17 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("varchar");
 
+                    b.Property<int>("ProjectManagerId")
+                        .HasColumnType("int");
+
                     b.Property<string>("ProjectName")
                         .IsRequired()
                         .HasMaxLength(125)
                         .HasColumnType("varchar");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ProjectManagerId");
 
                     b.ToTable("Projects", (string)null);
                 });
@@ -143,7 +142,8 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("Role")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.HasKey("ProjectId", "EmployeeId");
 
@@ -263,18 +263,29 @@ namespace Infrastructure.Migrations
                     b.Navigation("Employee");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Project", b =>
+                {
+                    b.HasOne("Domain.Entities.Employee", "ProjectManager")
+                        .WithMany()
+                        .HasForeignKey("ProjectManagerId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("ProjectManager");
+                });
+
             modelBuilder.Entity("Domain.Entities.ProjectEmployee", b =>
                 {
                     b.HasOne("Domain.Entities.Employee", "Employee")
                         .WithMany("ProjectEmployees")
                         .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("Domain.Entities.Project", "Project")
                         .WithMany("ProjectEmployees")
                         .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Employee");

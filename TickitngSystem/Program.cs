@@ -4,7 +4,6 @@ using Domain.EntityManager;
 using Domain.Interfaces;
 using Infrastructure;
 using Infrastructure.Repositories;
-using Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
@@ -34,8 +33,9 @@ if (string.IsNullOrWhiteSpace(connectionString))
 Console.WriteLine(
     "CONNECTION STRING = " + connectionString);
 
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(connectionString));
+builder.Services.AddDbContext<AppDbContext>(options =>options.UseSqlServer(connectionString));
+builder.Services.AddScoped<IEmailService, EmailService>();
+
 
 
 // ==============================

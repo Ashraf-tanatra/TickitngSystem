@@ -1,5 +1,4 @@
 ﻿using Domain.Entities;
-using Domain.Enum;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -17,28 +16,22 @@ namespace Infrastructure.Database.Configuration
                 pe.EmployeeId
             });
 
-
-            // Project
+            // Project -> ProjectEmployees
             builder.HasOne(pe => pe.Project)
                    .WithMany(p => p.ProjectEmployees)
                    .HasForeignKey(pe => pe.ProjectId)
-                   .OnDelete(DeleteBehavior.Cascade);
+                   .OnDelete(DeleteBehavior.NoAction);
 
-
-            // Employee
+            // Employee -> ProjectEmployees
             builder.HasOne(pe => pe.Employee)
                    .WithMany(e => e.ProjectEmployees)
                    .HasForeignKey(pe => pe.EmployeeId)
-                   .OnDelete(DeleteBehavior.Cascade);
+                   .OnDelete(DeleteBehavior.NoAction);
 
-
-            // Role inside the project
+            // Role
             builder.Property(pe => pe.Role)
-                   .HasConversion(
-                       role => role.ToString(),
-                       role => Enum.Parse<ProjectRole>(role))
+                   .HasMaxLength(20)
                    .IsRequired();
-
 
             builder.ToTable("ProjectEmployees");
         }

@@ -12,10 +12,6 @@ public class Account
 
     public Employee? Employee { get; set; }
 
-    public bool IsDeleted { get; set; } = false;
-
-    public DateTime? DeletedAt { get; set; }
-
     public bool EmailConfirmed { get; set; } = false;
 
     public string? VerificationCode { get; set; }

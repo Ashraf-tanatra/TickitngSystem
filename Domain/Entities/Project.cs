@@ -8,6 +8,9 @@
 
         public string? ProjectDescription { get; set; }
 
+        public Employee ProjectManager { get; set; } = null!;
+
+        public int ProjectManagerId { get; set; }
         // Employees + their roles in this project
         public ICollection<ProjectEmployee> ProjectEmployees { get; set; }
             = new List<ProjectEmployee>();

@@ -13,6 +13,6 @@ namespace Domain.Entities
         public Employee Employee { get; set; } = null!;
 
         // Employee's role in THIS project
-        public ProjectRole Role { get; set; }
+        public string Role { get; set; }
     }
 }

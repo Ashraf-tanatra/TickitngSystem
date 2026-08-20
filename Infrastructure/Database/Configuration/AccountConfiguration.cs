@@ -40,16 +40,6 @@ namespace Infrastructure.Database.Configuration
                    .OnDelete(DeleteBehavior.Cascade);
 
 
-            // Is Deleted
-            builder.Property(a => a.IsDeleted)
-                   .IsRequired();
-
-
-            // Deleted At
-            builder.Property(a => a.DeletedAt)
-                   .HasColumnType("datetime");
-
-
             // Email Confirmed
             builder.Property(a => a.EmailConfirmed)
                    .IsRequired();
