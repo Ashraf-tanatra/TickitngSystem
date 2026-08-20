@@ -1,9 +1,7 @@
 ﻿namespace ApplicationServices.DTOs
 {
-    public class LoginRequest
+    public class ResendVerificationCodeRequest
     {
         public string? Email { get; set; }
-
-        public string? Password { get; set; }
     }
 }

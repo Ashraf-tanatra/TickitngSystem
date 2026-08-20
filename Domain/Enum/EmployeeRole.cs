@@ -1,8 +1,8 @@
 ﻿namespace Domain.Enum
 {
-    public enum EmployeeRole
+    public enum ProjectRole
     {
-        Manager,
-        Employee
+        Employee = 1,
+        Manager = 2
     }
 }

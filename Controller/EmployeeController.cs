@@ -1,6 +1,5 @@
 ﻿using ApplicationServices.DTOs;
 using ApplicationServices.Interfaces;
-using Domain.EntityManager;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Controller
@@ -11,11 +10,11 @@ namespace Controller
     {
         private readonly IEmployeeManager _employeeManager;
 
-        public EmployeeController(IEmployeeManager employeeManager )
+        public EmployeeController(IEmployeeManager employeeManager)
         {
             _employeeManager = employeeManager;
-
         }
+
 
         // GET: api/Employee
         [HttpGet]
@@ -25,6 +24,7 @@ namespace Controller
 
             return Ok(employees);
         }
+
 
         // GET: api/Employee/5
         [HttpGet("{id}")]
@@ -38,38 +38,51 @@ namespace Controller
             return Ok(employee);
         }
 
+
+        // GET: api/Employee/5/projects
         [HttpGet("{id}/projects")]
-        public ActionResult<IEnumerable<ProjectResponse>> GetProjects(int id)
+        public ActionResult<IEnumerable<ProjectResponse>> GetProjects(
+            int id)
         {
-            var projects = _employeeManager.GetProjects(id);
+            try
+            {
+                var projects = _employeeManager.GetProjects(id);
 
-            return Ok(projects);
-        
+                return Ok(projects);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
         }
 
-        // POST: api/Employee
-        [HttpPost]
-        public ActionResult<EmployeeResponse> Create( CreateEmployeeRequest request)
-        {
-            var employee = _employeeManager.Create(request);
-
-            return CreatedAtAction(
-                nameof(GetById),
-                new { id = employee.Id },
-                employee);
-        }
 
         // PUT: api/Employee/5
         [HttpPut("{id}")]
-        public ActionResult<EmployeeResponse> Update(int id,UpdateEmployeeRequest request)
+        public ActionResult<EmployeeResponse> Update(
+            int id,
+            UpdateEmployeeRequest request)
         {
-            var employee = _employeeManager.Update(id, request);
+            try
+            {
+                var employee =
+                    _employeeManager.Update(id, request);
 
-            if (employee == null)
-                return NotFound();
+                if (employee == null)
+                    return NotFound();
 
-            return Ok(employee);
+                return Ok(employee);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ex.Message);
+            }
         }
+
 
         // DELETE: api/Employee/5
         [HttpDelete("{id}")]
@@ -82,6 +95,5 @@ namespace Controller
 
             return NoContent();
         }
-
     }
 }

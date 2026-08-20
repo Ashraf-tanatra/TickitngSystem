@@ -5,7 +5,7 @@ namespace ApplicationServices.Interfaces
 {
     public interface IEmployeeManager
     {
-        EmployeeResponse Create(CreateEmployeeRequest request);
+        //EmployeeResponse Create(CreateEmployeeRequest request);
 
         EmployeeResponse? GetById(int id);
 
@@ -16,7 +16,7 @@ namespace ApplicationServices.Interfaces
             UpdateEmployeeRequest request);
 
         bool Delete(int id);
-        IEnumerable<ProjectResponse> GetProjects(int employeeId);
+        IEnumerable<EmployeeProjectResponse> GetProjects(int employeeId);
 
 
 

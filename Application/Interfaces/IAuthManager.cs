@@ -1,11 +1,20 @@
 ﻿using ApplicationServices.DTOs;
+using ApplicationServices.DTOs.ApplicationServices.DTOs;
 
 namespace ApplicationServices.Interfaces
 {
     public interface IAuthManager
     {
-        AccountResponse SignUp(SignUpRequest request);
+        Task<AccountResponse> SignUp(
+            SignUpRequest request);
 
-        LoginResponse Login(LoginRequest request);
+        LoginResponse Login(
+            LoginRequest request);
+
+        void VerifyEmail(
+            VerifyEmailRequest request);
+
+        Task ResendVerificationCode(
+            ResendVerificationCodeRequest request);
     }
 }

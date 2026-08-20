@@ -10,71 +10,79 @@ namespace Infrastructure.Database.Configuration
         public void Configure(EntityTypeBuilder<Ticket> builder)
         {
             // Primary Key
-            builder.HasKey(x => x.TicketId);
+            builder.HasKey(t => t.TicketId);
 
-            builder.Property(x => x.TicketId)
+            builder.Property(t => t.TicketId)
                    .ValueGeneratedOnAdd();
 
 
-            // Title
-            builder.Property(x => x.TicketTitle)
+            // Ticket Title
+            builder.Property(t => t.TicketTitle)
                    .HasColumnType("varchar")
-                   .HasMaxLength(20)
+                   .HasMaxLength(100)
                    .IsRequired();
 
 
-            // Priority
-            builder.Property(x => x.Priority)
-                   .HasConversion(
-                       x => x.ToString(),
-                       x => (TicketPriority)Enum.Parse(
-                           typeof(TicketPriority), x));
-
-
-            // Status
-            builder.Property(x => x.TicketStatus)
-                   .HasConversion(
-                       x => x.ToString(),
-                       x => (TicketStatus)Enum.Parse(
-                           typeof(TicketStatus), x));
-
-
             // Due Date
-            builder.Property(x => x.DueTo)
-                   .HasColumnType("date");
-
-
-            // Created Time
-            builder.Property(x => x.CreatedTime)
+            builder.Property(t => t.DueTo)
                    .HasColumnType("datetime");
 
 
+            // Created Time
+            builder.Property(t => t.CreatedTime)
+                   .HasColumnType("datetime")
+                   .IsRequired();
+
+
+            // Ticket Status
+            builder.Property(t => t.TicketStatus)
+                   .HasConversion(
+                       status => status.ToString(),
+                       status => Enum.Parse<TicketStatus>(status))
+                   .IsRequired();
+
+
+            // Ticket Priority
+            builder.Property(t => t.Priority)
+                   .HasConversion(
+                       priority => priority.ToString(),
+                       priority => Enum.Parse<TicketPriority>(priority))
+                   .IsRequired();
+
+
             // Description
-            builder.Property(x => x.Description)
+            builder.Property(t => t.Description)
                    .HasColumnType("varchar")
                    .HasMaxLength(255);
 
 
-            // Assigned Employee
-            builder.HasOne(x => x.Employee)
+            // Current Assigned Employee
+            builder.HasOne(t => t.Employee)
                    .WithMany(e => e.Tickets)
-                   .HasForeignKey(x => x.EmployeeId)
+                   .HasForeignKey(t => t.EmployeeId)
                    .OnDelete(DeleteBehavior.Restrict);
 
 
-            // Ticket Created By
-            builder.HasOne(x => x.TicketCreatedBy)
+            // Employee Who Created The Ticket
+            builder.HasOne(t => t.TicketCreatedBy)
                    .WithMany()
-                   .HasForeignKey(x => x.TicketCreatedById)
+                   .HasForeignKey(t => t.TicketCreatedById)
                    .OnDelete(DeleteBehavior.Restrict);
 
 
             // Project
-            builder.HasOne(x => x.Project)
+            builder.HasOne(t => t.Project)
                    .WithMany(p => p.ProjectTickets)
-                   .HasForeignKey(x => x.ProjectId)
+                   .HasForeignKey(t => t.ProjectId)
                    .IsRequired()
                    .OnDelete(DeleteBehavior.Restrict);
+
+
+            // Ticket History
+            builder.HasMany(t => t.TicketHistories)
+                   .WithOne(h => h.Ticket)
+                   .HasForeignKey(h => h.TicketId)
+                   .OnDelete(DeleteBehavior.Cascade);
 
 
             builder.ToTable("Tickets");

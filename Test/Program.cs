@@ -1,142 +1,143 @@
 ﻿
+////using Domain.Interfaces;
+//////using Infrastructure;
+//////using Infrastructure.Database;
+//////using Infrastructure.Repositories;
+//////using Microsoft.EntityFrameworkCore;
+//////using Microsoft.Extensions.Configuration;
+
+////using Infrastructure.Database.Data;
+Console.WriteLine("");
+
+
+////DataSeeder.RecreateCleanDatabase();
+////DataSeeder.PopulateDatabase();
+
+
 //using Domain.Interfaces;
-////using Infrastructure;
+//using Infrastructure;
+//using Infrastructure.Repositories;
+
+////var configuration = new ConfigurationBuilder()
+////    .SetBasePath(Directory.GetCurrentDirectory())
+////    .AddJsonFile("appsettings.json")
+////    .Build();
+
+////var connectionString = configuration["constr"];
+
+////var options = new DbContextOptionsBuilder<AppDbContext>()
+////    .UseSqlServer(connectionString)
+////    .Options;
+
+//using var context = new AppDbContext();
+
+//IEmployeeRepository repository = new EmployeeRepository(context);
+
+
+//// Test GetAll
+//Console.WriteLine("===== ALL EMPLOYEES =====");
+
+//var employees = repository.GetAll();
+
+//foreach (var employee in employees)
+//{
+//    Console.WriteLine(
+//        $"{employee.Id} - {employee.FName} {employee.LName}"
+//    );
+//}
+////using Microsoft.Extensions.Configuration;
 ////using Infrastructure.Database;
-////using Infrastructure.Repositories;
 ////using Microsoft.EntityFrameworkCore;
 ////using Microsoft.Extensions.Configuration;
-
-//using Infrastructure.Database.Data;
-
-
-//DataSeeder.RecreateCleanDatabase();
-//DataSeeder.PopulateDatabase();
+////using Infrastructure;
 
 
-using Domain.Interfaces;
-using Infrastructure;
-using Infrastructure.Repositories;
+////internal class Program
+////{
+////    private static void Main(string[] args)
+////    {
+////        using var context = new AppDbContext();
 
-//var configuration = new ConfigurationBuilder()
-//    .SetBasePath(Directory.GetCurrentDirectory())
-//    .AddJsonFile("appsettings.json")
-//    .Build();
-
-//var connectionString = configuration["constr"];
-
-//var options = new DbContextOptionsBuilder<AppDbContext>()
-//    .UseSqlServer(connectionString)
-//    .Options;
-
-using var context = new AppDbContext();
-
-IEmployeeRepository repository = new EmployeeRepository(context);
+////        Console.WriteLine("Connected to database!");
 
 
-// Test GetAll
-Console.WriteLine("===== ALL EMPLOYEES =====");
+////        // ==============================
+////        // Test Employees
+////        // ==============================
 
-var employees = repository.GetAll();
+////        Console.WriteLine("\n===== EMPLOYEES =====");
 
-foreach (var employee in employees)
-{
-    Console.WriteLine(
-        $"{employee.Id} - {employee.FName} {employee.LName}"
-    );
-}
-//using Microsoft.Extensions.Configuration;
-//using Infrastructure.Database;
-//using Microsoft.EntityFrameworkCore;
-//using Microsoft.Extensions.Configuration;
-//using Infrastructure;
+////        var employees = context.Employees.ToList();
 
-
-//internal class Program
-//{
-//    private static void Main(string[] args)
-//    {
-//        using var context = new AppDbContext();
-
-//        Console.WriteLine("Connected to database!");
+////        foreach (var employee in employees)
+////        {
+////            Console.WriteLine(
+////                $"ID: {employee.Id} | " +
+////                $"Name: {employee.FName} {employee.LName} | " +
+////                $"Phone: {employee.Phone}"
+////            );
+////        }
 
 
-//        // ==============================
-//        // Test Employees
-//        // ==============================
+////        // ==============================
+////        // Test Projects
+////        // ==============================
 
-//        Console.WriteLine("\n===== EMPLOYEES =====");
+////        Console.WriteLine("\n===== PROJECTS =====");
 
-//        var employees = context.Employees.ToList();
+////        var projects = context.Projects
+////            .Include(p => p.ProjectManager)
+////            .ToList();
 
-//        foreach (var employee in employees)
-//        {
-//            Console.WriteLine(
-//                $"ID: {employee.Id} | " +
-//                $"Name: {employee.FName} {employee.LName} | " +
-//                $"Phone: {employee.Phone}"
-//            );
-//        }
-
-
-//        // ==============================
-//        // Test Projects
-//        // ==============================
-
-//        Console.WriteLine("\n===== PROJECTS =====");
-
-//        var projects = context.Projects
-//            .Include(p => p.ProjectManager)
-//            .ToList();
-
-//        foreach (var project in projects)
-//        {
-//            Console.WriteLine(
-//                $"Project ID: {project.Id} | " +
-//                $"Name: {project.ProjectName} | " +
-//                $"Manager: {project.ProjectManager?.FName}"
-//            );
-//        }
+////        foreach (var project in projects)
+////        {
+////            Console.WriteLine(
+////                $"Project ID: {project.Id} | " +
+////                $"Name: {project.ProjectName} | " +
+////                $"Manager: {project.ProjectManager?.FName}"
+////            );
+////        }
 
 
-//        // ==============================
-//        // Test Tickets
-//        // ==============================
+////        // ==============================
+////        // Test Tickets
+////        // ==============================
 
-//        Console.WriteLine("\n===== TICKETS =====");
+////        Console.WriteLine("\n===== TICKETS =====");
 
-//        var tickets = context.Tickets
-//            .Include(t => t.Employee)
-//            .Include(t => t.Project)
-//            .ToList();
+////        var tickets = context.Tickets
+////            .Include(t => t.Employee)
+////            .Include(t => t.Project)
+////            .ToList();
 
-//        foreach (var ticket in tickets)
-//        {
-//            Console.WriteLine(
-//                $"Ticket ID: {ticket.TicketId} | " +
-//                $"Title: {ticket.TicketTitle} | " +
-//                $"Employee: {ticket.Employee?.FName} | " +
-//                $"Project: {ticket.Project?.ProjectName}"
-//            );
-//        }
+////        foreach (var ticket in tickets)
+////        {
+////            Console.WriteLine(
+////                $"Ticket ID: {ticket.TicketId} | " +
+////                $"Title: {ticket.TicketTitle} | " +
+////                $"Employee: {ticket.Employee?.FName} | " +
+////                $"Project: {ticket.Project?.ProjectName}"
+////            );
+////        }
 
 
-//        // ==============================
-//        // Test Project Employees
-//        // ==============================
+////        // ==============================
+////        // Test Project Employees
+////        // ==============================
 
-//        Console.WriteLine("\n===== PROJECT EMPLOYEES =====");
+////        Console.WriteLine("\n===== PROJECT EMPLOYEES =====");
 
-//        var projectEmployees = context.ProjectEmployees
-//            .Include(pe => pe.Project)
-//            .Include(pe => pe.Employee)
-//            .ToList();
+////        var projectEmployees = context.ProjectEmployees
+////            .Include(pe => pe.Project)
+////            .Include(pe => pe.Employee)
+////            .ToList();
 
-//        foreach (var pe in projectEmployees)
-//        {
-//            Console.WriteLine(
-//                $"Project: {pe.Project.ProjectName} | " +
-//                $"Employee: {pe.Employee.FName} {pe.Employee.LName}"
-//            );
-//        }
-//    }
-//}
+////        foreach (var pe in projectEmployees)
+////        {
+////            Console.WriteLine(
+////                $"Project: {pe.Project.ProjectName} | " +
+////                $"Employee: {pe.Employee.FName} {pe.Employee.LName}"
+////            );
+////        }
+////    }
+////}

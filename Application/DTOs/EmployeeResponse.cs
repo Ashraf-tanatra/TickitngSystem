@@ -1,16 +1,16 @@
-﻿public class EmployeeResponse
+﻿using Domain.Enum;
+
+public class EmployeeResponse
 {
     public int Id { get; set; }
 
-    public string FName { get; set; } = string.Empty;
+    public string FName { get; set; } = null;
 
-    public string LName { get; set; } = string.Empty;
+    public string LName { get; set; } = null;
 
-    public string Phone { get; set; } = string.Empty;
+    public string Phone { get; set; } = null;
 
-    public char Gender { get; set; } 
-
-    public string Role { get; set; } = string.Empty;
+    public Gender Gender { get; set; }
 
     public bool IsDeleted { get; set; }
 }

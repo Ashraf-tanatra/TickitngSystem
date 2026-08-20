@@ -1,16 +1,15 @@
-﻿namespace ApplicationServices.DTOs;
+﻿using Domain.Enum;
 
-public class UpdateEmployeeRequest
+namespace ApplicationServices.DTOs
 {
-    public string FName { get; set; } = string.Empty;
+    public class UpdateEmployeeRequest
+    {
+        public string? FName { get; set; }
 
-    public string LName { get; set; } = string.Empty;
+        public string? LName { get; set; }
 
-    public string Phone { get; set; } = string.Empty;
+        public string? Phone { get; set; }
 
-    public char Gender { get; set; } 
-
-    public int RoleId { get; set; }
-
-    public bool IsAvailable { get; set; }
+        public Gender Gender { get; set; }
+    }
 }

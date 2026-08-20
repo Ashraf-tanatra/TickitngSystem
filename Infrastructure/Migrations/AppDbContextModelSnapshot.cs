@@ -30,18 +30,34 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasColumnType("varchar");
+
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("bit");
 
                     b.Property<int>("EmployeeId")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasColumnType("varchar");
+
+                    b.Property<string>("VerificationCode")
+                        .HasMaxLength(6)
+                        .HasColumnType("varchar");
+
+                    b.Property<DateTime?>("VerificationCodeExpiresAt")
+                        .HasColumnType("datetime");
 
                     b.HasKey("Id");
 
@@ -51,7 +67,7 @@ namespace Infrastructure.Migrations
                     b.HasIndex("EmployeeId")
                         .IsUnique();
 
-                    b.ToTable("Accounts");
+                    b.ToTable("Accounts", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.Employee", b =>
@@ -62,6 +78,9 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("FName")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -69,7 +88,7 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("Gender")
                         .IsRequired()
-                        .HasColumnType("nvarchar(1)");
+                        .HasColumnType("char(1)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
@@ -84,12 +103,9 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
 
-                    b.Property<int>("Role")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
-                    b.ToTable("Employees");
+                    b.ToTable("Employees", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.Project", b =>
@@ -104,17 +120,12 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("varchar");
 
-                    b.Property<int>("ProjectManagerId")
-                        .HasColumnType("int");
-
                     b.Property<string>("ProjectName")
                         .IsRequired()
                         .HasMaxLength(125)
                         .HasColumnType("varchar");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ProjectManagerId");
 
                     b.ToTable("Projects", (string)null);
                 });
@@ -126,6 +137,10 @@ namespace Infrastructure.Migrations
 
                     b.Property<int>("EmployeeId")
                         .HasColumnType("int");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("ProjectId", "EmployeeId");
 
@@ -143,14 +158,14 @@ namespace Infrastructure.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TicketId"));
 
                     b.Property<DateTime>("CreatedTime")
-                        .HasColumnType("Date");
+                        .HasColumnType("datetime");
 
                     b.Property<string>("Description")
                         .HasMaxLength(255)
                         .HasColumnType("varchar");
 
                     b.Property<DateTime?>("DueTo")
-                        .HasColumnType("Date");
+                        .HasColumnType("datetime");
 
                     b.Property<int>("EmployeeId")
                         .HasColumnType("int");
@@ -165,14 +180,14 @@ namespace Infrastructure.Migrations
                     b.Property<int>("TicketCreatedById")
                         .HasColumnType("int");
 
-                    b.Property<string>("TicketTitle")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("varchar");
-
-                    b.Property<string>("ticketStatus")
+                    b.Property<string>("TicketStatus")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TicketTitle")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar");
 
                     b.HasKey("TicketId");
 
@@ -185,6 +200,55 @@ namespace Infrastructure.Migrations
                     b.ToTable("Tickets", (string)null);
                 });
 
+            modelBuilder.Entity("Domain.Entities.TicketHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar");
+
+                    b.Property<int>("ActionByEmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<int?>("FromEmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("NewValue")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar");
+
+                    b.Property<string>("OldValue")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar");
+
+                    b.Property<int>("TicketId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ToEmployeeId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActionByEmployeeId");
+
+                    b.HasIndex("FromEmployeeId");
+
+                    b.HasIndex("TicketId");
+
+                    b.HasIndex("ToEmployeeId");
+
+                    b.ToTable("TicketHistories", (string)null);
+                });
+
             modelBuilder.Entity("Account", b =>
                 {
                     b.HasOne("Domain.Entities.Employee", "Employee")
@@ -194,17 +258,6 @@ namespace Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Employee");
-                });
-
-            modelBuilder.Entity("Domain.Entities.Project", b =>
-                {
-                    b.HasOne("Domain.Entities.Employee", "ProjectManager")
-                        .WithMany()
-                        .HasForeignKey("ProjectManagerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("ProjectManager");
                 });
 
             modelBuilder.Entity("Domain.Entities.ProjectEmployee", b =>
@@ -237,13 +290,13 @@ namespace Infrastructure.Migrations
                     b.HasOne("Domain.Entities.Project", "Project")
                         .WithMany("ProjectTickets")
                         .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Domain.Entities.Employee", "TicketCreatedBy")
                         .WithMany()
                         .HasForeignKey("TicketCreatedById")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Employee");
@@ -253,12 +306,46 @@ namespace Infrastructure.Migrations
                     b.Navigation("TicketCreatedBy");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Employee", b =>
+            modelBuilder.Entity("Domain.Entities.TicketHistory", b =>
                 {
-                    b.Navigation("Account")
+                    b.HasOne("Domain.Entities.Employee", "ActionByEmployee")
+                        .WithMany("TicketHistories")
+                        .HasForeignKey("ActionByEmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Domain.Entities.Employee", "FromEmployee")
+                        .WithMany()
+                        .HasForeignKey("FromEmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Entities.Ticket", "Ticket")
+                        .WithMany("TicketHistories")
+                        .HasForeignKey("TicketId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Employee", "ToEmployee")
+                        .WithMany()
+                        .HasForeignKey("ToEmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("ActionByEmployee");
+
+                    b.Navigation("FromEmployee");
+
+                    b.Navigation("Ticket");
+
+                    b.Navigation("ToEmployee");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Employee", b =>
+                {
+                    b.Navigation("Account");
+
                     b.Navigation("ProjectEmployees");
+
+                    b.Navigation("TicketHistories");
 
                     b.Navigation("Tickets");
                 });
@@ -268,6 +355,11 @@ namespace Infrastructure.Migrations
                     b.Navigation("ProjectEmployees");
 
                     b.Navigation("ProjectTickets");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Ticket", b =>
+                {
+                    b.Navigation("TicketHistories");
                 });
 #pragma warning restore 612, 618
         }

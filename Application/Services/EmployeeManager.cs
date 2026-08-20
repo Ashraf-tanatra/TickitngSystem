@@ -1,218 +1,219 @@
 ﻿using ApplicationServices.DTOs;
 using ApplicationServices.Interfaces;
 using Domain.Entities;
-using Domain.Enum;
 using Domain.Interfaces;
 
 namespace Domain.EntityManager
 {
     public class EmployeeManager : IEmployeeManager
     {
-        private readonly IEmployeeRepository _EmployeeRepository;
+        private readonly IEmployeeRepository _employeeRepository;
+        private readonly IAccountRepository _accountRepository;
 
-        public EmployeeManager(IEmployeeRepository repository)
+        public EmployeeManager(IEmployeeRepository employeeRepository)
         {
-            _EmployeeRepository = repository;
+            _employeeRepository = employeeRepository;
         }
 
-        public EmployeeResponse Create(CreateEmployeeRequest request)
-        {
-            // 1. Validate request
-            if (request == null)
-                throw new ArgumentNullException(nameof(request));
 
-            if (string.IsNullOrWhiteSpace(request.FName))
-                throw new ArgumentException("First name is required.");
+        // CREATE
+        //public EmployeeResponse Create(CreateEmployeeRequest request)
+        //{
+        //    if (request == null)
+        //        throw new ArgumentNullException(nameof(request));
 
-            if (string.IsNullOrWhiteSpace(request.LName))
-                throw new ArgumentException("Last name is required.");
+        //    if (string.IsNullOrWhiteSpace(request.FName))
+        //        throw new ArgumentException("First name is required.");
 
-            if (string.IsNullOrWhiteSpace(request.Phone))
-                throw new ArgumentException("Phone is required.");
+        //    if (string.IsNullOrWhiteSpace(request.LName))
+        //        throw new ArgumentException("Last name is required.");
 
-            if (string.IsNullOrWhiteSpace(request.Email))
-                throw new ArgumentException("Email is required.");
+        //    if (string.IsNullOrWhiteSpace(request.Email))
+        //        throw new ArgumentException("Email is required.");
 
-            if (string.IsNullOrWhiteSpace(request.Password))
-                throw new ArgumentException("Password is required.");
+        //    if (string.IsNullOrWhiteSpace(request.Phone))
+        //        throw new ArgumentException("Phone is required.");
+
+        //    if (string.IsNullOrWhiteSpace(request.Password))
+        //        throw new ArgumentException("Password is required.");
+
+        //    if (request.Password != request.ConfirmPassword)
+        //        throw new ArgumentException(
+        //            "Password and confirm password do not match.");
+
+        //    if (!request.AcceptTerms)
+        //        throw new ArgumentException(
+        //            "You must accept the Terms of Service and Privacy Policy.");
+
+        //    // Check Email
+        //    if (_accountRepository.EmailExists(request.Email))
+        //        throw new InvalidOperationException(
+        //            "An account with this email already exists.");
+
+        //    // Check Phone
+        //    if (_employeeRepository.ExistsByPhone(request.Phone))
+        //        throw new InvalidOperationException(
+        //            "An employee with this phone already exists.");
+
+        //    // Create Employee and Account
+        //    var employee = new Employee
+        //    {
+        //        FName = request.FName,
+        //        LName = request.LName,
+        //        Phone = request.Phone,
+        //        Gender = (Enum.Gender)request.Gender
+        //    };
+
+        //    var account = new Account
+        //    {
+        //        Email = request.Email,
+        //        PasswordHash = request.Password,
+        //        Employee = employee
+        //    };
+
+        //    employee.Account = account;
+
+        //    _employeeRepository.Add(employee);
+
+        //    return MapToResponse(employee);
+        //}
 
 
-            // 2. Check existing employees
-            if (_EmployeeRepository.ExistsByEmail(request.Email))
-            {
-                throw new InvalidOperationException(
-                    "An account with this email already exists.");
-            }
-
-            if (_EmployeeRepository.ExistsByPhone(request.Phone))
-            {
-                throw new InvalidOperationException(
-                    "An employee with this phone already exists.");
-            }
-
-
-            // 3. Create Account
-            var account = new Account
-            {
-                Email = request.Email,
-                PasswordHash = request.Password
-            };
-
-
-            // 4. Create Employee
-            var employee = new Employee
-            {
-                FName = request.FName,
-                LName = request.LName,
-                Phone = request.Phone,
-                Gender = request.Gender,
-                Role = EmployeeRole.Employee,
-                Account = account
-            };
-
-
-            // 5. Save Employee
-            _EmployeeRepository.Add(employee);
-
-
-            // 6. Return Response
-            return new EmployeeResponse
-            {
-                Id = employee.Id,
-                FName = employee.FName,
-                LName = employee.LName,
-                Phone = employee.Phone,
-                Gender = employee.Gender,
-                Role = employee.Role.ToString(),
-                IsDeleted = employee.IsDeleted
-            };
-        }
-
-        public bool Delete(int id)
-        {
-            // 1. Get employee
-            var employee = _EmployeeRepository.GetById(id);
-
-            // 2. Employee doesn't exist
-            if (employee == null)
-                return false;
-
-            // 3. Delete employee
-            _EmployeeRepository.Delete(employee);
-
-            // 4. Successfully deleted
-            return true;
-        }
-
+        // GET ALL
         public IEnumerable<EmployeeResponse> GetAll()
         {
-            var employees = _EmployeeRepository.GetAll();
+            var employees = _employeeRepository.GetAll();
 
-            return employees.Select(employee => new EmployeeResponse
-            {
-                Id = employee.Id,
-                FName = employee.FName,
-                LName = employee.LName,
-                Phone = employee.Phone,
-                Gender = employee.Gender,
-                Role = employee.Role.ToString(),
-                IsDeleted = employee.IsDeleted
-            });
+            return employees.Select(MapToResponse);
         }
 
+
+        // GET BY ID
         public EmployeeResponse? GetById(int id)
         {
-            var employee = _EmployeeRepository.GetById(id);
+            var employee = _employeeRepository.GetById(id);
 
             if (employee == null)
                 return null;
 
-            return new EmployeeResponse
-            {
-                Id = employee.Id,
-                FName = employee.FName,
-                LName = employee.LName,
-                Phone = employee.Phone,
-                Gender = employee.Gender,
-                Role = employee.Role.ToString(),
-                IsDeleted = employee.IsDeleted
-            };
+            return MapToResponse(employee);
         }
 
-        public EmployeeResponse? Update(int id , UpdateEmployeeRequest request)
+        // Update
+        public EmployeeResponse? Update(int id,UpdateEmployeeRequest request)
         {
-            // 1. Validate request
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
-            // 2. Get employee
-            var employee = _EmployeeRepository.GetById(id);
+            var employee = _employeeRepository.GetById(id);
 
             if (employee == null)
                 return null;
 
-            // 3. Validate fields
+            if (employee.IsDeleted)
+                throw new InvalidOperationException(
+                    "Cannot update a deleted employee.");
+
             if (string.IsNullOrWhiteSpace(request.FName))
-                throw new ArgumentException("First name is required.");
+                throw new ArgumentException(
+                    "First name is required.");
 
             if (string.IsNullOrWhiteSpace(request.LName))
-                throw new ArgumentException("Last name is required.");
+                throw new ArgumentException(
+                    "Last name is required.");
 
             if (string.IsNullOrWhiteSpace(request.Phone))
-                throw new ArgumentException("Phone is required.");
+                throw new ArgumentException(
+                    "Phone is required.");
 
-
-            // 4. Check if phone belongs to another employee
-            if (_EmployeeRepository.ExistsByPhoneExcept(request.Phone, id))
-            {  
-                throw new InvalidOperationException( "This phone number is already in use.");
+            if (_employeeRepository.ExistsByPhoneExcept(
+                    request.Phone,
+                    id))
+            {
+                throw new InvalidOperationException(
+                    "This phone number is already in use.");
             }
 
-
-            // 5. Update employee
             employee.FName = request.FName;
             employee.LName = request.LName;
             employee.Phone = request.Phone;
             employee.Gender = request.Gender;
 
+            _employeeRepository.Update(employee);
 
-            // 6. Save changes
-            _EmployeeRepository.Update(employee);
+            return MapToResponse(employee);
+        }
 
 
-            // 7. Return response
+        // DELETE
+        public bool Delete(int id)
+        {
+            //var employee = _employeeRepository.GetById(id);
+
+            //if (employee == null)
+            //    return false;
+
+            //_employeeRepository.Delete(employee);
+
+            return true;
+        }
+
+
+        // GET EMPLOYEE PROJECTS
+
+
+        public IEnumerable<EmployeeProjectResponse> GetProjects(int employeeId)
+        {
+            var employee = _employeeRepository.GetById(employeeId);
+
+            if (employee == null)
+                throw new KeyNotFoundException(
+                    "Employee not found.");
+
+            var projects = _employeeRepository.GetProjects(employeeId);
+
+            return projects.Select(project =>
+            {
+                var projectEmployee = project.ProjectEmployees
+                    .First(pe => pe.EmployeeId == employeeId);
+
+                return new EmployeeProjectResponse
+                {
+                    Id = project.Id,
+
+                    ProjectName = project.ProjectName,
+
+                    ProjectDescription = project.ProjectDescription,
+
+                    Role = projectEmployee.Role.ToString(),
+
+                    EmployeeCount = project.ProjectEmployees.Count,
+
+                    TicketCount = project.ProjectTickets.Count
+                };
+            });
+        }
+
+
+        // MAP EMPLOYEE TO RESPONSE
+        private static EmployeeResponse MapToResponse( Employee employee)
+        {
             return new EmployeeResponse
             {
                 Id = employee.Id,
+
                 FName = employee.FName,
+
                 LName = employee.LName,
+
                 Phone = employee.Phone,
-                Gender = employee.Gender,
-                Role = employee.Role.ToString(),
+
+                Gender = (Enum.Gender)employee.Gender,
+
                 IsDeleted = employee.IsDeleted
             };
         }
 
-        public IEnumerable<ProjectResponse> GetProjects(int employeeId)
-        {
-            var projects = _EmployeeRepository.GetProjects(employeeId);
-
-            return projects.Select(project => new ProjectResponse
-            {
-                Id = project.Id,
-                ProjectName = project.ProjectName,
-                ProjectDescription = project.ProjectDescription,
-                ProjectManagerId = project.ProjectManagerId,
-
-                ProjectManagerName = project.ProjectManager == null
-                    ? null
-                    : $"{project.ProjectManager.FName} {project.ProjectManager.LName}",
-
-                EmployeeCount = project.ProjectEmployees.Count,
-                TicketCount = project.ProjectTickets.Count
-            });
-        }
-
-       
+        
     }
 }

@@ -12,6 +12,8 @@ namespace Domain.Interfaces
 
         void Add(Account account);
 
+        void Update(Account account);
+
         void Delete(Account account);
     }
 }
