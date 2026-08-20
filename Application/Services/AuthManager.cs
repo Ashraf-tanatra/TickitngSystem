@@ -4,7 +4,7 @@ using Domain.Interfaces;
 
 namespace ApplicationServices.Services
 {
-    public class AuthManager : IAuthManager
+    public class AuthManager : IAuthManager //no need for this
     {
         private readonly IAccountRepository _accountRepository;
 
@@ -14,7 +14,7 @@ namespace ApplicationServices.Services
         }
 
         // SIGN UP
-        public AccountResponse SignUp(SignUpRequest request)
+        public AccountResponse SignUp(SignUpRequest request)//same as create an account ?
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -50,8 +50,8 @@ namespace ApplicationServices.Services
 
             return new AccountResponse
             {
-                Id = account.Id,
-                Email = account.Email,
+                Id = account.Id, // ?
+                Email = account.Email, // ?
                 EmployeeId = account.EmployeeId
             };
         }
@@ -86,7 +86,7 @@ namespace ApplicationServices.Services
             return new LoginResponse
             {
                 EmployeeId = account.EmployeeId,
-                Email = account.Email
+                Email = account.Email //?
             };
         }
     }

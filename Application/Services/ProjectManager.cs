@@ -1,5 +1,4 @@
 ﻿using ApplicationServices.DTOs.Project;
-using ApplicationServices.DTOs.Ticket;
 using ApplicationServices.Interfaces;
 using Domain.Entities;
 using Domain.Interfaces;
@@ -15,44 +14,16 @@ namespace ApplicationServices.Services
             _projectRepository = projectRepository;
         }
 
-        // GET EMPLOYEES OF PROJECT
-        public IEnumerable<EmployeeResponse> GetEmployees(int projectId)
+        public IEnumerable<Project> GetAllProjectWorkedByEmployee(int employeeId)
         {
-            var employees = _projectRepository.GetEmployees(projectId);
-
-            return employees.Select(employee => new EmployeeResponse
-            {
-                Id = employee.Id,
-                FName = employee.FName,
-                LName = employee.LName,
-                Phone = employee.Phone,
-                Gender = employee.Gender,
-                IsDeleted = employee.IsDeleted
-            });
+            throw new NotImplementedException();
+        }
+        public IEnumerable<Project> GetAllProjectWorkedByEmployeeTopThree(int employeeId)
+        {
+            throw new NotImplementedException();
         }
 
-        // GET ALL
-        public IEnumerable<ProjectResponse> GetAll()
-        {
-            var projects = _projectRepository.GetAll();
-
-            return projects.Select(project => new ProjectResponse
-            {
-                Id = project.Id,
-                ProjectName = project.ProjectName,
-                ProjectDescription = project.ProjectDescription,
-                ProjectManagerId = project.ProjectManagerId,
-
-                ProjectManagerName = project.ProjectManager == null
-                    ? null
-                    : $"{project.ProjectManager.FName} {project.ProjectManager.LName}",
-
-                EmployeeCount = project.ProjectEmployees.Count,
-                TicketCount = project.ProjectTickets.Count
-            });
-        }
-
-        // GET BY ID
+        // GET By ID
         public ProjectResponse? GetById(int id)
         {
             var project = _projectRepository.GetById(id);
@@ -65,17 +36,16 @@ namespace ApplicationServices.Services
                 Id = project.Id,
                 ProjectName = project.ProjectName,
                 ProjectDescription = project.ProjectDescription,
-                ProjectManagerId = project.ProjectManagerId,
+                ProjectManagerId = project.ProjectManagerId, // ?
 
                 ProjectManagerName = project.ProjectManager == null
                     ? null
                     : $"{project.ProjectManager.FName} {project.ProjectManager.LName}",
 
-                EmployeeCount = project.ProjectEmployees.Count,
-                TicketCount = project.ProjectTickets.Count
+                EmployeeCount = project.ProjectEmployees.Count,   // ?
+                TicketCount = project.ProjectTickets.Count        // ?
             };
         }
-
         // CREATE
         public ProjectResponse Create(CreateProjectRequest request)
         {
@@ -107,15 +77,12 @@ namespace ApplicationServices.Services
                 ProjectManagerId = request.ProjectManagerId
             };
 
-            _projectRepository.Add(project);
+            _projectRepository.Create(project);
 
             return GetById(project.Id)!;
         }
-
         // UPDATE
-        public ProjectResponse Update(
-            int id,
-            UpdateProjectRequest request)
+        public ProjectResponse Update(int id, UpdateProjectRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -152,28 +119,7 @@ namespace ApplicationServices.Services
 
             return GetById(project.Id)!;
         }
-
-
-
-        //GET TICKETS
-        public IEnumerable<TicketResponse> GetTickets(int projectId)
-        {
-            var tickets = _projectRepository.GetTickets(projectId);
-
-            return tickets.Select(ticket => new TicketResponse
-            {
-                TicketId = ticket.TicketId,
-                TicketTitle = ticket.TicketTitle,
-                DueTo = ticket.DueTo,
-                TicketStatus = ticket.TicketStatus.ToString(),
-                Priority = ticket.Priority.ToString(),
-                Description = ticket.Description,
-                EmployeeId = ticket.EmployeeId,
-                ProjectId = ticket.ProjectId
-            });
-        }
-
-        // DELETE
+        // Delete
         public bool Delete(int id)
         {
             var project = _projectRepository.GetById(id);
@@ -186,29 +132,83 @@ namespace ApplicationServices.Services
             return true;
         }
 
+
+        // GET EMPLOYEES OF PROJECT
+        //public IEnumerable<EmployeeResponse> GetEmployees(int projectId) // get emp that works in this project? 
+        //{
+        //    var employees = _projectRepository.GetEmployees(projectId);
+
+        //    return employees.Select(employee => new EmployeeResponse
+        //    {
+        //        Id = employee.Id,
+        //        FName = employee.FName,
+        //        LName = employee.LName,
+        //        Phone = employee.Phone,
+        //        Gender = employee.Gender,
+        //        IsDeleted = employee.IsDeleted
+        //    });
+        //}
+
+        //public IEnumerable<ProjectResponse> GetAll() // ?
+        //{
+        //    var projects = _projectRepository.GetAll();
+
+        //    return projects.Select(project => new ProjectResponse
+        //    {
+        //        Id = project.Id,
+        //        ProjectName = project.ProjectName,
+        //        ProjectDescription = project.ProjectDescription,
+        //        ProjectManagerId = project.ProjectManagerId,
+
+        //        ProjectManagerName = project.ProjectManager == null
+        //            ? null
+        //            : $"{project.ProjectManager.FName} {project.ProjectManager.LName}",
+
+        //        EmployeeCount = project.ProjectEmployees.Count,
+        //        TicketCount = project.ProjectTickets.Count
+        //    });
+        //}
+
+        //GET TICKETS
+        //public IEnumerable<TicketResponse> GetTickets(int projectId)
+        //{
+        //    var tickets = _projectRepository.GetTickets(projectId);
+
+        //    return tickets.Select(ticket => new TicketResponse
+        //    {
+        //        TicketId = ticket.TicketId,
+        //        TicketTitle = ticket.TicketTitle,
+        //        DueTo = ticket.DueTo,
+        //        TicketStatus = ticket.TicketStatus.ToString(),
+        //        Priority = ticket.Priority.ToString(),
+        //        Description = ticket.Description,
+        //        EmployeeId = ticket.EmployeeId,
+        //        ProjectId = ticket.ProjectId
+        //    });
+        //}
+
         // GET TICKET BY ID
-        public TicketResponse? GetTicket(int projectId, int ticketId)
-        {
-            var tickets = _projectRepository.GetTickets(projectId);
+        //public TicketResponse? GetTicket(int projectId, int ticketId)
+        //{
+        //    var tickets = _projectRepository.GetTickets(projectId);
 
-            var ticket = tickets.FirstOrDefault(t => t.TicketId == ticketId);
+        //    var ticket = tickets.FirstOrDefault(t => t.TicketId == ticketId); // ?
 
-            if (ticket == null)
-                return null;
+        //    if (ticket == null)
+        //        return null;
 
-            return new TicketResponse
-            {
-                TicketId = ticket.TicketId,
-                TicketTitle = ticket.TicketTitle,
-                DueTo = ticket.DueTo,
-                TicketStatus = ticket.TicketStatus.ToString(),
-                Priority = ticket.Priority.ToString(),
-                Description = ticket.Description,
-                EmployeeId = ticket.EmployeeId,
-                ProjectId = ticket.ProjectId
-            };
-        }
-
+        //    return new TicketResponse
+        //    {
+        //        TicketId = ticket.TicketId,
+        //        TicketTitle = ticket.TicketTitle,
+        //        DueTo = ticket.DueTo,
+        //        TicketStatus = ticket.TicketStatus.ToString(),
+        //        Priority = ticket.Priority.ToString(),
+        //        Description = ticket.Description,
+        //        EmployeeId = ticket.EmployeeId,
+        //        ProjectId = ticket.ProjectId
+        //    };
+        //}
 
     }
 }

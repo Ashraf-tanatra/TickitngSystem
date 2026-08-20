@@ -16,12 +16,12 @@
         public int? ToEmployeeId { get; set; }
         public Employee? ToEmployee { get; set; }
         // What happened
-        public string Action { get; set; } = string.Empty;
+        public string Action { get; set; } = string.Empty; // ?
         // Previous value
         public string? OldValue { get; set; }
         // New value
         public string? NewValue { get; set; }
         // When it happened
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime ModifiedAt { get; set; } = DateTime.Now;
     }
 }

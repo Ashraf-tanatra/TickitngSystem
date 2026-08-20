@@ -1,10 +1,9 @@
-﻿using Domain.Entities;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Database.Configuration
 {
-    internal class AccountConfiguration: IEntityTypeConfiguration<Account>
+    internal class AccountConfiguration : IEntityTypeConfiguration<Account>
     {
         public void Configure(EntityTypeBuilder<Account> builder)
         {
@@ -18,7 +17,7 @@ namespace Infrastructure.Database.Configuration
                    .HasMaxLength(255);
 
             builder.HasIndex(a => a.Email)
-                   .IsUnique();
+                   .IsUnique(); // delete this check this in program (program it)
 
             builder.Property(a => a.PasswordHash)
                    .IsRequired()

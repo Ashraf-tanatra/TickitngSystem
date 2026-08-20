@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260819162019_Initial")]
+    [Migration("20260820202714_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -114,6 +114,10 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(125)
                         .HasColumnType("varchar");
 
+                    b.Property<string>("ProjectStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ProjectManagerId");
@@ -129,8 +133,8 @@ namespace Infrastructure.Migrations
                     b.Property<int>("EmployeeId")
                         .HasColumnType("int");
 
-                    b.Property<int>("Role")
-                        .HasColumnType("int");
+                    b.Property<string>("Role")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("ProjectId", "EmployeeId");
 
@@ -147,8 +151,11 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TicketId"));
 
-                    b.Property<string>("AttachmentURL")
+                    b.PrimitiveCollection<string>("AttachmentURL")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("AttachmentURLId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedTime")
                         .HasColumnType("datetime");
@@ -208,11 +215,11 @@ namespace Infrastructure.Migrations
                     b.Property<int>("ActionByEmployeeId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
                     b.Property<int?>("FromEmployeeId")
                         .HasColumnType("int");
+
+                    b.Property<DateTime>("ModifiedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("NewValue")
                         .HasColumnType("nvarchar(max)");

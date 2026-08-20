@@ -58,6 +58,7 @@ namespace Infrastructure.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     ProjectName = table.Column<string>(type: "varchar(125)", maxLength: 125, nullable: false),
                     ProjectDescription = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true),
+                    ProjectStatus = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ProjectManagerId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -77,7 +78,7 @@ namespace Infrastructure.Migrations
                 {
                     ProjectId = table.Column<int>(type: "int", nullable: false),
                     EmployeeId = table.Column<int>(type: "int", nullable: false),
-                    Role = table.Column<int>(type: "int", nullable: false)
+                    Role = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -108,10 +109,11 @@ namespace Infrastructure.Migrations
                     TicketStatus = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Priority = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Description = table.Column<string>(type: "varchar(2500)", maxLength: 2500, nullable: true),
-                    AttachmentURL = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    AttachmentURLId = table.Column<int>(type: "int", nullable: false),
                     EmployeeId = table.Column<int>(type: "int", nullable: false),
                     TicketCreatedById = table.Column<int>(type: "int", nullable: false),
-                    ProjectId = table.Column<int>(type: "int", nullable: false)
+                    ProjectId = table.Column<int>(type: "int", nullable: false),
+                    AttachmentURL = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -149,7 +151,7 @@ namespace Infrastructure.Migrations
                     Action = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     OldValue = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     NewValue = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    ModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {

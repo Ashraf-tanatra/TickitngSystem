@@ -52,11 +52,11 @@ namespace ApplicationServices.Services
 
 
             // 3. Create Account
-            var account = new Account
-            {
-                Email = request.Email,
-                PasswordHash = request.Password
-            };
+            //var account = new Account // ?
+            //{
+            //    Email = request.Email,
+            //    PasswordHash = request.Password
+            //};
 
 
             // 4. Create Employee
@@ -74,7 +74,7 @@ namespace ApplicationServices.Services
 
 
             // 6. Return Response
-            return new EmployeeResponse
+            return new EmployeeResponse //? login response
             {
                 Id = employee.Id,
                 FName = employee.FName,
@@ -85,7 +85,7 @@ namespace ApplicationServices.Services
             };
         }
 
-        public bool Delete(int id)
+        public bool Delete(int id) // need edit need to add reActivate
         {
             // 1. Get employee
             var employee = _EmployeeRepository.GetById(id);
@@ -101,7 +101,7 @@ namespace ApplicationServices.Services
             return true;
         }
 
-        public IEnumerable<EmployeeResponse> GetAll()
+        public IEnumerable<EmployeeResponse> GetAll() // ?
         {
             var employees = _EmployeeRepository.GetAll();
 
@@ -176,7 +176,7 @@ namespace ApplicationServices.Services
 
 
             // 7. Return response
-            return new EmployeeResponse
+            return new EmployeeResponse //?
             {
                 Id = employee.Id,
                 FName = employee.FName,
@@ -187,7 +187,7 @@ namespace ApplicationServices.Services
             };
         }
 
-        public IEnumerable<ProjectResponse> GetProjects(int employeeId)
+        public IEnumerable<ProjectResponse> GetProjects(int employeeId) //?
         {
             var projects = _EmployeeRepository.GetProjects(employeeId);
 

@@ -1,26 +1,24 @@
 ﻿using ApplicationServices.DTOs.Project;
-using ApplicationServices.DTOs.Ticket;
+using Domain.Entities;
 
 namespace ApplicationServices.Interfaces
 {
     public interface IProjectManager
     {
+        IEnumerable<Project> GetAllProjectWorkedByEmployee(int employeeId);
+        IEnumerable<Project> GetAllProjectWorkedByEmployeeTopThree(int employeeId);
         ProjectResponse Create(CreateProjectRequest request);
-
-        IEnumerable<ProjectResponse> GetAll();
-
         ProjectResponse? GetById(int id);
-
-        ProjectResponse Update(
-            int id,
-            UpdateProjectRequest request);
-
+        ProjectResponse Update(int id, UpdateProjectRequest request);
         bool Delete(int id);
 
-        IEnumerable<EmployeeResponse> GetEmployees(int projectId);
 
-        IEnumerable<TicketResponse> GetTickets(int projectId);
+        //IEnumerable<ProjectResponse> GetAll();
 
-        TicketResponse? GetTicket(int projectId , int TicketId);
+        //IEnumerable<EmployeeResponse> GetEmployees(int projectId);
+
+        //IEnumerable<TicketResponse> GetTickets(int projectId);
+
+        //TicketResponse? GetTicket(int projectId, int TicketId);
     }
 }

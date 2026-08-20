@@ -1,5 +1,4 @@
 ﻿using ApplicationServices.DTOs.Project;
-using ApplicationServices.DTOs.Ticket;
 using ApplicationServices.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,13 +16,13 @@ namespace Controller
         }
 
         // GET: api/Project
-        [HttpGet]
-        public ActionResult<IEnumerable<ProjectResponse>> GetAll()
-        {
-            var projects = _projectManager.GetAll();
+        //[HttpGet]
+        //public ActionResult<IEnumerable<ProjectResponse>> GetAll()
+        //{
+        //    var projects = _projectManager.GetAll();
 
-            return Ok(projects);
-        }
+        //    return Ok(projects);
+        //}
 
         // GET: api/Project/5
         [HttpGet("{id}")]
@@ -80,25 +79,25 @@ namespace Controller
         }
 
         // GET: api/Project/5/tickets
-        [HttpGet("{id}/tickets")]
-        public ActionResult<IEnumerable<TicketResponse>> GetTickets(int id)
-        {
-            var tickets = _projectManager.GetTickets(id);
+        //[HttpGet("{id}/tickets")]
+        //public ActionResult<IEnumerable<TicketResponse>> GetTickets(int id)
+        //{
+        //    var tickets = _projectManager.GetTickets(id);
 
-            return Ok(tickets);
-        }
+        //    return Ok(tickets);
+        //}
 
         // GET: api/Project/5/tickets/10
-        [HttpGet("{projectId}/tickets/{ticketId}")]
-        public ActionResult<TicketResponse> GetTicket(int projectId, int ticketId)
-        {
-            var ticket = _projectManager.GetTicket(projectId, ticketId);
+        //[HttpGet("{projectId}/tickets/{ticketId}")]
+        //public ActionResult<TicketResponse> GetTicket(int projectId, int ticketId)
+        //{
+        //    var ticket = _projectManager.GetTicket(projectId, ticketId);
 
-            if (ticket == null)
-                return NotFound();
+        //    if (ticket == null)
+        //        return NotFound();
 
-            return Ok(ticket);
-        }
+        //    return Ok(ticket);
+        //}
 
         // DELETE: api/Project/5
         [HttpDelete("{id}")]
@@ -111,12 +110,12 @@ namespace Controller
         }
 
         // GET: api/Project/5/employees
-        [HttpGet("{id}/employees")]
-        public ActionResult<IEnumerable<EmployeeResponse>> GetEmployees(int id)
-        {
-            var employees = _projectManager.GetEmployees(id);
+        //[HttpGet("{id}/employees")]
+        //public ActionResult<IEnumerable<EmployeeResponse>> GetEmployees(int id)
+        //{
+        //    var employees = _projectManager.GetEmployees(id);
 
-            return Ok(employees);
-        }
+        //    return Ok(employees);
+        //}
     }
 }

@@ -1,22 +1,19 @@
-﻿namespace Domain.Entities
+﻿using Domain.Enum;
+
+namespace Domain.Entities
 {
     public class Project
     {
         public int Id { get; set; }
-
         public required string ProjectName { get; set; }
-
         public string? ProjectDescription { get; set; }
+        public ProjectStatus ProjectStatus { get; set; } = ProjectStatus.Active;
 
+        // Foreign Key
         public int ProjectManagerId { get; set; }
-
         public Employee? ProjectManager { get; private set; }
-
-        public ICollection<Ticket> ProjectTickets { get; set; }
-            = new List<Ticket>();
-
-        public ICollection<ProjectEmployee> ProjectEmployees { get; set; }
-            = new List<ProjectEmployee>();
+        public ICollection<Ticket>? ProjectTickets { get; set; }
+        public ICollection<ProjectEmployee>? ProjectEmployees { get; set; }
 
         public override string ToString()
         {

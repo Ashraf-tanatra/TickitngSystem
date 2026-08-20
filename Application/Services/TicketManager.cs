@@ -14,7 +14,7 @@ namespace ApplicationServices.Services
             _ticketRepository = ticketRepository;
         }
 
-        public IEnumerable<TicketResponse> GetAll()
+        public IEnumerable<TicketResponse> GetAll() // ?
         {
             var tickets = _ticketRepository.GetAll();
 

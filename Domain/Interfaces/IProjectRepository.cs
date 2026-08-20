@@ -4,20 +4,25 @@ namespace Domain.Interfaces
 {
     public interface IProjectRepository
     {
-        IEnumerable<Project> GetAll();
-
+        //IEnumerable<Project> GetAll();
+        IEnumerable<Project> GetAllProjectWorkedByEmployee(int employeeId);
+        IEnumerable<Project> GetAllProjectWorkedByEmployeeTopThree(int employeeId);
+        int GetProjectCount(int employeeId);
         Project? GetById(int id);
-
-        void Add(Project project);
-
+        void Create(Project project);
         void Update(Project project);
-
         void Delete(Project project);
+        void SetProjectAsActive(int projectId);
+        void SetProjectAsCancelled(int projectId);
+        void SetProjectAsCompleted(int projectId);
 
         bool EmployeeExists(int employeeId); // ?
 
+
+
         //bool IsManager(int employeeId); // ?
-        IEnumerable<Employee> GetEmployees(int projectId);
-        IEnumerable<Ticket> GetTickets(int projectId);
+        //IEnumerable<Employee> GetEmployees(int projectId);
+        //IEnumerable<Ticket> GetTickets(int projectId);
+
     }
 }
