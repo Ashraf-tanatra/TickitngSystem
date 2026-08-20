@@ -16,9 +16,13 @@ namespace ApplicationServices.Interfaces
             UpdateEmployeeRequest request);
 
         bool Delete(int id);
+
         IEnumerable<EmployeeProjectResponse> GetProjects(int employeeId);
 
+        void Add(Employee employee);
 
+        bool ValidPhoneNumberFormat(string phone);
 
+        bool ExistsByPhone(string phone);
     }
 }

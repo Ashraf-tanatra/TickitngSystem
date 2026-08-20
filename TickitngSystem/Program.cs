@@ -1,4 +1,5 @@
 using ApplicationServices.Interfaces;
+using ApplicationServices.Managers;
 using ApplicationServices.Services;
 using Domain.EntityManager;
 using Domain.Interfaces;
@@ -33,9 +34,8 @@ if (string.IsNullOrWhiteSpace(connectionString))
 Console.WriteLine(
     "CONNECTION STRING = " + connectionString);
 
-builder.Services.AddDbContext<AppDbContext>(options =>options.UseSqlServer(connectionString));
-builder.Services.AddScoped<IEmailService, EmailService>();
-
+builder.Services.AddDbContext<AppDbContext>(
+    options => options.UseSqlServer(connectionString));
 
 
 // ==============================
@@ -60,17 +60,12 @@ builder.Services.AddScoped<
     AuthManager>();
 
 builder.Services.AddScoped<
-    IAccountRepository,
-    AccountRepository>();
-
-
-// ==============================
-// Email
-// ==============================
+    IAccountManager,
+    AccountManager>();
 
 builder.Services.AddScoped<
-    IEmailService,
-    EmailService>();
+    IAccountRepository,
+    AccountRepository>();
 
 
 // ==============================

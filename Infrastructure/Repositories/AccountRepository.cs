@@ -22,6 +22,12 @@ namespace Infrastructure.Repositories
                 .Include(a => a.Employee)
                 .FirstOrDefault(a => a.Email == email);
         }
+        public Account? GetById(int id)
+        {
+            return _context.Accounts
+                .Include(a => a.Employee)
+                .FirstOrDefault(a => a.Id == id);
+        }
 
 
         // CHECK EMAIL

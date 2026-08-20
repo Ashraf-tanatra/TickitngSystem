@@ -15,5 +15,6 @@ namespace Domain.Interfaces
         void Update(Account account);
 
         void Delete(Account account);
+        Account? GetById(int id);
     }
 }

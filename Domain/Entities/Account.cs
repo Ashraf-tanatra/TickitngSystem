@@ -12,9 +12,9 @@ public class Account
 
     public Employee? Employee { get; set; }
 
-    public bool EmailConfirmed { get; set; } = false;
+    //public bool EmailConfirmed { get; set; } = false;
 
-    public string? VerificationCode { get; set; }
+    //public string? VerificationCode { get; set; }
 
-    public DateTime? VerificationCodeExpiresAt { get; set; }
+    //public DateTime? VerificationCodeExpiresAt { get; set; }
 }

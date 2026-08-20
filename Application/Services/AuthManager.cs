@@ -2,24 +2,20 @@
 using ApplicationServices.DTOs.ApplicationServices.DTOs;
 using ApplicationServices.Interfaces;
 using Domain.Entities;
-using Domain.Interfaces;
 
 namespace ApplicationServices.Services
 {
     public class AuthManager : IAuthManager
     {
-        private readonly IAccountRepository _accountRepository;
-        private readonly IEmployeeRepository _employeeRepository;
-        private readonly IEmailService _emailService;
+        private readonly IEmployeeManager _employeeManager;
+        private readonly IAccountManager _accountManager;
 
         public AuthManager(
-            IAccountRepository accountRepository,
-            IEmployeeRepository employeeRepository,
-            IEmailService emailService)
+            IAccountManager accountManager,
+            IEmployeeManager employeeManager)
         {
-            _accountRepository = accountRepository;
-            _employeeRepository = employeeRepository;
-            _emailService = emailService;
+            _accountManager = accountManager;
+            _employeeManager = employeeManager;
         }
 
         // =========================
@@ -53,13 +49,34 @@ namespace ApplicationServices.Services
                 throw new ArgumentException(
                     "You must accept the Terms of Service and Privacy Policy.");
 
+            // =========================
+            // FORMAT VALIDATION
+            // =========================
+
+            if (!_accountManager.ValidEmailFormat(request.Email))
+                throw new ArgumentException(
+                    "Invalid email format.");
+
+            if (!_accountManager.PasswordFormat(request.Password))
+                throw new ArgumentException(
+                    "Password must be at least 8 characters and contain " +
+                    "uppercase, lowercase, number, and special character.");
+
+            if (!_employeeManager.ValidPhoneNumberFormat(request.Phone))
+                throw new ArgumentException(
+                    "Phone number must contain exactly 10 digits.");
+
+            // =========================
+            // CHECK DUPLICATES
+            // =========================
+
             // Check if Email already exists
-            if (_accountRepository.EmailExists(request.Email))
+            if (_accountManager.Exists(request.Email))
                 throw new InvalidOperationException(
                     "An account with this email already exists.");
 
             // Check if Phone already exists
-            if (_employeeRepository.ExistsByPhone(request.Phone))
+            if (_employeeManager.ExistsByPhone(request.Phone))
                 throw new InvalidOperationException(
                     "An employee with this phone already exists.");
 
@@ -76,13 +93,13 @@ namespace ApplicationServices.Services
                 IsDeleted = false
             };
 
-            // =========================
-            // Generate Verification Code
-            // =========================
+            //// =========================
+            //// Generate Verification Code
+            //// =========================
 
-            var verificationCode = Random.Shared
-                .Next(100000, 1000000)
-                .ToString();
+            //var verificationCode = Random.Shared
+            //    .Next(100000, 1000000)
+            //    .ToString();
 
             // =========================
             // Create Account
@@ -91,19 +108,8 @@ namespace ApplicationServices.Services
             var account = new Account
             {
                 Email = request.Email,
-
-                // TEMPORARY
-                // Replace with password hashing later.
                 PasswordHash = request.Password,
-
-                Employee = employee,
-
-                EmailConfirmed = false,
-
-                VerificationCode = verificationCode,
-
-                VerificationCodeExpiresAt =
-                    DateTime.UtcNow.AddMinutes(10)
+                Employee = employee
             };
 
             // Connect both sides of the relationship
@@ -113,15 +119,15 @@ namespace ApplicationServices.Services
             // Save Employee + Account
             // =========================
 
-            _employeeRepository.Add(employee);
+            _employeeManager.Add(employee);
 
             // =========================
             // Send Verification Email
             // =========================
 
-            await _emailService.SendVerificationCodeAsync(
-                account.Email!,
-                verificationCode);
+            //await _emailService.SendVerificationCodeAsync(
+            //    account.Email!,
+            //    verificationCode);
 
             // =========================
             // Response
@@ -134,112 +140,6 @@ namespace ApplicationServices.Services
                 EmployeeId = employee.Id
             };
         }
-
-
-        // =========================
-        // VERIFY EMAIL
-        // =========================
-        public void VerifyEmail(VerifyEmailRequest request)
-        {
-            if (request == null)
-                throw new ArgumentNullException(nameof(request));
-
-            if (string.IsNullOrWhiteSpace(request.Email))
-                throw new ArgumentException(
-                    "Email is required.");
-
-            if (string.IsNullOrWhiteSpace(request.Code))
-                throw new ArgumentException(
-                    "Verification code is required.");
-
-            var account =
-                _accountRepository.GetByEmail(request.Email);
-
-            if (account == null)
-                throw new KeyNotFoundException(
-                    "Account not found.");
-
-            if (account.EmailConfirmed)
-                throw new InvalidOperationException(
-                    "Email is already verified.");
-
-            if (account.VerificationCode != request.Code)
-                throw new ArgumentException(
-                    "Invalid verification code.");
-
-            if (account.VerificationCodeExpiresAt == null ||
-                account.VerificationCodeExpiresAt < DateTime.UtcNow)
-            {
-                throw new InvalidOperationException(
-                    "Verification code has expired.");
-            }
-
-            // =========================
-            // Confirm Email
-            // =========================
-
-            account.EmailConfirmed = true;
-
-            // Remove used verification code
-            account.VerificationCode = null;
-            account.VerificationCodeExpiresAt = null;
-
-            _accountRepository.Update(account);
-        }
-
-
-        // =========================
-        // RESEND VERIFICATION CODE
-        // =========================
-        public async Task ResendVerificationCode(
-            ResendVerificationCodeRequest request)
-        {
-            if (request == null)
-                throw new ArgumentNullException(nameof(request));
-
-            if (string.IsNullOrWhiteSpace(request.Email))
-                throw new ArgumentException(
-                    "Email is required.");
-
-            var account =
-                _accountRepository.GetByEmail(request.Email);
-
-            if (account == null)
-                throw new KeyNotFoundException(
-                    "Account not found.");
-
-            if (account.EmailConfirmed)
-                throw new InvalidOperationException(
-                    "Email is already verified.");
-
-            // =========================
-            // Generate New Code
-            // =========================
-
-            var verificationCode = Random.Shared
-                .Next(100000, 1000000)
-                .ToString();
-
-            account.VerificationCode = verificationCode;
-
-            account.VerificationCodeExpiresAt =
-                DateTime.UtcNow.AddMinutes(10);
-
-            // =========================
-            // Save New Code
-            // =========================
-
-            _accountRepository.Update(account);
-
-            // =========================
-            // Send New Code
-            // =========================
-
-            await _emailService.SendVerificationCodeAsync(
-                account.Email!,
-                verificationCode);
-        }
-
 
         // =========================
         // LOGIN
@@ -257,8 +157,7 @@ namespace ApplicationServices.Services
                 throw new ArgumentException(
                     "Password is required.");
 
-            var account =
-                _accountRepository.GetByEmail(request.Email);
+            var account = _accountManager.GetEntityByEmail(request.Email);
 
             // Account doesn't exist
             if (account == null)
@@ -280,11 +179,11 @@ namespace ApplicationServices.Services
             // Check Email Verification
             // =========================
 
-            if (!account.EmailConfirmed)
-            {
-                throw new UnauthorizedAccessException(
-                    "Please verify your email before logging in.");
-            }
+            //if (!account.EmailConfirmed)
+            //{
+            //    throw new UnauthorizedAccessException(
+            //        "Please verify your email before logging in.");
+            //}
 
             // =========================
             // Check Password
@@ -308,5 +207,110 @@ namespace ApplicationServices.Services
                 LName = account.Employee.LName
             };
         }
+
+
+        //// =========================
+        //// VERIFY EMAIL
+        //// =========================
+        //public void VerifyEmail(VerifyEmailRequest request)
+        //{
+        //    if (request == null)
+        //        throw new ArgumentNullException(nameof(request));
+
+        //    if (string.IsNullOrWhiteSpace(request.Email))
+        //        throw new ArgumentException(
+        //            "Email is required.");
+
+        //    if (string.IsNullOrWhiteSpace(request.Code))
+        //        throw new ArgumentException(
+        //            "Verification code is required.");
+
+        //    var account =
+        //        _accountRepository.GetByEmail(request.Email);
+
+        //    if (account == null)
+        //        throw new KeyNotFoundException(
+        //            "Account not found.");
+
+        //    if (account.EmailConfirmed)
+        //        throw new InvalidOperationException(
+        //            "Email is already verified.");
+
+        //    if (account.VerificationCode != request.Code)
+        //        throw new ArgumentException(
+        //            "Invalid verification code.");
+
+        //    if (account.VerificationCodeExpiresAt == null ||
+        //        account.VerificationCodeExpiresAt < DateTime.UtcNow)
+        //    {
+        //        throw new InvalidOperationException(
+        //            "Verification code has expired.");
+        //    }
+
+        //    // =========================
+        //    // Confirm Email
+        //    // =========================
+
+        //    account.EmailConfirmed = true;
+
+        //    // Remove used verification code
+        //    account.VerificationCode = null;
+        //    account.VerificationCodeExpiresAt = null;
+
+        //    _accountRepository.Update(account);
+        //}
+
+
+        // =========================
+        // RESEND VERIFICATION CODE
+        // =========================
+        //public async Task ResendVerificationCode(
+        //    ResendVerificationCodeRequest request)
+        //{
+        //    if (request == null)
+        //        throw new ArgumentNullException(nameof(request));
+
+        //    if (string.IsNullOrWhiteSpace(request.Email))
+        //        throw new ArgumentException(
+        //            "Email is required.");
+
+        //    var account =
+        //        _accountRepository.GetByEmail(request.Email);
+
+        //    if (account == null)
+        //        throw new KeyNotFoundException(
+        //            "Account not found.");
+
+        //    if (account.EmailConfirmed)
+        //        throw new InvalidOperationException(
+        //            "Email is already verified.");
+
+        //    // =========================
+        //    // Generate New Code
+        //    // =========================
+
+        //    var verificationCode = Random.Shared
+        //        .Next(100000, 1000000)
+        //        .ToString();
+
+        //    account.VerificationCode = verificationCode;
+
+        //    account.VerificationCodeExpiresAt =
+        //        DateTime.UtcNow.AddMinutes(10);
+
+        //    // =========================
+        //    // Save New Code
+        //    // =========================
+
+        //    _accountRepository.Update(account);
+
+        //    // =========================
+        //    // Send New Code
+        //    // =========================
+
+        //    await _emailService.SendVerificationCodeAsync(
+        //        account.Email!,
+        //        verificationCode);
+        //}
     }
 }

@@ -40,20 +40,20 @@ namespace Infrastructure.Database.Configuration
                    .OnDelete(DeleteBehavior.Cascade);
 
 
-            // Email Confirmed
-            builder.Property(a => a.EmailConfirmed)
-                   .IsRequired();
+            //// Email Confirmed
+            //builder.Property(a => a.EmailConfirmed)
+            //       .IsRequired();
 
 
-            // Verification Code
-            builder.Property(a => a.VerificationCode)
-                   .HasColumnType("varchar")
-                   .HasMaxLength(6);
+            //// Verification Code
+            //builder.Property(a => a.VerificationCode)
+            //       .HasColumnType("varchar")
+            //       .HasMaxLength(6);
 
 
-            // Verification Code Expiration
-            builder.Property(a => a.VerificationCodeExpiresAt)
-                   .HasColumnType("datetime");
+            //// Verification Code Expiration
+            //builder.Property(a => a.VerificationCodeExpiresAt)
+            //       .HasColumnType("datetime");
 
 
             builder.ToTable("Accounts");

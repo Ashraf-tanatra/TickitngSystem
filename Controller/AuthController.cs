@@ -39,65 +39,65 @@ namespace Controller
             }
         }
 
-        // =========================
-        // POST: api/Auth/verify-email
-        // =========================
-        [HttpPost("verify-email")]
-        public ActionResult VerifyEmail(
-            [FromBody] VerifyEmailRequest request)
-        {
-            try
-            {
-                _authManager.VerifyEmail(request);
+        //// =========================
+        //// POST: api/Auth/verify-email
+        //// =========================
+        //[HttpPost("verify-email")]
+        //public ActionResult VerifyEmail(
+        //    [FromBody] VerifyEmailRequest request)
+        //{
+        //    try
+        //    {
+        //        _authManager.VerifyEmail(request);
 
-                return Ok(new
-                {
-                    message = "Email verified successfully."
-                });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-        }
+        //        return Ok(new
+        //        {
+        //            message = "Email verified successfully."
+        //        });
+        //    }
+        //    catch (ArgumentException ex)
+        //    {
+        //        return BadRequest(ex.Message);
+        //    }
+        //    catch (KeyNotFoundException ex)
+        //    {
+        //        return NotFound(ex.Message);
+        //    }
+        //    catch (InvalidOperationException ex)
+        //    {
+        //        return BadRequest(ex.Message);
+        //    }
+        //}
 
         // =========================
         // POST: api/Auth/resend-verification-code
         // =========================
-        [HttpPost("resend-verification-code")]
-        public async Task<IActionResult> ResendVerificationCode(
-            [FromBody] ResendVerificationCodeRequest request)
-        {
-            try
-            {
-                await _authManager.ResendVerificationCode(request);
+        //[HttpPost("resend-verification-code")]
+        //public async Task<IActionResult> ResendVerificationCode(
+        //    [FromBody] ResendVerificationCodeRequest request)
+        //{
+        //    try
+        //    {
+        //        await _authManager.ResendVerificationCode(request);
 
-                return Ok(new
-                {
-                    message = "Verification code sent successfully."
-                });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-        }
+        //        return Ok(new
+        //        {
+        //            message = "Verification code sent successfully."
+        //        });
+        //    }
+        //    catch (ArgumentException ex)
+        //    {
+        //        return BadRequest(ex.Message);
+        //    }
+        //    catch (KeyNotFoundException ex)
+        //    {
+        //        return NotFound(ex.Message);
+        //    }
+        //    catch (InvalidOperationException ex)
+        //    {
+        //        return BadRequest(ex.Message);
+        //    }
+        //}
 
         // =========================
         // POST: api/Auth/login

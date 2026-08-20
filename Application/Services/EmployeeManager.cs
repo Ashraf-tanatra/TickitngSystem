@@ -100,7 +100,9 @@ namespace Domain.EntityManager
         }
 
         // Update
-        public EmployeeResponse? Update(int id,UpdateEmployeeRequest request)
+        public EmployeeResponse? Update(
+            int id,
+            UpdateEmployeeRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -126,6 +128,12 @@ namespace Domain.EntityManager
                 throw new ArgumentException(
                     "Phone is required.");
 
+            // Validate phone format
+            if (!ValidPhoneNumberFormat(request.Phone))
+                throw new ArgumentException(
+                    "Phone number must contain exactly 10 digits.");
+
+            // Check duplicate phone
             if (_employeeRepository.ExistsByPhoneExcept(
                     request.Phone,
                     id))
@@ -148,19 +156,25 @@ namespace Domain.EntityManager
         // DELETE
         public bool Delete(int id)
         {
-            //var employee = _employeeRepository.GetById(id);
+            var employee = _employeeRepository.GetById(id);
 
-            //if (employee == null)
-            //    return false;
+            if (employee == null)
+                return false;
 
-            //_employeeRepository.Delete(employee);
+            if (employee.IsDeleted)
+                throw new InvalidOperationException(
+                    "Employee is already deleted.");
+
+            employee.IsDeleted = true;
+            employee.DeletedAt = DateTime.UtcNow;
+
+            _employeeRepository.Update(employee);
 
             return true;
         }
 
 
         // GET EMPLOYEE PROJECTS
-
 
         public IEnumerable<EmployeeProjectResponse> GetProjects(int employeeId)
         {
@@ -194,9 +208,34 @@ namespace Domain.EntityManager
             });
         }
 
+        // ADD
+        public void Add(Employee employee)
+        {
+            if (employee == null)
+                throw new ArgumentNullException(nameof(employee));
+
+            _employeeRepository.Add(employee);
+        }
+
+        // VALIDATE PHONE NUMBER
+        public bool ValidPhoneNumberFormat(string phone)
+        {
+            return !string.IsNullOrWhiteSpace(phone)
+                   && phone.Length == 10
+                   && phone.All(char.IsDigit);
+        }
+
+        // CHECK PHONE
+        public bool ExistsByPhone(string phone)
+        {
+            if (string.IsNullOrWhiteSpace(phone))
+                return false;
+
+            return _employeeRepository.ExistsByPhone(phone);
+        }
 
         // MAP EMPLOYEE TO RESPONSE
-        private static EmployeeResponse MapToResponse( Employee employee)
+        private static EmployeeResponse MapToResponse(Employee employee)
         {
             return new EmployeeResponse
             {
@@ -208,12 +247,10 @@ namespace Domain.EntityManager
 
                 Phone = employee.Phone,
 
-                Gender = (Enum.Gender)employee.Gender,
+                Gender = employee.Gender,
 
                 IsDeleted = employee.IsDeleted
             };
         }
-
-        
     }
 }

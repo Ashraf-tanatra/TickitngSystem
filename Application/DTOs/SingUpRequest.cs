@@ -20,4 +20,5 @@ namespace ApplicationServices.DTOs
 
         public bool AcceptTerms { get; set; }
     }
+ 
 }
