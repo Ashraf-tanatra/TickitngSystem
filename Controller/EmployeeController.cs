@@ -26,6 +26,42 @@ namespace Controller
         }
 
 
+        // POST: api/Employee/5/reactivate
+        [HttpPost("{id}/reactivate")]
+        public IActionResult Reactivate(int id,ReactivateAccountRequest request)
+        {
+            try
+            {
+                var result = _employeeManager.Reactivate(id, request);
+
+                if (!result)
+                    return NotFound(new
+                    {
+                        message = "Employee not found."
+                    });
+
+                return Ok(new
+                {
+                    message = "Employee reactivated successfully."
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
+        }
+
+
         // GET: api/Employee/5
         [HttpGet("{id}")]
         public ActionResult<EmployeeResponse> GetById(int id)
@@ -41,8 +77,7 @@ namespace Controller
 
         // GET: api/Employee/5/projects
         [HttpGet("{id}/projects")]
-        public ActionResult<IEnumerable<ProjectResponse>> GetProjects(
-            int id)
+        public ActionResult<IEnumerable<ProjectResponse>> GetProjects( int id)
         {
             try
             {
@@ -59,9 +94,7 @@ namespace Controller
 
         // PUT: api/Employee/5
         [HttpPut("{id}")]
-        public ActionResult<EmployeeResponse> Update(
-            int id,
-            UpdateEmployeeRequest request)
+        public ActionResult<EmployeeResponse> Update(int id,UpdateEmployeeRequest request)
         {
             try
             {
@@ -84,16 +117,31 @@ namespace Controller
         }
 
 
-        // DELETE: api/Employee/5
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            var deleted = _employeeManager.Delete(id);
+            try
+            {
+                var deleted = _employeeManager.Delete(id);
 
-            if (!deleted)
-                return NotFound();
+                if (!deleted)
+                    return NotFound(new
+                    {
+                        message = "Employee not found."
+                    });
 
-            return NoContent();
+                return Ok(new
+                {
+                    message = "Employee deleted successfully."
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
         }
     }
 }

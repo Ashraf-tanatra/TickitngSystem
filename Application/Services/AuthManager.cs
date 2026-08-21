@@ -2,6 +2,7 @@
 using ApplicationServices.DTOs.ApplicationServices.DTOs;
 using ApplicationServices.Interfaces;
 using Domain.Entities;
+using Domain.Interfaces;
 
 namespace ApplicationServices.Services
 {
@@ -10,13 +11,16 @@ namespace ApplicationServices.Services
         private readonly IEmployeeManager _employeeManager;
         private readonly IAccountManager _accountManager;
 
-        public AuthManager(
-            IAccountManager accountManager,
-            IEmployeeManager employeeManager)
+        private readonly IEmployeeRepository _employeeRepository;
+        private readonly IAccountRepository _accountRepository;
+
+        public AuthManager(IAccountManager accountManager,IEmployeeManager employeeManager)
         {
             _accountManager = accountManager;
             _employeeManager = employeeManager;
         }
+
+        
 
         // =========================
         // SIGN UP
@@ -205,6 +209,86 @@ namespace ApplicationServices.Services
                 Email = account.Email,
                 FName = account.Employee.FName,
                 LName = account.Employee.LName
+            };
+        }
+
+
+        // ==================================================
+        // Create New Account For Exist Employee 
+        // ==================================================
+        public AccountResponse CreateAccountForExistingEmployee( int employeeId,ReactivateAccountRequest request)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            if (string.IsNullOrWhiteSpace(request.Email))
+                throw new ArgumentException("Email is required.");
+
+            if (string.IsNullOrWhiteSpace(request.Password))
+                throw new ArgumentException("Password is required.");
+
+            if (request.Password != request.ConfirmPassword)
+                throw new ArgumentException(
+                    "Password and confirm password do not match.");
+
+            // Validate Email
+            if (!_accountManager.ValidEmailFormat(request.Email))
+                throw new ArgumentException(
+                    "Invalid email format.");
+
+            // Validate Password
+            if (!_accountManager.PasswordFormat(request.Password))
+                throw new ArgumentException(
+                    "Password must be at least 8 characters and contain " +
+                    "uppercase, lowercase, number, and special character.");
+
+            // Check Employee
+            var employee = _employeeRepository.GetById(employeeId);
+
+            if (employee == null)
+                throw new KeyNotFoundException(
+                    "Employee not found.");
+
+            if (!employee.IsDeleted)
+                throw new InvalidOperationException(
+                    "Employee is already active.");
+
+            // Check 10 Days
+            if (employee.DeletedAt == null)
+                throw new InvalidOperationException(
+                    "Deleted date is not available.");
+
+            if (employee.DeletedAt.Value.AddDays(10) < DateTime.UtcNow)
+                throw new InvalidOperationException(
+                    "Employee cannot be reactivated after 10 days.");
+
+            // Check Email
+            if (_accountRepository.EmailExists(request.Email))
+                throw new InvalidOperationException(
+                    "An account with this email already exists.");
+
+            // Reactivate Employee
+            employee.IsDeleted = false;
+            employee.DeletedAt = null;
+
+            _employeeRepository.Update(employee);
+
+            // Create New Account
+            var account = new Account
+            {
+                Email = request.Email,
+                PasswordHash = request.Password,
+                EmployeeId = employeeId
+            };
+
+            _accountRepository.Add(account);
+
+            // Response
+            return new AccountResponse
+            {
+                Id = account.Id,
+                Email = account.Email,
+                EmployeeId = employeeId
             };
         }
 

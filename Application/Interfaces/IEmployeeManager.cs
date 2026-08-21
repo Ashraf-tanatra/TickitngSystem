@@ -24,5 +24,6 @@ namespace ApplicationServices.Interfaces
         bool ValidPhoneNumberFormat(string phone);
 
         bool ExistsByPhone(string phone);
+        bool Reactivate(int id,ReactivateAccountRequest request);
     }
 }

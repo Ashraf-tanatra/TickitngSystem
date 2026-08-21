@@ -10,9 +10,11 @@ namespace Domain.EntityManager
         private readonly IEmployeeRepository _employeeRepository;
         private readonly IAccountRepository _accountRepository;
 
-        public EmployeeManager(IEmployeeRepository employeeRepository)
+        public EmployeeManager(IEmployeeRepository employeeRepository, IAccountRepository accountRepository)
         {
             _employeeRepository = employeeRepository;
+            _accountRepository = accountRepository;
+
         }
 
 
@@ -100,9 +102,7 @@ namespace Domain.EntityManager
         }
 
         // Update
-        public EmployeeResponse? Update(
-            int id,
-            UpdateEmployeeRequest request)
+        public EmployeeResponse? Update(int id, UpdateEmployeeRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -168,6 +168,9 @@ namespace Domain.EntityManager
             employee.IsDeleted = true;
             employee.DeletedAt = DateTime.UtcNow;
 
+            var account = employee.Account;
+            _accountRepository.Delete(account);
+
             _employeeRepository.Update(employee);
 
             return true;
@@ -206,6 +209,82 @@ namespace Domain.EntityManager
                     TicketCount = project.ProjectTickets.Count
                 };
             });
+        }
+
+        //ReActive Employee
+        public bool Reactivate(int id,ReactivateAccountRequest request)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            if (string.IsNullOrWhiteSpace(request.Email))
+                throw new ArgumentException(
+                    "Email is required.");
+
+            if (string.IsNullOrWhiteSpace(request.Password))
+                throw new ArgumentException(
+                    "Password is required.");
+
+            if (request.Password != request.ConfirmPassword)
+                throw new ArgumentException(
+                    "Password and confirm password do not match.");
+
+            // =========================
+            // Get Employee
+            // =========================
+
+            var employee = _employeeRepository.GetById(id);
+
+            if (employee == null)
+                return false;
+
+            if (!employee.IsDeleted)
+                throw new InvalidOperationException(
+                    "Employee is already active.");
+
+            // =========================
+            // Check Deleted Date
+            // =========================
+
+            if (employee.DeletedAt == null)
+                throw new InvalidOperationException(
+                    "Deleted date is not available.");
+
+            if (employee.DeletedAt.Value.AddDays(10) < DateTime.UtcNow)
+                throw new InvalidOperationException(
+                    "Employee cannot be reactivated after 10 days.");
+
+            // =========================
+            // Check Email
+            // =========================
+
+            if (_accountRepository.EmailExists(request.Email))
+                throw new InvalidOperationException(
+                    "An account with this email already exists.");
+
+            // =========================
+            // Reactivate Employee
+            // =========================
+
+            employee.IsDeleted = false;
+            employee.DeletedAt = null;
+
+            _employeeRepository.Update(employee);
+
+            // =========================
+            // Create New Account
+            // =========================
+
+            var account = new Account
+            {
+                Email = request.Email,
+                PasswordHash = request.Password,
+                EmployeeId = employee.Id
+            };
+
+            _accountRepository.Add(account);
+
+            return true;
         }
 
         // ADD

@@ -10,7 +10,7 @@ namespace ApplicationServices.Interfaces
 
         LoginResponse Login(
             LoginRequest request);
-
+        public AccountResponse CreateAccountForExistingEmployee(int employeeId, ReactivateAccountRequest request);
         //void VerifyEmail(
         //    VerifyEmailRequest request);
 
