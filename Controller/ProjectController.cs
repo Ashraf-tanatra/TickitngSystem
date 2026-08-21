@@ -8,33 +8,6 @@ namespace Controller
     [Route("api/[controller]")]
     public class ProjectController : ControllerBase
     {
-        private readonly IProjectManager _projectManager;
-
-        public ProjectController(IProjectManager projectManager)
-        {
-            _projectManager = projectManager;
-        }
-
-        // GET: api/Project
-        [HttpGet]
-        public ActionResult<IEnumerable<ProjectResponse>> GetAll()
-        {
-            var projects = _projectManager.GetAll();
-
-            return Ok(projects);
-        }
-
-        // GET: api/Project/5
-        [HttpGet("{id}")]
-        public ActionResult<ProjectResponse> GetById(int id)
-        {
-            var project = _projectManager.GetById(id);
-
-            if (project == null)
-                return NotFound();
-
-            return Ok(project);
-        }
 
         // POST: api/Project
         [HttpPost]
