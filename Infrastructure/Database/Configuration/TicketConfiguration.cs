@@ -85,6 +85,17 @@ namespace Infrastructure.Database.Configuration
                    .OnDelete(DeleteBehavior.Cascade);
 
 
+            // Ticket Attachments
+            builder.HasMany(t => t.TicketAttachments)
+                   .WithOne(a => a.Ticket)
+                   .HasForeignKey(a => a.TicketId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+
+            builder.ToTable("Tickets");
+
+
+
             builder.ToTable("Tickets");
         }
     }

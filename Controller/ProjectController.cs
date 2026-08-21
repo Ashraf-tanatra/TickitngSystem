@@ -8,25 +8,31 @@ namespace Controller
     [Route("api/[controller]")]
     public class ProjectController : ControllerBase
     {
+        private readonly ProjectManager _projectManager;
+
+        public ProjectController(ProjectManager projectManager)
+        {
+            _projectManager = projectManager;
+        }
 
         // POST: api/Project
-        [HttpPost]
-        public ActionResult<ProjectResponse> Create(CreateProjectRequest request)
-        {
-            try
-            {
-                var project = _projectManager.Create(request);
+        //[HttpPost]
+        //public ActionResult<ProjectResponse> Create(CreateProjectRequest request)
+        //{
+        //    try
+        //    {
+        //        var project = _projectManager.Create(request);
 
-                return CreatedAtAction(
-                    nameof(GetById),
-                    new { id = project.Id },
-                    project);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-        }
+        //        return CreatedAtAction(
+        //            nameof(GetById),
+        //            new { id = project.Id },
+        //            project);
+        //    }
+        //    catch (ArgumentException ex)
+        //    {
+        //        return BadRequest(ex.Message);
+        //    }
+        //}
 
         // PUT: api/Project/5
         [HttpPut("{id}")]

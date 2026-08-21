@@ -16,7 +16,7 @@ namespace Controller
         }
 
 
-        // GET: api/Employee
+        // GET: api/Employee (Get All Employee in Database)
         [HttpGet]
         public ActionResult<IEnumerable<EmployeeResponse>> GetAll()
         {
@@ -77,7 +77,7 @@ namespace Controller
 
         // GET: api/Employee/5/projects
         [HttpGet("{id}/projects")]
-        public ActionResult<IEnumerable<ProjectResponse>> GetProjects( int id)
+        public ActionResult<IEnumerable<EmployeeProjectResponse>> GetProjects(int id)
         {
             try
             {

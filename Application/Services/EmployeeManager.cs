@@ -189,26 +189,25 @@ namespace Domain.EntityManager
 
             var projects = _employeeRepository.GetProjects(employeeId);
 
-            return projects.Select(project =>
-            {
-                var projectEmployee = project.ProjectEmployees
-                    .First(pe => pe.EmployeeId == employeeId);
-
-                return new EmployeeProjectResponse
+            return projects
+                .Where(project =>
+                    project.ProjectEmployees
+                        .Any(pe => pe.EmployeeId == employeeId))
+                .Select(project =>
                 {
-                    Id = project.Id,
+                    var projectEmployee = project.ProjectEmployees
+                        .First(pe => pe.EmployeeId == employeeId);
 
-                    ProjectName = project.ProjectName,
-
-                    ProjectDescription = project.ProjectDescription,
-
-                    Role = projectEmployee.Role.ToString(),
-
-                    EmployeeCount = project.ProjectEmployees.Count,
-
-                    TicketCount = project.ProjectTickets.Count
-                };
-            });
+                    return new EmployeeProjectResponse
+                    {
+                        Id = project.Id,
+                        ProjectName = project.ProjectName,
+                        ProjectDescription = project.ProjectDescription,
+                        Role = projectEmployee.Role.ToString(),
+                        EmployeeCount = project.ProjectEmployees.Count,
+                        TicketCount = project.ProjectTickets.Count
+                    };
+                });
         }
 
         //ReActive Employee

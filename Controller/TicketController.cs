@@ -39,13 +39,11 @@ namespace Controller
 
         // POST: api/Ticket
         [HttpPost]
-        public ActionResult<TicketResponse> Create(
-            CreateTicketRequest request)
+        public ActionResult<TicketResponse> Create(CreateTicketRequest request)
         {
             try
             {
                 var ticket = _ticketManager.Create(request);
-
                 return CreatedAtAction(
                     nameof(GetById),
                     new { id = ticket.TicketId },
@@ -59,9 +57,7 @@ namespace Controller
 
         // PUT: api/Ticket/5
         [HttpPut("{id}")]
-        public ActionResult<TicketResponse> Update(
-            int id,
-            UpdateTicketRequest request)
+        public ActionResult<TicketResponse> Update(int id,UpdateTicketRequest request)
         {
             try
             {

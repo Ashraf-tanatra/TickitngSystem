@@ -67,21 +67,13 @@ namespace Infrastructure.Repositories
                     e.Id != employeeId &&
                     !e.IsDeleted);
         }
-        
-
-
-
-        // GET EMPLOYEE PROJECTS
-        public IEnumerable<Project> GetProjects(
-            int employeeId)
+        public IEnumerable<Project> GetProjects(int employeeId)
         {
             return _context.Projects
                 .Where(p => p.ProjectEmployees
-                    .Any(pe =>
-                        pe.EmployeeId == employeeId))
+                    .Any(pe => pe.EmployeeId == employeeId))
 
                 .Include(p => p.ProjectEmployees)
-                    .ThenInclude(pe => pe.Employee)
 
                 .Include(p => p.ProjectTickets)
 
