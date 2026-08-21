@@ -118,9 +118,7 @@ namespace ApplicationServices.Managers
             return _accountRepository.GetByEmail(email);
         }
 
-        public AccountResponse? Update(
-    int id,
-    UpdateAccountRequest request)
+        public AccountResponse? Update(int id,UpdateAccountRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));

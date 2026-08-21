@@ -10,9 +10,7 @@ namespace Domain.EntityManager
 
         ProjectResponse? GetById(int id);
 
-        ProjectResponse Update(
-            int id,
-            UpdateProjectRequest request);
+        ProjectResponse Update(int id,UpdateProjectRequest request);
 
         bool Delete(int id);
 

@@ -9,11 +9,9 @@ namespace ApplicationServices.Interfaces
 
         EmployeeResponse? GetById(int id);
 
-        IEnumerable<EmployeeResponse> GetAll();
+        IEnumerable<EmployeeResponse> GetAll(); 
 
-        EmployeeResponse? Update(
-            int id,
-            UpdateEmployeeRequest request);
+        EmployeeResponse? Update( int id, UpdateEmployeeRequest request); // make it void 
 
         bool Delete(int id);
 

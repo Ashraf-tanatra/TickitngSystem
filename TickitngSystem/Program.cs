@@ -50,6 +50,18 @@ builder.Services.AddScoped<
     IEmployeeRepository,
     EmployeeRepository>();
 
+// ==============================
+// Project
+// ==============================
+
+builder.Services.AddScoped<
+    IProjectManager,
+    ProjectManager>();
+
+builder.Services.AddScoped<
+    IProjectRepository,
+    ProjectRepository>();
+
 
 // ==============================
 // Account / Authentication

@@ -4,11 +4,11 @@ public class EmployeeResponse
 {
     public int Id { get; set; }
 
-    public string FName { get; set; } = null;
+    public string FName { get; set; } 
 
-    public string LName { get; set; } = null;
+    public string LName { get; set; } 
 
-    public string Phone { get; set; } = null;
+    public string Phone { get; set; } 
 
     public Gender Gender { get; set; }
 

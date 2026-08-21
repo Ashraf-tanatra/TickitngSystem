@@ -2,6 +2,7 @@
 
 namespace Domain.Interfaces
 {
+    
     public interface IProjectEmployeeRepository
     {
         IEnumerable<ProjectEmployee> GetAll();

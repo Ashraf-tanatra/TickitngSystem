@@ -6,18 +6,17 @@ namespace Domain.EntityManager
 {
     public class ProjectManager : IProjectManager
     {
-        //private readonly IProjectRepository _projectRepository;
+        private readonly IProjectRepository _projectRepository;
 
-        //public ProjectManager(IProjectRepository projectRepository)
-        //{
-        //    _projectRepository = projectRepository;
-        //}
+        public ProjectManager(IProjectRepository projectRepository)
+        {
+            _projectRepository = projectRepository;
+        }
 
         //// GET EMPLOYEES OF PROJECT
         //public IEnumerable<EmployeeResponse> GetEmployees(int projectId)
         //{
         //    var employees = _projectRepository.GetEmployees(projectId);
-
         //    return employees.Select(employee => new EmployeeResponse
         //    {
         //        Id = employee.Id,
@@ -25,31 +24,11 @@ namespace Domain.EntityManager
         //        LName = employee.LName,
         //        Phone = employee.Phone,
         //        Gender = employee.Gender,
-
         //        IsDeleted = employee.IsDeleted
         //    });
         //}
 
-        //// GET ALL
-        //public IEnumerable<ProjectResponse> GetAll()
-        //{
-        //    var projects = _projectRepository.GetAll();
-
-        //    return projects.Select(project => new ProjectResponse
-        //    {
-        //        Id = project.Id,
-        //        ProjectName = project.ProjectName,
-        //        ProjectDescription = project.ProjectDescription,
-        //        ProjectManagerId = project.ProjectManagerId,
-
-        //        ProjectManagerName = project.ProjectManager == null
-        //            ? null
-        //            : $"{project.ProjectManager.FName} {project.ProjectManager.LName}",
-
-        //        EmployeeCount = project.ProjectEmployees.Count,
-        //        TicketCount = project.ProjectTickets.Count
-        //    });
-        //}
+      
 
         //// GET BY ID
         //public ProjectResponse? GetById(int id)
@@ -217,9 +196,25 @@ namespace Domain.EntityManager
             throw new NotImplementedException();
         }
 
+        // GET ALL
         public IEnumerable<ProjectResponse> GetAll()
         {
-            throw new NotImplementedException();
+            var projects = _projectRepository.GetAll();
+
+            return projects.Select(project => new ProjectResponse
+            {
+                Id = project.Id,
+                ProjectName = project.ProjectName,
+                ProjectDescription = project.ProjectDescription,
+                ProjectManagerId = project.ProjectManagerId,
+
+                ProjectManagerName = project.ProjectManager == null
+                    ? null
+                    : $"{project.ProjectManager.FName} {project.ProjectManager.LName}",
+
+                EmployeeCount = project.ProjectEmployees.Count,
+                TicketCount = project.ProjectTickets.Count
+            });
         }
 
         public ProjectResponse? GetById(int id)
@@ -229,7 +224,16 @@ namespace Domain.EntityManager
 
         public IEnumerable<EmployeeResponse> GetEmployees(int projectId)
         {
-            throw new NotImplementedException();
+            var employees = _projectRepository.GetEmployees(projectId);
+            return employees.Select(employee => new EmployeeResponse
+            {
+                Id = employee.Id,
+                FName = employee.FName,
+                LName = employee.LName,
+                Phone = employee.Phone,
+                Gender = employee.Gender,
+                IsDeleted = employee.IsDeleted
+            });
         }
 
         public TicketResponse? GetTicket(int projectId, int TicketId)

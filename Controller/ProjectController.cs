@@ -38,8 +38,7 @@ namespace Controller
 
         // POST: api/Project
         [HttpPost]
-        public ActionResult<ProjectResponse> Create(
-            CreateProjectRequest request)
+        public ActionResult<ProjectResponse> Create(CreateProjectRequest request)
         {
             try
             {
@@ -58,9 +57,7 @@ namespace Controller
 
         // PUT: api/Project/5
         [HttpPut("{id}")]
-        public ActionResult<ProjectResponse> Update(
-            int id,
-            UpdateProjectRequest request)
+        public ActionResult<ProjectResponse> Update( int id, UpdateProjectRequest request)
         {
             try
             {

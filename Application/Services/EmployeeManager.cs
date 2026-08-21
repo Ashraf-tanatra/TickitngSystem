@@ -229,10 +229,7 @@ namespace Domain.EntityManager
                 throw new ArgumentException(
                     "Password and confirm password do not match.");
 
-            // =========================
             // Get Employee
-            // =========================
-
             var employee = _employeeRepository.GetById(id);
 
             if (employee == null)
@@ -242,39 +239,26 @@ namespace Domain.EntityManager
                 throw new InvalidOperationException(
                     "Employee is already active.");
 
-            // =========================
             // Check Deleted Date
-            // =========================
-
             if (employee.DeletedAt == null)
                 throw new InvalidOperationException(
                     "Deleted date is not available.");
 
-            if (employee.DeletedAt.Value.AddDays(10) < DateTime.UtcNow)
+            if (employee.DeletedAt.Value.AddDays(30) < DateTime.UtcNow)
                 throw new InvalidOperationException(
-                    "Employee cannot be reactivated after 10 days.");
-
-            // =========================
+                    "Employee cannot be reactivated after 30 days.");
             // Check Email
-            // =========================
-
             if (_accountRepository.EmailExists(request.Email))
                 throw new InvalidOperationException(
                     "An account with this email already exists.");
 
-            // =========================
             // Reactivate Employee
-            // =========================
-
             employee.IsDeleted = false;
             employee.DeletedAt = null;
 
             _employeeRepository.Update(employee);
 
-            // =========================
             // Create New Account
-            // =========================
-
             var account = new Account
             {
                 Email = request.Email,

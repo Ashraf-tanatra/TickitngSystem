@@ -53,10 +53,7 @@ namespace ApplicationServices.Services
                 throw new ArgumentException(
                     "You must accept the Terms of Service and Privacy Policy.");
 
-            // =========================
             // FORMAT VALIDATION
-            // =========================
-
             if (!_accountManager.ValidEmailFormat(request.Email))
                 throw new ArgumentException(
                     "Invalid email format.");
@@ -70,10 +67,7 @@ namespace ApplicationServices.Services
                 throw new ArgumentException(
                     "Phone number must contain exactly 10 digits.");
 
-            // =========================
             // CHECK DUPLICATES
-            // =========================
-
             // Check if Email already exists
             if (_accountManager.Exists(request.Email))
                 throw new InvalidOperationException(
@@ -84,10 +78,7 @@ namespace ApplicationServices.Services
                 throw new InvalidOperationException(
                     "An employee with this phone already exists.");
 
-            // =========================
             // Create Employee
-            // =========================
-
             var employee = new Employee
             {
                 FName = request.FName,
@@ -213,89 +204,10 @@ namespace ApplicationServices.Services
         }
 
 
-        // ==================================================
-        // Create New Account For Exist Employee 
-        // ==================================================
-        public AccountResponse CreateAccountForExistingEmployee( int employeeId,ReactivateAccountRequest request)
-        {
-            if (request == null)
-                throw new ArgumentNullException(nameof(request));
+        // =========================
+        // VERIFY EMAIL
+        // =========================
 
-            if (string.IsNullOrWhiteSpace(request.Email))
-                throw new ArgumentException("Email is required.");
-
-            if (string.IsNullOrWhiteSpace(request.Password))
-                throw new ArgumentException("Password is required.");
-
-            if (request.Password != request.ConfirmPassword)
-                throw new ArgumentException(
-                    "Password and confirm password do not match.");
-
-            // Validate Email
-            if (!_accountManager.ValidEmailFormat(request.Email))
-                throw new ArgumentException(
-                    "Invalid email format.");
-
-            // Validate Password
-            if (!_accountManager.PasswordFormat(request.Password))
-                throw new ArgumentException(
-                    "Password must be at least 8 characters and contain " +
-                    "uppercase, lowercase, number, and special character.");
-
-            // Check Employee
-            var employee = _employeeRepository.GetById(employeeId);
-
-            if (employee == null)
-                throw new KeyNotFoundException(
-                    "Employee not found.");
-
-            if (!employee.IsDeleted)
-                throw new InvalidOperationException(
-                    "Employee is already active.");
-
-            // Check 10 Days
-            if (employee.DeletedAt == null)
-                throw new InvalidOperationException(
-                    "Deleted date is not available.");
-
-            if (employee.DeletedAt.Value.AddDays(10) < DateTime.UtcNow)
-                throw new InvalidOperationException(
-                    "Employee cannot be reactivated after 10 days.");
-
-            // Check Email
-            if (_accountRepository.EmailExists(request.Email))
-                throw new InvalidOperationException(
-                    "An account with this email already exists.");
-
-            // Reactivate Employee
-            employee.IsDeleted = false;
-            employee.DeletedAt = null;
-
-            _employeeRepository.Update(employee);
-
-            // Create New Account
-            var account = new Account
-            {
-                Email = request.Email,
-                PasswordHash = request.Password,
-                EmployeeId = employeeId
-            };
-
-            _accountRepository.Add(account);
-
-            // Response
-            return new AccountResponse
-            {
-                Id = account.Id,
-                Email = account.Email,
-                EmployeeId = employeeId
-            };
-        }
-
-
-        //// =========================
-        //// VERIFY EMAIL
-        //// =========================
         //public void VerifyEmail(VerifyEmailRequest request)
         //{
         //    if (request == null)

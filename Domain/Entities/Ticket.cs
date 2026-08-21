@@ -16,6 +16,8 @@ namespace Domain.Entities
 
         public TicketPriority Priority { get; set; } = TicketPriority.Low;
 
+        public ICollection<TicketAttachments> TicketAttachments { get; set; } = new List<TicketAttachments>();
+
         public string? Description { get; set; }
         // Current assigned Employee
         public int EmployeeId { get; set; }

@@ -59,9 +59,7 @@ namespace Infrastructure.Repositories
 
 
         // CHECK PHONE EXCEPT CURRENT EMPLOYEE
-        public bool ExistsByPhoneExcept(
-            string phone,
-            int employeeId)
+        public bool ExistsByPhoneExcept(string phone,int employeeId)
         {
             return _context.Employees
                 .Any(e =>

@@ -8,22 +8,22 @@ namespace Infrastructure.Repositories
 {
     public class ProjectRepository : IProjectRepository
     {
-        //private readonly AppDbContext _context;
+        private readonly AppDbContext _context;
 
-        //public ProjectRepository(AppDbContext context)
-        //{
-        //    _context = context;
-        //}
+        public ProjectRepository(AppDbContext context)
+        {
+            _context = context;
+        }
 
-        //public IEnumerable<Project> GetAll()
-        //{
-        //    return _context.Projects
-        //        .Include(p => p.ProjectManager)
-        //        .Include(p => p.ProjectTickets)
-        //        .Include(p => p.ProjectEmployees)
-        //            .ThenInclude(pe => pe.Employee)
-        //        .ToList();
-        //}
+        public IEnumerable<Project> GetAll()
+        {
+            return _context.Projects
+                .Include(p => p.ProjectManager)
+                .Include(p => p.ProjectTickets)
+                .Include(p => p.ProjectEmployees)
+                    .ThenInclude(pe => pe.Employee)
+                .ToList();
+        }
 
         //public Project? GetById(int id)
         //{
@@ -66,14 +66,14 @@ namespace Infrastructure.Repositories
         //                 e.Role == EmployeeRole.Manager);
         //}
 
-        //public IEnumerable<Employee> GetEmployees(int projectId)
-        //{
-        //    return _context.ProjectEmployees
-        //        .Where(pe => pe.ProjectId == projectId)
-        //        .Select(pe => pe.Employee)
-        //        .Where(e => !e.IsDeleted)
-        //        .ToList();
-        //}
+        public IEnumerable<Employee> GetEmployees(int projectId)
+        {
+            return _context.ProjectEmployees
+                .Where(pe => pe.ProjectId == projectId)
+                .Select(pe => pe.Employee)
+                .Where(e => !e.IsDeleted)
+                .ToList();
+        }
 
         //public IEnumerable<Ticket> GetTickets(int projectId)
         //{
@@ -96,20 +96,14 @@ namespace Infrastructure.Repositories
             throw new NotImplementedException();
         }
 
-        public IEnumerable<Project> GetAll()
-        {
-            throw new NotImplementedException();
-        }
+       
 
         public Project? GetById(int id)
         {
             throw new NotImplementedException();
         }
 
-        public IEnumerable<Employee> GetEmployees(int projectId)
-        {
-            throw new NotImplementedException();
-        }
+      
 
         public IEnumerable<Ticket> GetTickets(int projectId)
         {
