@@ -15,7 +15,6 @@ namespace Domain.Entities
         public TicketPriority Priority { get; set; } = TicketPriority.Low;
 
         public string? Description { get; set; }
-        public int AttachmentURLId { get; set; }
 
         public Employee? Employee { get; set; }
         public int EmployeeId { get; set; }
@@ -25,7 +24,8 @@ namespace Domain.Entities
         public required int ProjectId { get; set; }
         public Project Project { get; set; }
         public ICollection<TicketHistory> TicketHistories { get; set; } = new List<TicketHistory>();
-        public ICollection<string>? AttachmentURL { get; set; }
+
+        public ICollection<TicketAttachments>? AttachmentURL { get; set; }
 
         // Used by Employee and project manager
         public void SetAsOnProgress() => TicketStatus = TicketStatus.InProgress;

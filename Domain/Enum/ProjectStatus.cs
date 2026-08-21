@@ -4,6 +4,7 @@
     {
         Active,
         Completed,
+        OnHold,
         Cancelled
     }
 }

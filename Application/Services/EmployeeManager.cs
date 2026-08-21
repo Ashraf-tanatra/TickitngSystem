@@ -36,7 +36,6 @@ namespace ApplicationServices.Services
             if (string.IsNullOrWhiteSpace(request.Password))
                 throw new ArgumentException("Password is required.");
 
-
             // 2. Check existing employees
             if (_EmployeeRepository.ExistsByEmail(request.Email))
             {
@@ -202,8 +201,8 @@ namespace ApplicationServices.Services
                     ? null
                     : $"{project.ProjectManager.FName} {project.ProjectManager.LName}",
 
-                EmployeeCount = project.ProjectEmployees.Count,
-                TicketCount = project.ProjectTickets.Count
+                //EmployeeCount = project.ProjectEmployees.Count,
+                //TicketCount = project.ProjectTickets.Count
             });
         }
 

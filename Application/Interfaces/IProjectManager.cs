@@ -1,16 +1,22 @@
 ﻿using ApplicationServices.DTOs.Project;
-using Domain.Entities;
 
 namespace ApplicationServices.Interfaces
 {
     public interface IProjectManager
     {
-        IEnumerable<Project> GetAllProjectWorkedByEmployee(int employeeId);
-        IEnumerable<Project> GetAllProjectWorkedByEmployeeTopThree(int employeeId);
+        IEnumerable<ProjectResponse> GetAllProjectWorkedByEmployee(int employeeId);
+        IEnumerable<string[]> GetAllProjectWorkedByEmployeeTopThree(int employeeId);
+        int GetProjectCount(int employeeId);
+
         ProjectResponse Create(CreateProjectRequest request);
         ProjectResponse? GetById(int id);
         ProjectResponse Update(int id, UpdateProjectRequest request);
         bool Delete(int id);
+
+        void SetProjectAsActive(int projectId);
+        void SetProjectAsCancelled(int projectId);
+        void SetProjectAsCompleted(int projectId);
+        void SetProjectAsOnHold(int projectId);
 
 
         //IEnumerable<ProjectResponse> GetAll();

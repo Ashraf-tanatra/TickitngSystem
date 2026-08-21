@@ -8,6 +8,9 @@ namespace Domain.Entities
         public required string ProjectName { get; set; }
         public string? ProjectDescription { get; set; }
         public ProjectStatus ProjectStatus { get; set; } = ProjectStatus.Active;
+        public DateOnly? StartedAt { get; set; }
+        public DateOnly? EndAt { get; set; }
+
 
         // Foreign Key
         public int ProjectManagerId { get; set; }

@@ -8,7 +8,6 @@ namespace Infrastructure.Database.Configuration
         public void Configure(EntityTypeBuilder<Account> builder)
         {
             builder.HasKey(a => a.Id);
-
             builder.Property(a => a.Id)
                    .ValueGeneratedOnAdd();
 

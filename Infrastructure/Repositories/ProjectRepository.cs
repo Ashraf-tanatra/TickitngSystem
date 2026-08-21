@@ -14,25 +14,31 @@ namespace Infrastructure.Repositories
             _context = context;
         }
 
-        // add order by Get all the projects that the employee works on
-        public IEnumerable<Project> GetAllProjectWorkedByEmployee(int employeeId)
+        // Get all the projects that the employee works on
+        public IEnumerable<Project>? GetAllProjectWorkedByEmployee(int employeeId)
         {
             return _context.Projects
-                    .Where(p => p.ProjectStatus == ProjectStatus.Active)
+                    //.Where(p => p.ProjectStatus == ProjectStatus.Active)
                     .Include(p => p.ProjectEmployees)
-                    .Where(p => p.ProjectEmployees.Any(pe => pe.EmployeeId == employeeId))
+                    .Where(p => p.ProjectManagerId == employeeId || p.ProjectEmployees.Any(pe => pe.EmployeeId == employeeId))
                     .ToList();
         }
-        // add order by last three projects that the employee added to works on
-        public IEnumerable<Project> GetAllProjectWorkedByEmployeeTopThree(int employeeId)
+        // last three projects that the employee added to works on
+        public IEnumerable<String[]>? GetAllProjectWorkedByEmployeeTopThree(int employeeId)
         {
             return _context.Projects
-                   .Where(p => p.ProjectStatus == ProjectStatus.Active)
+                   .Where(p => p.ProjectStatus == ProjectStatus.Active || p.ProjectStatus == ProjectStatus.OnHold)
                    .Include(p => p.ProjectEmployees)
-                   .Where(p => p.ProjectEmployees.Any(pe => pe.EmployeeId == employeeId))
+                   .Where(p => p.ProjectManagerId == employeeId || p.ProjectEmployees.Any(pe => pe.EmployeeId == employeeId))
+                   .OrderByDescending(d => d.StartedAt)
                    .Take(3)
+                   .Select(p => new string[2]
+                   {
+                        p.ProjectName,
+                        p.ProjectEmployees.FirstOrDefault(pe=>pe.EmployeeId==employeeId).Role
+                   })
                    .ToList();
-            //OrderBy(d=>d.EndTime) //to do after edit the database
+            // //to do after edit the database
         }
         //Number of projects that the employee works on
         public int GetProjectCount(int employeeId)
@@ -40,17 +46,17 @@ namespace Infrastructure.Repositories
             return _context.Projects
                    .Where(p => p.ProjectStatus == ProjectStatus.Active)
                    .Include(p => p.ProjectEmployees)
-                   .Where(p => p.ProjectEmployees.Any(pe => pe.EmployeeId == employeeId))
+                   .Where(p => p.ProjectManagerId == employeeId || p.ProjectEmployees.Any(pe => pe.EmployeeId == employeeId))
                    .Count();
         }
 
         public Project? GetById(int id)
         {
             return _context.Projects
-                .Include(p => p.ProjectManager)
-                .Include(p => p.ProjectTickets)
+                //.Include(p => p.ProjectManager)
+                //.Include(p => p.ProjectTickets)
                 .Include(p => p.ProjectEmployees)
-                    .ThenInclude(pe => pe.Employee)
+                //.ThenInclude(pe => pe.Employee)
                 .FirstOrDefault(p => p.Id == id);
         }
         // Create
@@ -89,6 +95,12 @@ namespace Infrastructure.Repositories
             _context.Projects
               .Where(p => p.Id == projectId)
               .ExecuteUpdate(setter => setter.SetProperty(p => p.ProjectStatus, ProjectStatus.Completed));
+        }
+        public void SetProjectAsOnHold(int projectId)
+        {
+            _context.Projects
+              .Where(p => p.Id == projectId)
+              .ExecuteUpdate(setter => setter.SetProperty(p => p.ProjectStatus, ProjectStatus.OnHold));
         }
 
         // ?

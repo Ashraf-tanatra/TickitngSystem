@@ -1,6 +1,5 @@
 ﻿using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 
 namespace Infrastructure
 {
@@ -28,14 +27,14 @@ namespace Infrastructure
                 typeof(AppDbContext).Assembly);
         }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            base.OnConfiguring(optionsBuilder);
-            var config = new ConfigurationBuilder().AddJsonFile("appsettings.json")
-               .Build();
+        //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        //{
+        //    base.OnConfiguring(optionsBuilder);
+        //    var config = new ConfigurationBuilder().AddJsonFile("appsettings.json")
+        //       .Build();
 
-            var connectionString = config.GetSection("constr").Value;
-            optionsBuilder.UseSqlServer(connectionString);
-        }
+        //    var connectionString = config.GetSection("constr").Value;
+        //    optionsBuilder.UseSqlServer(connectionString);
+        //}
     }
 }

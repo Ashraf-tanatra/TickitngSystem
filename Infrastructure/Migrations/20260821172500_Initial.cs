@@ -59,6 +59,8 @@ namespace Infrastructure.Migrations
                     ProjectName = table.Column<string>(type: "varchar(125)", maxLength: 125, nullable: false),
                     ProjectDescription = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true),
                     ProjectStatus = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    StartedAt = table.Column<DateOnly>(type: "date", nullable: true),
+                    EndAt = table.Column<DateOnly>(type: "date", nullable: true),
                     ProjectManagerId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -109,11 +111,9 @@ namespace Infrastructure.Migrations
                     TicketStatus = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Priority = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Description = table.Column<string>(type: "varchar(2500)", maxLength: 2500, nullable: true),
-                    AttachmentURLId = table.Column<int>(type: "int", nullable: false),
                     EmployeeId = table.Column<int>(type: "int", nullable: false),
                     TicketCreatedById = table.Column<int>(type: "int", nullable: false),
-                    ProjectId = table.Column<int>(type: "int", nullable: false),
-                    AttachmentURL = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    ProjectId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -136,6 +136,26 @@ namespace Infrastructure.Migrations
                         principalTable: "Projects",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Attachments",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    URL = table.Column<string>(type: "VARCHAR(255)", maxLength: 255, nullable: false),
+                    TicketId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Attachments", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Attachments_Tickets_TicketId",
+                        column: x => x.TicketId,
+                        principalTable: "Tickets",
+                        principalColumn: "TicketId",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -191,6 +211,11 @@ namespace Infrastructure.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_Attachments_TicketId",
+                table: "Attachments",
+                column: "TicketId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ProjectEmployees_EmployeeId",
                 table: "ProjectEmployees",
                 column: "EmployeeId");
@@ -241,6 +266,9 @@ namespace Infrastructure.Migrations
         {
             migrationBuilder.DropTable(
                 name: "Accounts");
+
+            migrationBuilder.DropTable(
+                name: "Attachments");
 
             migrationBuilder.DropTable(
                 name: "ProjectEmployees");

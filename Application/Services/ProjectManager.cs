@@ -14,13 +14,44 @@ namespace ApplicationServices.Services
             _projectRepository = projectRepository;
         }
 
-        public IEnumerable<Project> GetAllProjectWorkedByEmployee(int employeeId)
+        public IEnumerable<ProjectResponse> GetAllProjectWorkedByEmployee(int employeeId)
         {
-            throw new NotImplementedException();
+            var Emp = _projectRepository.EmployeeExists(employeeId);
+            if (!Emp)
+                return null;
+
+            var project = _projectRepository.GetAllProjectWorkedByEmployee(employeeId);
+
+            if (project == null)
+                return null;
+
+            return project.Select(project => new ProjectResponse
+            {
+                Id = project.Id,
+                ProjectName = project.ProjectName,
+                ProjectDescription = project.ProjectDescription,
+                ProjectManagerId = project.ProjectManagerId,
+                StartDate = project.StartedAt,
+                EndDate = project.EndAt,
+                EmployeeRole = (project.ProjectManagerId == employeeId ? "Manager" : null)
+                ?? project.ProjectEmployees?.FirstOrDefault(pe => pe.EmployeeId == employeeId)?.Role
+
+
+                //ProjectManagerName = project.ProjectManager == null ? null
+                //    : $"{project.ProjectManager.FName} {project.ProjectManager.LName}"
+
+                //EmployeeCount = project.ProjectEmployees.Count,
+                //TicketCount = project.ProjectTickets.Count
+            });
         }
-        public IEnumerable<Project> GetAllProjectWorkedByEmployeeTopThree(int employeeId)
+
+        public IEnumerable<string[]> GetAllProjectWorkedByEmployeeTopThree(int employeeId)
         {
-            throw new NotImplementedException();
+            return _projectRepository.GetAllProjectWorkedByEmployeeTopThree(employeeId);
+        }
+        public int GetProjectCount(int employeeId)
+        {
+            return _projectRepository.GetProjectCount(employeeId);
         }
 
         // GET By ID
@@ -36,14 +67,19 @@ namespace ApplicationServices.Services
                 Id = project.Id,
                 ProjectName = project.ProjectName,
                 ProjectDescription = project.ProjectDescription,
-                ProjectManagerId = project.ProjectManagerId, // ?
+                ProjectManagerId = project.ProjectManagerId,
+                StartDate = project.StartedAt,
+                EndDate = project.EndAt
 
-                ProjectManagerName = project.ProjectManager == null
-                    ? null
-                    : $"{project.ProjectManager.FName} {project.ProjectManager.LName}",
+                //EmployeeRole = (project.ProjectManagerId == id ? "Manager" : null)
+                //?? project.ProjectEmployees?.FirstOrDefault(pe => pe.EmployeeId == id)?.Role
 
-                EmployeeCount = project.ProjectEmployees.Count,   // ?
-                TicketCount = project.ProjectTickets.Count        // ?
+                //ProjectManagerName = project.ProjectManager == null
+                //    ? null
+                //    : $"{project.ProjectManager.FName} {project.ProjectManager.LName}",
+
+                //EmployeeCount = project.ProjectEmployees.Count,   // ?
+                //TicketCount = project.ProjectTickets.Count        // ?
             };
         }
         // CREATE
@@ -63,24 +99,28 @@ namespace ApplicationServices.Services
                     "The specified Project Manager does not exist.");
             }
 
+            var project = new Project
+            {
+                ProjectName = request.ProjectName,
+                ProjectDescription = request.ProjectDescription,
+                ProjectManagerId = request.ProjectManagerId,
+                StartedAt = request.StartTime,
+                EndAt = request.EndTime
+            };
+
+            _projectRepository.Create(project);
+
+            return GetById(project.Id); // may need edit
+
             //if (!_projectRepository.IsManager(
             //        request.ProjectManagerId))
             //{
             //    throw new ArgumentException(
             //        "The specified employee is not a Project Manager.");
             //}
-
-            var project = new Project
-            {
-                ProjectName = request.ProjectName,
-                ProjectDescription = request.ProjectDescription,
-                ProjectManagerId = request.ProjectManagerId
-            };
-
-            _projectRepository.Create(project);
-
-            return GetById(project.Id)!;
         }
+
+        // need edit for testing for project managet only can edit
         // UPDATE
         public ProjectResponse Update(int id, UpdateProjectRequest request)
         {
@@ -114,6 +154,8 @@ namespace ApplicationServices.Services
             project.ProjectName = request.ProjectName;
             project.ProjectDescription = request.ProjectDescription;
             project.ProjectManagerId = request.ProjectManagerId;
+            project.StartedAt = request.StartDate;
+            project.EndAt = request.EndDate;
 
             _projectRepository.Update(project);
 
@@ -130,6 +172,25 @@ namespace ApplicationServices.Services
             _projectRepository.Delete(project);
 
             return true;
+        }
+
+        void IProjectManager.SetProjectAsActive(int projectId)
+        {
+            _projectRepository.SetProjectAsActive(projectId);
+
+        }
+        void IProjectManager.SetProjectAsCancelled(int projectId)
+        {
+            _projectRepository.SetProjectAsCancelled(projectId);
+
+        }
+        void IProjectManager.SetProjectAsCompleted(int projectId)
+        {
+            _projectRepository.SetProjectAsCompleted(projectId);
+        }
+        void IProjectManager.SetProjectAsOnHold(int projectId)
+        {
+            _projectRepository.SetProjectAsOnHold(projectId);
         }
 
 

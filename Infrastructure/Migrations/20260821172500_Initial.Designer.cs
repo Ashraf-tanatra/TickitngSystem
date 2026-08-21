@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260820202714_Initial")]
+    [Migration("20260821172500_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -102,6 +102,9 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateOnly?>("EndAt")
+                        .HasColumnType("date");
+
                     b.Property<string>("ProjectDescription")
                         .HasMaxLength(255)
                         .HasColumnType("varchar");
@@ -117,6 +120,9 @@ namespace Infrastructure.Migrations
                     b.Property<string>("ProjectStatus")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateOnly?>("StartedAt")
+                        .HasColumnType("date");
 
                     b.HasKey("Id");
 
@@ -150,12 +156,6 @@ namespace Infrastructure.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TicketId"));
-
-                    b.PrimitiveCollection<string>("AttachmentURL")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("AttachmentURLId")
-                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedTime")
                         .HasColumnType("datetime");
@@ -198,6 +198,29 @@ namespace Infrastructure.Migrations
                     b.HasIndex("TicketCreatedById");
 
                     b.ToTable("Tickets", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.TicketAttachments", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("TicketId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("URL")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("VARCHAR");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TicketId");
+
+                    b.ToTable("Attachments", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.TicketHistory", b =>
@@ -314,6 +337,17 @@ namespace Infrastructure.Migrations
                     b.Navigation("TicketCreatedBy");
                 });
 
+            modelBuilder.Entity("Domain.Entities.TicketAttachments", b =>
+                {
+                    b.HasOne("Domain.Entities.Ticket", "Ticket")
+                        .WithMany("AttachmentURL")
+                        .HasForeignKey("TicketId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Ticket");
+                });
+
             modelBuilder.Entity("Domain.Entities.TicketHistory", b =>
                 {
                     b.HasOne("Domain.Entities.Employee", "ActionByEmployee")
@@ -368,6 +402,8 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.Ticket", b =>
                 {
+                    b.Navigation("AttachmentURL");
+
                     b.Navigation("TicketHistories");
                 });
 #pragma warning restore 612, 618
