@@ -14,23 +14,6 @@ namespace ApplicationServices.Services
             _ticketRepository = ticketRepository;
         }
 
-        public IEnumerable<TicketResponse> GetAll() // ?
-        {
-            var tickets = _ticketRepository.GetAll();
-
-            return tickets.Select(ticket => new TicketResponse
-            {
-                TicketId = ticket.TicketId,
-                TicketTitle = ticket.TicketTitle,
-                DueTo = ticket.DueTo,
-                TicketStatus = ticket.TicketStatus.ToString(),
-                Priority = ticket.Priority.ToString(),
-                Description = ticket.Description,
-                EmployeeId = ticket.EmployeeId,
-                ProjectId = ticket.ProjectId
-            });
-        }
-
         public TicketResponse? GetById(int id)
         {
             var ticket = _ticketRepository.GetById(id);
@@ -93,9 +76,7 @@ namespace ApplicationServices.Services
             };
         }
 
-        public TicketResponse Update(
-            int id,
-            UpdateTicketRequest request)
+        public TicketResponse Update(int id, UpdateTicketRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -146,4 +127,21 @@ namespace ApplicationServices.Services
             return true;
         }
     }
+
+    //public IEnumerable<TicketResponse> GetAll() 
+    //{
+    //    var tickets = _ticketRepository.GetAll();
+
+    //    return tickets.Select(ticket => new TicketResponse
+    //    {
+    //        TicketId = ticket.TicketId,
+    //        TicketTitle = ticket.TicketTitle,
+    //        DueTo = ticket.DueTo,
+    //        TicketStatus = ticket.TicketStatus.ToString(),
+    //        Priority = ticket.Priority.ToString(),
+    //        Description = ticket.Description,
+    //        EmployeeId = ticket.EmployeeId,
+    //        ProjectId = ticket.ProjectId
+    //    });
+    //}
 }

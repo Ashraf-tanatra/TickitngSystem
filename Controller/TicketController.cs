@@ -15,16 +15,6 @@ namespace Controller
             _ticketManager = ticketManager;
         }
 
-        // GET: api/Ticket
-        [HttpGet]
-        public ActionResult<IEnumerable<TicketResponse>> GetAll()
-        {
-            var tickets = _ticketManager.GetAll();
-
-            return Ok(tickets);
-        }
-
-        // GET: api/Ticket/5
         [HttpGet("{id}")]
         public ActionResult<TicketResponse> GetById(int id)
         {
@@ -35,7 +25,6 @@ namespace Controller
 
             return Ok(ticket);
         }
-
 
         // POST: api/Ticket
         [HttpPost]
@@ -89,4 +78,17 @@ namespace Controller
             return NoContent();
         }
     }
+
+
+
+    // GET: api/Ticket
+    //[HttpGet]
+    //public ActionResult<IEnumerable<TicketResponse>> GetAll()
+    //{
+    //    var tickets = _ticketManager.GetAll();
+
+    //    return Ok(tickets);
+    //}
+
+    // GET: api/Ticket/5
 }

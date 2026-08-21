@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Controller
 {
     [ApiController]
-    [Route("api")]
+    [Route("api/[controller]")]
     public class ProjectController : ControllerBase
     {
         private readonly IProjectManager _projectManager;
@@ -17,7 +17,7 @@ namespace Controller
         }
         //Tested
         //GET api/project/employee = 1
-        [HttpGet("[controller]/employeeId = {employeeId:int}")]
+        [HttpGet("employeeId = {employeeId:int}")]
         public ActionResult<ProjectResponse> GetProjectsWorkedByEmployee(int employeeId)
         {
             try
@@ -33,9 +33,10 @@ namespace Controller
             }
         }
 
+
         //Tested
         //GET api/project/TopThree/1
-        [HttpGet("Dashboard/[controller]/{employeeId:int}")]
+        [HttpGet("Dashboard/{employeeId:int}")]
         public ActionResult<ProjectResponse> GetProjectsWorkedByEmployeeTopThree(int employeeId)
         {
             //var emp = EmployeeController.GetById(employeeId);
@@ -44,6 +45,18 @@ namespace Controller
                 return NotFound();
 
             return Ok(projects);
+        }
+
+        //Get api/project/Employees/1
+        [HttpGet("Employees/{projectId:int}")]
+        public ActionResult<IEnumerable<EmployeeResponse>> GetEmployees(int projectId)
+        {
+            var project = _projectManager.GetById(projectId);
+            if (project == null)
+                return NotFound();
+
+            var employees = _projectManager.GetEmployeesWorkOnProject(projectId);
+            return Ok(employees);
         }
 
         //Tested
@@ -56,7 +69,7 @@ namespace Controller
 
         //Tested
         // GET: api/Project/1
-        [HttpGet("[controller]/{id:int}")]
+        [HttpGet("{id:int}")]
         public ActionResult<ProjectResponse> GetById(int id)
         {
             var project = _projectManager.GetById(id);
@@ -69,18 +82,15 @@ namespace Controller
 
         //Tested
         // POST: api/Project
-        [Route("[controller]")]
         [HttpPost]
         public ActionResult<ProjectResponse> Create(CreateProjectRequest request)
         {
             try
             {
-                var project = _projectManager.Create(request);
+                var projectId = _projectManager.Create(request);
 
-                return CreatedAtAction(
-                    nameof(GetById),
-                    new { id = project.Id },
-                    project);
+                return Ok(projectId);
+                //CreatedAtAction(nameof(GetById),new { id = project.Id },project);
             }
             catch (ArgumentException ex)
             {
@@ -90,7 +100,7 @@ namespace Controller
 
         //Tested
         // PUT: api/Project/5
-        [HttpPut("[controller]/{id}")]
+        [HttpPut("{id}")]
         public ActionResult<ProjectResponse> Update(int id, UpdateProjectRequest request)
         {
             try
@@ -111,7 +121,7 @@ namespace Controller
 
         //Tested
         // PUT: api/Project/1/1
-        [HttpPut("[controller]/{id:int}/{status:int}")]
+        [HttpPut("{id:int}/{status:int}")]
         public IActionResult UpdateStatus(int id, ProjectStatus status)
         {
             var projcet = _projectManager.GetById(id);
@@ -153,7 +163,7 @@ namespace Controller
 
         // Can't delete if there is an employee or an tickets
         // DELETE: api/Project/5
-        [HttpDelete("[controller]/{id}")]
+        [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
             try
@@ -167,6 +177,39 @@ namespace Controller
                 return BadRequest(ex.Message);
             }
 
+        }
+
+        [Route("AddEmployee")]
+        [HttpPost]
+        public ActionResult<ProjectEmployeeRequest> AddEmployeeToProject(ProjectEmployeeRequest request)
+        {
+            try
+            {
+                _projectManager.ProjectAddEmployee(request);
+
+                return Ok(request);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("employeeId = {employeeId:int}/[controller]")]
+        public ActionResult<ProjectResponse> GetProjectsWorkedByEmployeeWithFilter(int employeeId, [FromQuery] ProjectStatus filterStatus)
+        {
+            try
+            {
+                var projects = _projectManager.GetAllProjectWorkedByEmployeeWithFilter(employeeId, filterStatus);
+
+                if (projects == null)
+                    return NotFound();
+                return Ok(projects);
+            }
+            catch (NullReferenceException)
+            {
+                return NotFound();
+            }
         }
 
 
