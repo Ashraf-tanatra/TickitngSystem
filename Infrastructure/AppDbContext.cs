@@ -18,6 +18,7 @@ namespace Infrastructure
         public DbSet<ProjectEmployee> ProjectEmployees { get; set; }
         public DbSet<Account> Accounts { get; set; }
         public DbSet<TicketHistory> TicketHistories { get; set; }
+        public DbSet<TicketAttachments> Attachments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

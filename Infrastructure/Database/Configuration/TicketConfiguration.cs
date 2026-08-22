@@ -41,12 +41,12 @@ namespace Infrastructure.Database.Configuration
 
             // Due Date
             builder.Property(x => x.DueTo)
-                   .HasColumnType("date");
+                   .HasColumnType("DATE");
 
 
             // Created Time
-            builder.Property(x => x.CreatedTime)
-                   .HasColumnType("datetime");
+            builder.Property(x => x.CreatedAt)
+                   .HasColumnType("DATE");
 
 
             // Description

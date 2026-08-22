@@ -12,21 +12,16 @@ namespace ApplicationServices.Interfaces
 
         int Create(CreateProjectRequest request);
         ProjectResponse? GetById(int id);
-        ProjectResponse Update(int id, UpdateProjectRequest request);
-        bool Delete(int id);
+        void Update(int projectId, int empId, UpdateProjectRequest request);
+        void Delete(int id, int empId);
 
         void ProjectAddEmployee(ProjectEmployeeRequest request);
 
-        void SetProjectAsActive(int projectId);
-        void SetProjectAsCancelled(int projectId);
-        void SetProjectAsCompleted(int projectId);
-        void SetProjectAsOnHold(int projectId);
+        void SetProjectStatus(int projectId, ProjectStatus status);
+
+        bool ProjectExits(int projectId);
 
 
         IEnumerable<ProjectResponse>? GetAllProjectWorkedByEmployeeWithFilter(int employeeId, ProjectStatus FilterByStatus);
-
-        //IEnumerable<TicketResponse> GetTickets(int projectId);
-
-        //TicketResponse? GetTicket(int projectId, int TicketId);
     }
 }

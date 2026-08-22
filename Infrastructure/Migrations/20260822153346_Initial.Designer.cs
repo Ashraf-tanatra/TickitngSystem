@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260821172500_Initial")]
+    [Migration("20260822153346_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -157,15 +157,15 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TicketId"));
 
-                    b.Property<DateTime>("CreatedTime")
-                        .HasColumnType("datetime");
+                    b.Property<DateOnly>("CreatedAt")
+                        .HasColumnType("DATE");
 
                     b.Property<string>("Description")
                         .HasMaxLength(2500)
                         .HasColumnType("varchar");
 
-                    b.Property<DateTime?>("DueTo")
-                        .HasColumnType("date");
+                    b.Property<DateOnly?>("DueTo")
+                        .HasColumnType("DATE");
 
                     b.Property<int>("EmployeeId")
                         .HasColumnType("int");

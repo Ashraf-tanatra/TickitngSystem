@@ -5,7 +5,7 @@ namespace Domain.Entities
     public class Project
     {
         public int Id { get; set; }
-        public required string ProjectName { get; set; }
+        public string ProjectName { get; set; } = null!;
         public string? ProjectDescription { get; set; }
         public ProjectStatus ProjectStatus { get; set; } = ProjectStatus.Active;
         public DateOnly? StartedAt { get; set; }

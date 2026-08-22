@@ -18,7 +18,7 @@ namespace Infrastructure.Repositories
         public IEnumerable<Project>? GetAllProjectWorkedByEmployee(int employeeId)
         {
             return _context.Projects
-                    //.Where(p => p.ProjectStatus == ProjectStatus.Active)
+                    .Where(p => p.ProjectStatus != ProjectStatus.Cancelled)
                     .Include(p => p.ProjectEmployees)
                     .Where(p => p.ProjectManagerId == employeeId || p.ProjectEmployees.Any(pe => pe.EmployeeId == employeeId))
                     .ToList();
@@ -58,16 +58,17 @@ namespace Infrastructure.Repositories
                    .Where(p => p.ProjectManagerId == employeeId || p.ProjectEmployees.Any(pe => pe.EmployeeId == employeeId))
                    .Count();
         }
-
-        public Project? GetById(int id)
+        public Project GetById(int id)
         {
+            if (!ProjectExits(id))
+                throw new ArgumentException($"Project does not exist.");
+
             return _context.Projects
-                //.Include(p => p.ProjectManager)
-                //.Include(p => p.ProjectTickets)
                 .Include(p => p.ProjectEmployees)
                 .ThenInclude(pe => pe.Employee)
                 .FirstOrDefault(p => p.Id == id);
         }
+
         // Create
         public void Create(Project project)
         {
@@ -80,11 +81,28 @@ namespace Infrastructure.Repositories
             _context.Projects.Update(project);
             _context.SaveChanges();
         }
-        // Delete // ? may not Delete the project just set it as cancelled
-        public void Delete(Project project)
+
+        // Delete
+        public void Delete(int projectId, int employeeId)
         {
-            _context.Projects.Remove(project);
-            _context.SaveChanges();
+            if (!ProjectExits(projectId))
+                throw new ArgumentException($"Project does not exist.");
+            if (!IsManager(projectId, employeeId))
+                throw new ArgumentException($"Project cannot delete by you.");
+
+            if (TicketExists(projectId))
+                _context.Projects.Where(p => p.Id == projectId)
+                    .ExecuteUpdate(setter => setter.SetProperty(p => p.ProjectStatus, ProjectStatus.Cancelled));
+
+            else
+            {
+                var project = GetById(projectId);
+                if (project.ProjectStatus == ProjectStatus.Cancelled)
+                    throw new ArgumentException($"Project is already cancelled.");
+
+                _context.Projects.Remove(project);
+                _context.SaveChanges();
+            }
         }
 
         public void AddEmployeeToProject(ProjectEmployee projectEmployee)
@@ -93,39 +111,23 @@ namespace Infrastructure.Repositories
             _context.SaveChanges();
         }
 
-        public void SetProjectAsActive(int projectId)
+
+        public void SetProjectStatus(int projectId, ProjectStatus status)
         {
             _context.Projects
+              .Where(p => p.Id == projectId)
+              .ExecuteUpdate(setter => setter.SetProperty(p => p.ProjectStatus, status));
+        }
+
+        public bool EmployeeExists(int employeeId) => _context.Employees.Any(e => e.Id == employeeId);
+        public bool ProjectExits(int projectId) => _context.Projects.Any(p => p.Id == projectId);
+        public bool TicketExists(int projectId) => _context.Tickets.Any(t => t.ProjectId == projectId);
+        public bool IsManager(int projectId, int employeeId)
+        {
+            return _context.Projects
                 .Where(p => p.Id == projectId)
-                .ExecuteUpdate(setter => setter.SetProperty(p => p.ProjectStatus, ProjectStatus.Active));
+                .Any(e => e.ProjectManagerId == employeeId);
         }
-        public void SetProjectAsCancelled(int projectId)
-        {
-            _context.Projects
-              .Where(p => p.Id == projectId)
-              .ExecuteUpdate(setter => setter.SetProperty(p => p.ProjectStatus, ProjectStatus.Cancelled));
-        }
-        public void SetProjectAsCompleted(int projectId)
-        {
-            _context.Projects
-              .Where(p => p.Id == projectId)
-              .ExecuteUpdate(setter => setter.SetProperty(p => p.ProjectStatus, ProjectStatus.Completed));
-        }
-        public void SetProjectAsOnHold(int projectId)
-        {
-            _context.Projects
-              .Where(p => p.Id == projectId)
-              .ExecuteUpdate(setter => setter.SetProperty(p => p.ProjectStatus, ProjectStatus.OnHold));
-        }
-
-        public bool EmployeeExists(int employeeId)
-        {
-            return _context.Employees
-                    .Any(e => e.Id == employeeId);
-        }
-
-
-
         public IEnumerable<Project>? GetAllProjectWorkedByEmployeeWithFilter(int employeeId, ProjectStatus FilterByStatus)
         {
 
@@ -136,31 +138,5 @@ namespace Infrastructure.Repositories
                      .ToList();
         }
 
-
-        //public bool IsManager(int employeeId)
-        //{
-        //    return _context.Employees
-        //        .Any(e => e.Id == employeeId &&
-        //                 e.Role == EmployeeRole.Manager);
-        //}
-
-
-
-        //public IEnumerable<Ticket> GetTickets(int projectId)
-        //{
-        //    return _context.Tickets
-        //        .Where(t => t.ProjectId == projectId)
-        //        .ToList();
-        //}
-
-        //public IEnumerable<Project> GetAll()
-        //{
-        //    return _context.Projects
-        //        .Include(p => p.ProjectManager)
-        //        .Include(p => p.ProjectTickets)
-        //        .Include(p => p.ProjectEmployees)
-        //            .ThenInclude(pe => pe.Employee)
-        //        .ToList();
-        //}
     }
 }
