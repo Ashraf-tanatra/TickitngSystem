@@ -52,7 +52,7 @@ namespace Infrastructure.Database.Configuration
             // Description
             builder.Property(x => x.Description)
                    .HasColumnType("varchar")
-                   .HasMaxLength(255);
+                   .HasMaxLength(2500);
 
 
             // Assigned Employee

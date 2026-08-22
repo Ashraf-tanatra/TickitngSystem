@@ -1,9 +1,8 @@
-﻿using ApplicationServices.DTOs;
+﻿using ApplicationServices.DTOs.Account;
 using ApplicationServices.Interfaces;
-using Domain.Entities;
 using Domain.Interfaces;
 
-namespace ApplicationServices.Managers
+namespace ApplicationServices.Services
 {
     public class AccountManager : IAccountManager
     {
@@ -44,13 +43,13 @@ namespace ApplicationServices.Managers
             _accountRepository.Add(account);
 
             // 5. Return response
-            return new AccountResponse
+            return new AccountResponse // ?
             {
                 Email = account.Email
             };
         }
 
-        public AccountResponse? GetByEmail(string email)
+        public AccountResponse? GetByEmail(string email)  //?
         {
             if (string.IsNullOrWhiteSpace(email))
                 throw new ArgumentException("Email is required.");
@@ -74,7 +73,7 @@ namespace ApplicationServices.Managers
             return _accountRepository.GetByEmail(email) != null;
         }
 
-        public bool Delete(string email)
+        public bool Delete(string email)// may delete this
         {
             if (string.IsNullOrWhiteSpace(email))
                 return false;

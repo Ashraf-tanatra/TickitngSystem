@@ -1,4 +1,5 @@
-﻿using ApplicationServices.DTOs;
+﻿using ApplicationServices.DTOs.Employee;
+using ApplicationServices.DTOs.Project;
 using Domain.Entities;
 
 namespace ApplicationServices.Interfaces

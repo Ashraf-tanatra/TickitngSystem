@@ -1,10 +1,10 @@
-﻿using ApplicationServices.DTOs;
+﻿using ApplicationServices.DTOs.Employee;
+using ApplicationServices.DTOs.Project;
 using ApplicationServices.Interfaces;
 using Domain.Entities;
-using Domain.Enum;
 using Domain.Interfaces;
 
-namespace Domain.EntityManager
+namespace ApplicationServices.Services
 {
     public class EmployeeManager : IEmployeeManager
     {
@@ -36,7 +36,6 @@ namespace Domain.EntityManager
             if (string.IsNullOrWhiteSpace(request.Password))
                 throw new ArgumentException("Password is required.");
 
-
             // 2. Check existing employees
             if (_EmployeeRepository.ExistsByEmail(request.Email))
             {
@@ -52,11 +51,11 @@ namespace Domain.EntityManager
 
 
             // 3. Create Account
-            var account = new Account
-            {
-                Email = request.Email,
-                PasswordHash = request.Password
-            };
+            //var account = new Account // ?
+            //{
+            //    Email = request.Email,
+            //    PasswordHash = request.Password
+            //};
 
 
             // 4. Create Employee
@@ -65,9 +64,7 @@ namespace Domain.EntityManager
                 FName = request.FName,
                 LName = request.LName,
                 Phone = request.Phone,
-                Gender = request.Gender,
-                Role = EmployeeRole.Employee,
-                Account = account
+                Gender = request.Gender
             };
 
 
@@ -76,19 +73,18 @@ namespace Domain.EntityManager
 
 
             // 6. Return Response
-            return new EmployeeResponse
+            return new EmployeeResponse //? login response
             {
                 Id = employee.Id,
                 FName = employee.FName,
                 LName = employee.LName,
                 Phone = employee.Phone,
                 Gender = employee.Gender,
-                Role = employee.Role.ToString(),
                 IsDeleted = employee.IsDeleted
             };
         }
 
-        public bool Delete(int id)
+        public bool Delete(int id) // need edit need to add reActivate
         {
             // 1. Get employee
             var employee = _EmployeeRepository.GetById(id);
@@ -104,7 +100,7 @@ namespace Domain.EntityManager
             return true;
         }
 
-        public IEnumerable<EmployeeResponse> GetAll()
+        public IEnumerable<EmployeeResponse> GetAll() // ?
         {
             var employees = _EmployeeRepository.GetAll();
 
@@ -115,7 +111,6 @@ namespace Domain.EntityManager
                 LName = employee.LName,
                 Phone = employee.Phone,
                 Gender = employee.Gender,
-                Role = employee.Role.ToString(),
                 IsDeleted = employee.IsDeleted
             });
         }
@@ -134,12 +129,11 @@ namespace Domain.EntityManager
                 LName = employee.LName,
                 Phone = employee.Phone,
                 Gender = employee.Gender,
-                Role = employee.Role.ToString(),
                 IsDeleted = employee.IsDeleted
             };
         }
 
-        public EmployeeResponse? Update(int id , UpdateEmployeeRequest request)
+        public EmployeeResponse? Update(int id, UpdateEmployeeRequest request)
         {
             // 1. Validate request
             if (request == null)
@@ -164,8 +158,8 @@ namespace Domain.EntityManager
 
             // 4. Check if phone belongs to another employee
             if (_EmployeeRepository.ExistsByPhoneExcept(request.Phone, id))
-            {  
-                throw new InvalidOperationException( "This phone number is already in use.");
+            {
+                throw new InvalidOperationException("This phone number is already in use.");
             }
 
 
@@ -181,19 +175,18 @@ namespace Domain.EntityManager
 
 
             // 7. Return response
-            return new EmployeeResponse
+            return new EmployeeResponse //?
             {
                 Id = employee.Id,
                 FName = employee.FName,
                 LName = employee.LName,
                 Phone = employee.Phone,
                 Gender = employee.Gender,
-                Role = employee.Role.ToString(),
                 IsDeleted = employee.IsDeleted
             };
         }
 
-        public IEnumerable<ProjectResponse> GetProjects(int employeeId)
+        public IEnumerable<ProjectResponse> GetProjects(int employeeId) //?
         {
             var projects = _EmployeeRepository.GetProjects(employeeId);
 
@@ -208,11 +201,11 @@ namespace Domain.EntityManager
                     ? null
                     : $"{project.ProjectManager.FName} {project.ProjectManager.LName}",
 
-                EmployeeCount = project.ProjectEmployees.Count,
-                TicketCount = project.ProjectTickets.Count
+                //EmployeeCount = project.ProjectEmployees.Count,
+                //TicketCount = project.ProjectTickets.Count
             });
         }
 
-       
+
     }
 }

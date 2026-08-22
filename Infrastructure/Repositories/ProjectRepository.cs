@@ -1,7 +1,6 @@
 ﻿using Domain.Entities;
 using Domain.Enum;
 using Domain.Interfaces;
-using Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories
@@ -15,58 +14,34 @@ namespace Infrastructure.Repositories
             _context = context;
         }
 
-        public IEnumerable<Project> GetAll()
+        // Get all the projects that the employee works on
+        public IEnumerable<Project>? GetAllProjectWorkedByEmployee(int employeeId)
         {
             return _context.Projects
-                .Include(p => p.ProjectManager)
-                .Include(p => p.ProjectTickets)
-                .Include(p => p.ProjectEmployees)
-                    .ThenInclude(pe => pe.Employee)
-                .ToList();
+                    //.Where(p => p.ProjectStatus == ProjectStatus.Active)
+                    .Include(p => p.ProjectEmployees)
+                    .Where(p => p.ProjectManagerId == employeeId || p.ProjectEmployees.Any(pe => pe.EmployeeId == employeeId))
+                    .ToList();
         }
-
-        public Project? GetById(int id)
+        // last three projects that the employee added to works on
+        public IEnumerable<String[]>? GetAllProjectWorkedByEmployeeTopThree(int employeeId)
         {
             return _context.Projects
-                .Include(p => p.ProjectManager)
-                .Include(p => p.ProjectTickets)
-                .Include(p => p.ProjectEmployees)
-                    .ThenInclude(pe => pe.Employee)
-                .FirstOrDefault(p => p.Id == id);
+                   .Where(p => p.ProjectStatus == ProjectStatus.Active || p.ProjectStatus == ProjectStatus.OnHold)
+                   .Include(p => p.ProjectEmployees)
+                   .Where(p => p.ProjectManagerId == employeeId || p.ProjectEmployees.Any(pe => pe.EmployeeId == employeeId))
+                   .OrderByDescending(d => d.StartedAt)
+                   .Take(3)
+                   .Select(p => new string[2]
+                   {
+                        p.ProjectName,
+                        p.ProjectEmployees.FirstOrDefault(pe=>pe.EmployeeId==employeeId).Role
+                   })
+                   .ToList();
+            // //to do after edit the database
         }
-
-        public void Add(Project project)
-        {
-            _context.Projects.Add(project);
-            _context.SaveChanges();
-        }
-
-        public void Update(Project project)
-        {
-            _context.Projects.Update(project);
-            _context.SaveChanges();
-        }
-
-        public void Delete(Project project)
-        {
-            _context.Projects.Remove(project);
-            _context.SaveChanges();
-        }
-
-        public bool EmployeeExists(int employeeId)
-        {
-            return _context.Employees
-                .Any(e => e.Id == employeeId);
-        }
-
-        public bool IsManager(int employeeId)
-        {
-            return _context.Employees
-                .Any(e => e.Id == employeeId &&
-                         e.Role == EmployeeRole.Manager);
-        }
-
-        public IEnumerable<Employee> GetEmployees(int projectId)
+        // All employees that work on the project
+        public IEnumerable<Employee>? GetEmployees(int projectId)
         {
             return _context.ProjectEmployees
                 .Where(pe => pe.ProjectId == projectId)
@@ -74,12 +49,118 @@ namespace Infrastructure.Repositories
                 .Where(e => !e.IsDeleted)
                 .ToList();
         }
-
-        public IEnumerable<Ticket> GetTickets(int projectId)
+        //Number of projects that the employee works on
+        public int GetProjectCount(int employeeId)
         {
-            return _context.Tickets
-                .Where(t => t.ProjectId == projectId)
-                .ToList();
+            return _context.Projects
+                   .Where(p => p.ProjectStatus == ProjectStatus.Active)
+                   .Include(p => p.ProjectEmployees)
+                   .Where(p => p.ProjectManagerId == employeeId || p.ProjectEmployees.Any(pe => pe.EmployeeId == employeeId))
+                   .Count();
         }
+
+        public Project? GetById(int id)
+        {
+            return _context.Projects
+                //.Include(p => p.ProjectManager)
+                //.Include(p => p.ProjectTickets)
+                .Include(p => p.ProjectEmployees)
+                .ThenInclude(pe => pe.Employee)
+                .FirstOrDefault(p => p.Id == id);
+        }
+        // Create
+        public void Create(Project project)
+        {
+            _context.Projects.Add(project);
+            _context.SaveChanges();
+        }
+        // Update
+        public void Update(Project project)
+        {
+            _context.Projects.Update(project);
+            _context.SaveChanges();
+        }
+        // Delete // ? may not Delete the project just set it as cancelled
+        public void Delete(Project project)
+        {
+            _context.Projects.Remove(project);
+            _context.SaveChanges();
+        }
+
+        public void AddEmployeeToProject(ProjectEmployee projectEmployee)
+        {
+            _context.ProjectEmployees.Add(projectEmployee);
+            _context.SaveChanges();
+        }
+
+        public void SetProjectAsActive(int projectId)
+        {
+            _context.Projects
+                .Where(p => p.Id == projectId)
+                .ExecuteUpdate(setter => setter.SetProperty(p => p.ProjectStatus, ProjectStatus.Active));
+        }
+        public void SetProjectAsCancelled(int projectId)
+        {
+            _context.Projects
+              .Where(p => p.Id == projectId)
+              .ExecuteUpdate(setter => setter.SetProperty(p => p.ProjectStatus, ProjectStatus.Cancelled));
+        }
+        public void SetProjectAsCompleted(int projectId)
+        {
+            _context.Projects
+              .Where(p => p.Id == projectId)
+              .ExecuteUpdate(setter => setter.SetProperty(p => p.ProjectStatus, ProjectStatus.Completed));
+        }
+        public void SetProjectAsOnHold(int projectId)
+        {
+            _context.Projects
+              .Where(p => p.Id == projectId)
+              .ExecuteUpdate(setter => setter.SetProperty(p => p.ProjectStatus, ProjectStatus.OnHold));
+        }
+
+        public bool EmployeeExists(int employeeId)
+        {
+            return _context.Employees
+                    .Any(e => e.Id == employeeId);
+        }
+
+
+
+        public IEnumerable<Project>? GetAllProjectWorkedByEmployeeWithFilter(int employeeId, ProjectStatus FilterByStatus)
+        {
+
+            return _context.Projects
+                     .Where(p => p.ProjectStatus == FilterByStatus)
+                     .Include(p => p.ProjectEmployees)
+                     .Where(p => p.ProjectManagerId == employeeId || p.ProjectEmployees.Any(pe => pe.EmployeeId == employeeId))
+                     .ToList();
+        }
+
+
+        //public bool IsManager(int employeeId)
+        //{
+        //    return _context.Employees
+        //        .Any(e => e.Id == employeeId &&
+        //                 e.Role == EmployeeRole.Manager);
+        //}
+
+
+
+        //public IEnumerable<Ticket> GetTickets(int projectId)
+        //{
+        //    return _context.Tickets
+        //        .Where(t => t.ProjectId == projectId)
+        //        .ToList();
+        //}
+
+        //public IEnumerable<Project> GetAll()
+        //{
+        //    return _context.Projects
+        //        .Include(p => p.ProjectManager)
+        //        .Include(p => p.ProjectTickets)
+        //        .Include(p => p.ProjectEmployees)
+        //            .ThenInclude(pe => pe.Employee)
+        //        .ToList();
+        //}
     }
 }

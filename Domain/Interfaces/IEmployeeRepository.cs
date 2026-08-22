@@ -14,7 +14,7 @@ namespace Domain.Interfaces
 
         void Delete(Employee employee);
 
-        bool ExistsByEmail(string email);
+        bool ExistsByEmail(string email); // ?
 
         bool ExistsByPhone(string phone);
         bool ExistsByPhoneExcept(string phone, int employeeId);

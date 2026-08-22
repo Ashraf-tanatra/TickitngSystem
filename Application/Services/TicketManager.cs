@@ -1,8 +1,9 @@
-﻿using ApplicationServices.DTOs;
+﻿using ApplicationServices.DTOs.Ticket;
+using ApplicationServices.Interfaces;
 using Domain.Entities;
 using Domain.Interfaces;
 
-namespace Domain.EntityManager
+namespace ApplicationServices.Services
 {
     public class TicketManager : ITicketManager
     {
@@ -11,23 +12,6 @@ namespace Domain.EntityManager
         public TicketManager(ITicketRepository ticketRepository)
         {
             _ticketRepository = ticketRepository;
-        }
-
-        public IEnumerable<TicketResponse> GetAll()
-        {
-            var tickets = _ticketRepository.GetAll();
-
-            return tickets.Select(ticket => new TicketResponse
-            {
-                TicketId = ticket.TicketId,
-                TicketTitle = ticket.TicketTitle,
-                DueTo = ticket.DueTo,
-                TicketStatus = ticket.TicketStatus.ToString(),
-                Priority = ticket.Priority.ToString(),
-                Description = ticket.Description,
-                EmployeeId = ticket.EmployeeId,
-                ProjectId = ticket.ProjectId
-            });
         }
 
         public TicketResponse? GetById(int id)
@@ -92,9 +76,7 @@ namespace Domain.EntityManager
             };
         }
 
-        public TicketResponse Update(
-            int id,
-            UpdateTicketRequest request)
+        public TicketResponse Update(int id, UpdateTicketRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -145,4 +127,21 @@ namespace Domain.EntityManager
             return true;
         }
     }
+
+    //public IEnumerable<TicketResponse> GetAll() 
+    //{
+    //    var tickets = _ticketRepository.GetAll();
+
+    //    return tickets.Select(ticket => new TicketResponse
+    //    {
+    //        TicketId = ticket.TicketId,
+    //        TicketTitle = ticket.TicketTitle,
+    //        DueTo = ticket.DueTo,
+    //        TicketStatus = ticket.TicketStatus.ToString(),
+    //        Priority = ticket.Priority.ToString(),
+    //        Description = ticket.Description,
+    //        EmployeeId = ticket.EmployeeId,
+    //        ProjectId = ticket.ProjectId
+    //    });
+    //}
 }

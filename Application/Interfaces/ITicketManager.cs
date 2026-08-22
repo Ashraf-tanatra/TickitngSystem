@@ -1,19 +1,16 @@
-﻿using ApplicationServices.DTOs;
+﻿using ApplicationServices.DTOs.Ticket;
 
-namespace Domain.EntityManager
+namespace ApplicationServices.Interfaces
 {
     public interface ITicketManager
     {
-        IEnumerable<TicketResponse> GetAll();
-
         TicketResponse? GetById(int id);
 
         TicketResponse Create(CreateTicketRequest request);
-
-        TicketResponse Update(
-            int id,
-            UpdateTicketRequest request);
-
+        TicketResponse Update(int id, UpdateTicketRequest request);
         bool Delete(int id);
+
+
+        //IEnumerable<TicketResponse> GetAll();
     }
 }

@@ -1,5 +1,6 @@
-﻿using ApplicationServices.DTOs;
-using Domain.EntityManager;
+﻿using ApplicationServices.DTOs.Project;
+using ApplicationServices.Interfaces;
+using Domain.Enum;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Controller
@@ -14,18 +15,61 @@ namespace Controller
         {
             _projectManager = projectManager;
         }
-
-        // GET: api/Project
-        [HttpGet]
-        public ActionResult<IEnumerable<ProjectResponse>> GetAll()
+        //Tested
+        //GET api/project/employee = 1
+        [HttpGet("employeeId = {employeeId:int}")]
+        public ActionResult<ProjectResponse> GetProjectsWorkedByEmployee(int employeeId)
         {
-            var projects = _projectManager.GetAll();
+            try
+            {
+                var projects = _projectManager.GetAllProjectWorkedByEmployee(employeeId);
+                if (projects == null)
+                    return NotFound();
+                return Ok(projects);
+            }
+            catch (NullReferenceException)
+            {
+                return NotFound();
+            }
+        }
+
+
+        //Tested
+        //GET api/project/TopThree/1
+        [HttpGet("Dashboard/{employeeId:int}")]
+        public ActionResult<ProjectResponse> GetProjectsWorkedByEmployeeTopThree(int employeeId)
+        {
+            //var emp = EmployeeController.GetById(employeeId);
+            var projects = _projectManager.GetAllProjectWorkedByEmployeeTopThree(employeeId);
+            if (projects == null || projects.Count() == 0)
+                return NotFound();
 
             return Ok(projects);
         }
 
-        // GET: api/Project/5
-        [HttpGet("{id}")]
+        //Get api/project/Employees/1
+        [HttpGet("Employees/{projectId:int}")]
+        public ActionResult<IEnumerable<EmployeeResponse>> GetEmployees(int projectId)
+        {
+            var project = _projectManager.GetById(projectId);
+            if (project == null)
+                return NotFound();
+
+            var employees = _projectManager.GetEmployeesWorkOnProject(projectId);
+            return Ok(employees);
+        }
+
+        //Tested
+        //GET api/ProjectCount/1        // include the projects that he manage
+        [HttpGet("ProjectCount/{employeeId:int}")]
+        public ActionResult<int> ProjectCount(int employeeId)
+        {
+            return Ok(_projectManager.GetProjectCount(employeeId));
+        }
+
+        //Tested
+        // GET: api/Project/1
+        [HttpGet("{id:int}")]
         public ActionResult<ProjectResponse> GetById(int id)
         {
             var project = _projectManager.GetById(id);
@@ -36,19 +80,17 @@ namespace Controller
             return Ok(project);
         }
 
+        //Tested
         // POST: api/Project
         [HttpPost]
-        public ActionResult<ProjectResponse> Create(
-            CreateProjectRequest request)
+        public ActionResult<ProjectResponse> Create(CreateProjectRequest request)
         {
             try
             {
-                var project = _projectManager.Create(request);
+                var projectId = _projectManager.Create(request);
 
-                return CreatedAtAction(
-                    nameof(GetById),
-                    new { id = project.Id },
-                    project);
+                return Ok(projectId);
+                //CreatedAtAction(nameof(GetById),new { id = project.Id },project);
             }
             catch (ArgumentException ex)
             {
@@ -56,11 +98,10 @@ namespace Controller
             }
         }
 
+        //Tested
         // PUT: api/Project/5
         [HttpPut("{id}")]
-        public ActionResult<ProjectResponse> Update(
-            int id,
-            UpdateProjectRequest request)
+        public ActionResult<ProjectResponse> Update(int id, UpdateProjectRequest request)
         {
             try
             {
@@ -78,44 +119,130 @@ namespace Controller
             }
         }
 
-        // GET: api/Project/5/tickets
-        [HttpGet("{id}/tickets")]
-        public ActionResult<IEnumerable<TicketResponse>> GetTickets(int id)
+        //Tested
+        // PUT: api/Project/1/1
+        [HttpPut("{id:int}/{status:int}")]
+        public IActionResult UpdateStatus(int id, ProjectStatus status)
         {
-            var tickets = _projectManager.GetTickets(id);
-
-            return Ok(tickets);
-        }
-
-        // GET: api/Project/5/tickets/10
-        [HttpGet("{projectId}/tickets/{ticketId}")]
-        public ActionResult<TicketResponse> GetTicket(int projectId, int ticketId)
-        {
-            var ticket = _projectManager.GetTicket(projectId, ticketId);
-
-            if (ticket == null)
+            var projcet = _projectManager.GetById(id);
+            if (projcet == null)
+            {
+                return NotFound(projcet);
+            }
+            try
+            {
+                switch (status)
+                {
+                    case ProjectStatus.Active:
+                        _projectManager.SetProjectAsActive(id);
+                        break;
+                    case ProjectStatus.Completed:
+                        _projectManager.SetProjectAsCompleted(id);
+                        break;
+                    case ProjectStatus.OnHold:
+                        _projectManager.SetProjectAsOnHold(id);
+                        break;
+                    case ProjectStatus.Cancelled:
+                        _projectManager.SetProjectAsCancelled(id);
+                        break;
+                    default:
+                        return BadRequest("Invalid status number.");
+                }
+                return Ok();
+            }
+            catch (KeyNotFoundException)
+            {
                 return NotFound();
-
-            return Ok(ticket);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
+
+        // Can't delete if there is an employee or an tickets
         // DELETE: api/Project/5
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            if (!_projectManager.Delete(id))
-                return NotFound();
+            try
+            {
+                if (!_projectManager.Delete(id))
+                    return NotFound();
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
 
-            return NoContent();
         }
+
+        [Route("AddEmployee")]
+        [HttpPost]
+        public ActionResult<ProjectEmployeeRequest> AddEmployeeToProject(ProjectEmployeeRequest request)
+        {
+            try
+            {
+                _projectManager.ProjectAddEmployee(request);
+
+                return Ok(request);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("employeeId = {employeeId:int}/[controller]")]
+        public ActionResult<ProjectResponse> GetProjectsWorkedByEmployeeWithFilter(int employeeId, [FromQuery] ProjectStatus filterStatus)
+        {
+            try
+            {
+                var projects = _projectManager.GetAllProjectWorkedByEmployeeWithFilter(employeeId, filterStatus);
+
+                if (projects == null)
+                    return NotFound();
+                return Ok(projects);
+            }
+            catch (NullReferenceException)
+            {
+                return NotFound();
+            }
+        }
+
+
+        // GET: api/Project/5/tickets
+        //[HttpGet("{id}/tickets")]
+        //public ActionResult<IEnumerable<TicketResponse>> GetTickets(int id)
+        //{
+        //    var tickets = _projectManager.GetTickets(id);
+
+        //    return Ok(tickets);
+        //}
+
+        // GET: api/Project/5/tickets/10
+        //[HttpGet("{projectId}/tickets/{ticketId}")]
+        //public ActionResult<TicketResponse> GetTicket(int projectId, int ticketId)
+        //{
+        //    var ticket = _projectManager.GetTicket(projectId, ticketId);
+
+        //    if (ticket == null)
+        //        return NotFound();
+
+        //    return Ok(ticket);
+        //}
+
+
 
         // GET: api/Project/5/employees
-        [HttpGet("{id}/employees")]
-        public ActionResult<IEnumerable<EmployeeResponse>> GetEmployees(int id)
-        {
-            var employees = _projectManager.GetEmployees(id);
+        //[HttpGet("{id}/employees")]
+        //public ActionResult<IEnumerable<EmployeeResponse>> GetEmployees(int id)
+        //{
+        //    var employees = _projectManager.GetEmployees(id);
 
-            return Ok(employees);
-        }
+        //    return Ok(employees);
+        //}
     }
 }

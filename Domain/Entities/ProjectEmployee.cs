@@ -2,12 +2,13 @@
 {
     public class ProjectEmployee
     {
+        // Foreign Key
         public int ProjectId { get; set; }
-
+        // Foreign Key
         public int EmployeeId { get; set; }
+        public Project Project { get; set; }
+        public Employee Employee { get; set; }
 
-        public Project Project { get; set; } = null!;
-
-        public Employee Employee { get; set; } = null!;
+        public string? Role { get; set; }
     }
 }

@@ -62,14 +62,16 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("FName")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<string>("Gender")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(1)");
+                    b.Property<int>("Gender")
+                        .HasColumnType("int");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
@@ -84,9 +86,6 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
 
-                    b.Property<int>("Role")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.ToTable("Employees");
@@ -100,6 +99,9 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateOnly?>("EndAt")
+                        .HasColumnType("date");
+
                     b.Property<string>("ProjectDescription")
                         .HasMaxLength(255)
                         .HasColumnType("varchar");
@@ -111,6 +113,13 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(125)
                         .HasColumnType("varchar");
+
+                    b.Property<string>("ProjectStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateOnly?>("StartedAt")
+                        .HasColumnType("date");
 
                     b.HasKey("Id");
 
@@ -126,6 +135,9 @@ namespace Infrastructure.Migrations
 
                     b.Property<int>("EmployeeId")
                         .HasColumnType("int");
+
+                    b.Property<string>("Role")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("ProjectId", "EmployeeId");
 
@@ -143,14 +155,14 @@ namespace Infrastructure.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TicketId"));
 
                     b.Property<DateTime>("CreatedTime")
-                        .HasColumnType("Date");
+                        .HasColumnType("datetime");
 
                     b.Property<string>("Description")
-                        .HasMaxLength(255)
+                        .HasMaxLength(2500)
                         .HasColumnType("varchar");
 
                     b.Property<DateTime?>("DueTo")
-                        .HasColumnType("Date");
+                        .HasColumnType("date");
 
                     b.Property<int>("EmployeeId")
                         .HasColumnType("int");
@@ -165,14 +177,14 @@ namespace Infrastructure.Migrations
                     b.Property<int>("TicketCreatedById")
                         .HasColumnType("int");
 
+                    b.Property<string>("TicketStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("TicketTitle")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("varchar");
-
-                    b.Property<string>("ticketStatus")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("TicketId");
 
@@ -183,6 +195,75 @@ namespace Infrastructure.Migrations
                     b.HasIndex("TicketCreatedById");
 
                     b.ToTable("Tickets", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.TicketAttachments", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("TicketId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("URL")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("VARCHAR");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TicketId");
+
+                    b.ToTable("Attachments", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.TicketHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ActionByEmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("FromEmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("NewValue")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OldValue")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TicketId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ToEmployeeId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActionByEmployeeId");
+
+                    b.HasIndex("FromEmployeeId");
+
+                    b.HasIndex("TicketId");
+
+                    b.HasIndex("ToEmployeeId");
+
+                    b.ToTable("TicketHistories");
                 });
 
             modelBuilder.Entity("Account", b =>
@@ -237,13 +318,13 @@ namespace Infrastructure.Migrations
                     b.HasOne("Domain.Entities.Project", "Project")
                         .WithMany("ProjectTickets")
                         .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Domain.Entities.Employee", "TicketCreatedBy")
                         .WithMany()
                         .HasForeignKey("TicketCreatedById")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Employee");
@@ -253,12 +334,58 @@ namespace Infrastructure.Migrations
                     b.Navigation("TicketCreatedBy");
                 });
 
+            modelBuilder.Entity("Domain.Entities.TicketAttachments", b =>
+                {
+                    b.HasOne("Domain.Entities.Ticket", "Ticket")
+                        .WithMany("AttachmentURL")
+                        .HasForeignKey("TicketId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Ticket");
+                });
+
+            modelBuilder.Entity("Domain.Entities.TicketHistory", b =>
+                {
+                    b.HasOne("Domain.Entities.Employee", "ActionByEmployee")
+                        .WithMany()
+                        .HasForeignKey("ActionByEmployeeId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Employee", "FromEmployee")
+                        .WithMany()
+                        .HasForeignKey("FromEmployeeId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Domain.Entities.Ticket", "Ticket")
+                        .WithMany("TicketHistories")
+                        .HasForeignKey("TicketId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Employee", "ToEmployee")
+                        .WithMany("TicketHistories")
+                        .HasForeignKey("ToEmployeeId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("ActionByEmployee");
+
+                    b.Navigation("FromEmployee");
+
+                    b.Navigation("Ticket");
+
+                    b.Navigation("ToEmployee");
+                });
+
             modelBuilder.Entity("Domain.Entities.Employee", b =>
                 {
                     b.Navigation("Account")
                         .IsRequired();
 
                     b.Navigation("ProjectEmployees");
+
+                    b.Navigation("TicketHistories");
 
                     b.Navigation("Tickets");
                 });
@@ -268,6 +395,13 @@ namespace Infrastructure.Migrations
                     b.Navigation("ProjectEmployees");
 
                     b.Navigation("ProjectTickets");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Ticket", b =>
+                {
+                    b.Navigation("AttachmentURL");
+
+                    b.Navigation("TicketHistories");
                 });
 #pragma warning restore 612, 618
         }

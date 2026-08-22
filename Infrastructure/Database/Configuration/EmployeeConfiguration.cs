@@ -17,7 +17,7 @@ namespace Infrastructure.Database.Configuration
                    .HasMaxLength(50);
 
             builder.Property(e => e.Phone)
-                   .HasMaxLength(10);
+                   .HasMaxLength(10);// may increase this
         }
     }
 }
