@@ -154,15 +154,15 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TicketId"));
 
-                    b.Property<DateOnly>("CreatedAt")
-                        .HasColumnType("DATE");
+                    b.Property<DateTime>("CreatedTime")
+                        .HasColumnType("datetime");
 
                     b.Property<string>("Description")
                         .HasMaxLength(2500)
                         .HasColumnType("varchar");
 
-                    b.Property<DateOnly?>("DueTo")
-                        .HasColumnType("DATE");
+                    b.Property<DateTime?>("DueTo")
+                        .HasColumnType("date");
 
                     b.Property<int>("EmployeeId")
                         .HasColumnType("int");

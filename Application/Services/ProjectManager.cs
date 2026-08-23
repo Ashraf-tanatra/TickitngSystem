@@ -46,8 +46,10 @@ namespace ApplicationServices.Services
                 //TicketCount = project.ProjectTickets.Count
             });
         }
+
         public IEnumerable<string[]>? GetAllProjectWorkedByEmployeeTopThree(int employeeId)
             => _projectRepository.GetAllProjectWorkedByEmployeeTopThree(employeeId);
+
         public IEnumerable<EmployeeResponse>? GetEmployeesWorkOnProject(int projectId)
         {
             var employees = _projectRepository.GetEmployees(projectId);
@@ -60,10 +62,13 @@ namespace ApplicationServices.Services
                 Gender = employee.Gender
             });
         }
+
         public int GetProjectCount(int employeeId)
         {
             return _projectRepository.GetProjectCount(employeeId);
         }
+
+        // GET By ID
         public ProjectResponse? GetById(int id)
         {
             var project = _projectRepository.GetById(id);
@@ -86,9 +91,12 @@ namespace ApplicationServices.Services
 
                 ProjectManagerName = project.ProjectManager == null
                     ? null : $"{project.ProjectManager.FName} {project.ProjectManager.LName}",
+
+                //EmployeeCount = project.ProjectEmployees.Count,   // ?
+                //TicketCount = project.ProjectTickets.Count        // ?
             };
         }
-
+        // CREATE
         public int Create(CreateProjectRequest request)
         {
             if (request == null)
@@ -127,37 +135,59 @@ namespace ApplicationServices.Services
             //}
         }
 
-        // need edit for testing for project manager only can edit
-        public void Update(int projectId, int empId, UpdateProjectRequest request)
+        // need edit for testing for project managet only can edit
+        // UPDATE
+        public ProjectResponse Update(int id, UpdateProjectRequest request)
         {
-            Exception exception = new Exception();
-
             if (request == null)
-                throw exception;
+                throw new ArgumentNullException(nameof(request));
 
-            if (!_projectRepository.ProjectExits(projectId))
-                throw exception;
+            var project = _projectRepository.GetById(id);
+
+            if (project == null)
+                throw new KeyNotFoundException(
+                    "Project not found.");
 
             if (string.IsNullOrWhiteSpace(request.ProjectName))
-                throw exception;
+                throw new ArgumentException(
+                    "Project name is required.");
 
-            if (!_projectRepository.EmployeeExists(empId))
-                throw exception;
+            if (!_projectRepository.EmployeeExists(
+                    request.ProjectManagerId))
+            {
+                throw new ArgumentException(
+                    "The specified Project Manager does not exist.");
+            }
 
-            if (!_projectRepository.IsManager(projectId, empId))
-                throw exception;
-
-            var project = _projectRepository.GetById(projectId);
+            //if (!_projectRepository.IsManager(
+            //        request.ProjectManagerId))
+            //{
+            //    throw new ArgumentException(
+            //        "The specified employee is not a Project Manager.");
+            //}
 
             project.ProjectName = request.ProjectName;
             project.ProjectDescription = request.ProjectDescription;
-            //project.ProjectManagerId = request.ProjectManagerId;
+            project.ProjectManagerId = request.ProjectManagerId;
             project.StartedAt = request.StartDate;
             project.EndAt = request.EndDate;
 
             _projectRepository.Update(project);
+
+            return GetById(project.Id)!;
         }
-        public void Delete(int id, int empId) => _projectRepository.Delete(id, empId);
+        // Delete
+        public bool Delete(int id)
+        {
+            var project = _projectRepository.GetById(id);
+
+            if (project == null)
+                return false;
+
+            _projectRepository.Delete(project);
+
+            return true;
+        }
 
         public void ProjectAddEmployee(ProjectEmployeeRequest request)
         {
@@ -176,18 +206,26 @@ namespace ApplicationServices.Services
             _projectRepository.AddEmployeeToProject(projectEmployee);
         }
 
-        void IProjectManager.SetProjectStatus(int projectId, ProjectStatus status)
+        void IProjectManager.SetProjectAsActive(int projectId)
         {
-            if ((int)status < 0 || (int)status > 4)
-                throw new ArgumentException("Invalid project status.");
+            _projectRepository.SetProjectAsActive(projectId);
 
-            _projectRepository.SetProjectStatus(projectId, status);
+        }
+        void IProjectManager.SetProjectAsCancelled(int projectId)
+        {
+            _projectRepository.SetProjectAsCancelled(projectId);
+
+        }
+        void IProjectManager.SetProjectAsCompleted(int projectId)
+        {
+            _projectRepository.SetProjectAsCompleted(projectId);
+        }
+        void IProjectManager.SetProjectAsOnHold(int projectId)
+        {
+            _projectRepository.SetProjectAsOnHold(projectId);
         }
 
-        public bool ProjectExits(int projectId)
-        {
-            return _projectRepository.ProjectExits(projectId);
-        }
+
 
         public IEnumerable<ProjectResponse>? GetAllProjectWorkedByEmployeeWithFilter(int employeeId, ProjectStatus FilterByStatus)
         {

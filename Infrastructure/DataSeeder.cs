@@ -64,22 +64,19 @@ namespace Infrastructure
         {
             new Ticket
             {
-                TicketTitle = "Fix login issue",DueTo = DateOnly.FromDateTime(DateTime.Now).
-                AddDays(3),CreatedAt = DateOnly.FromDateTime(DateTime.Now).AddDays(-2),
+                TicketTitle = "Fix login issue",DueTo = DateTime.Now.AddDays(3),CreatedTime = DateTime.Now.AddDays(-2),
                 TicketStatus = TicketStatus.Pending,Priority = TicketPriority.Low,Description = "Users are unable to log in.",
                 EmployeeId = 1,ProjectId = 2, TicketCreatedById = 1
             },
             new Ticket
                 {
-                TicketTitle = "Update homepage",DueTo = DateOnly.FromDateTime(DateTime.Now).AddDays(7),
-                CreatedAt = DateOnly.FromDateTime(DateTime.Now).AddDays(-1),
+                TicketTitle = "Update homepage",DueTo = DateTime.Now.AddDays(7),CreatedTime = DateTime.Now.AddDays(-1),
                 TicketStatus = TicketStatus.InProgress,Priority = TicketPriority.Medium,
                 Description = "Update the homepage layout and content.",EmployeeId = 2,ProjectId = 1, TicketCreatedById = 2
                 },
             new Ticket
                 {
-                TicketTitle = "API authentication",DueTo = DateOnly.FromDateTime(DateTime.Now).AddDays(5),
-                CreatedAt = DateOnly.FromDateTime(DateTime.Now),TicketStatus = TicketStatus.Done,
+                TicketTitle = "API authentication",DueTo = DateTime.Now.AddDays(5),CreatedTime = DateTime.Now,TicketStatus = TicketStatus.Done,
                 Priority = TicketPriority.High,Description = "Implement authentication for the API.",EmployeeId = 3,ProjectId = 3, TicketCreatedById = 1
                 }
             };

@@ -15,7 +15,7 @@ namespace Controller
         {
             _projectManager = projectManager;
         }
-
+        //Tested
         //GET api/project/employee = 1
         [HttpGet("employeeId = {employeeId:int}")]
         public ActionResult<ProjectResponse> GetProjectsWorkedByEmployee(int employeeId)
@@ -33,10 +33,13 @@ namespace Controller
             }
         }
 
+
+        //Tested
         //GET api/project/TopThree/1
         [HttpGet("Dashboard/{employeeId:int}")]
         public ActionResult<ProjectResponse> GetProjectsWorkedByEmployeeTopThree(int employeeId)
         {
+            //var emp = EmployeeController.GetById(employeeId);
             var projects = _projectManager.GetAllProjectWorkedByEmployeeTopThree(employeeId);
             if (projects == null || projects.Count() == 0)
                 return NotFound();
@@ -48,20 +51,23 @@ namespace Controller
         [HttpGet("Employees/{projectId:int}")]
         public ActionResult<IEnumerable<EmployeeResponse>> GetEmployees(int projectId)
         {
-            if (!_projectManager.ProjectExits(projectId))
+            var project = _projectManager.GetById(projectId);
+            if (project == null)
                 return NotFound();
 
             var employees = _projectManager.GetEmployeesWorkOnProject(projectId);
             return Ok(employees);
         }
 
-        //GET api/ProjectCount/1 
+        //Tested
+        //GET api/ProjectCount/1        // include the projects that he manage
         [HttpGet("ProjectCount/{employeeId:int}")]
         public ActionResult<int> ProjectCount(int employeeId)
         {
             return Ok(_projectManager.GetProjectCount(employeeId));
         }
 
+        //Tested
         // GET: api/Project/1
         [HttpGet("{id:int}")]
         public ActionResult<ProjectResponse> GetById(int id)
@@ -74,15 +80,17 @@ namespace Controller
             return Ok(project);
         }
 
+        //Tested
         // POST: api/Project
         [HttpPost]
-        public IActionResult Create(CreateProjectRequest request)
+        public ActionResult<ProjectResponse> Create(CreateProjectRequest request)
         {
             try
             {
                 var projectId = _projectManager.Create(request);
 
                 return Ok(projectId);
+                //CreatedAtAction(nameof(GetById),new { id = project.Id },project);
             }
             catch (ArgumentException ex)
             {
@@ -90,14 +98,16 @@ namespace Controller
             }
         }
 
+        //Tested
         // PUT: api/Project/5
-        [HttpPut("Update/{id}/{empId}")]
-        public IActionResult Update(int id, int empId, UpdateProjectRequest request)
+        [HttpPut("{id}")]
+        public ActionResult<ProjectResponse> Update(int id, UpdateProjectRequest request)
         {
             try
             {
-                _projectManager.Update(id, empId, request);
-                return NoContent();
+                var project = _projectManager.Update(id, request);
+
+                return Ok(project);
             }
             catch (KeyNotFoundException)
             {
@@ -107,41 +117,37 @@ namespace Controller
             {
                 return BadRequest(ex.Message);
             }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
-        }
-        // DELETE: api/Project/5
-        [HttpDelete("Delete/{id}/{empId}")]
-        public IActionResult Delete(int id, int empId)
-        {
-            try
-            {
-                if (!_projectManager.ProjectExits(id))
-                    return NotFound();
-
-                _projectManager.Delete(id, empId);
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
         }
 
+        //Tested
         // PUT: api/Project/1/1
-        [HttpPut("UpdateStatus/{id:int}/{status:int}")]
+        [HttpPut("{id:int}/{status:int}")]
         public IActionResult UpdateStatus(int id, ProjectStatus status)
         {
-
-            if (!_projectManager.ProjectExits(id))
+            var projcet = _projectManager.GetById(id);
+            if (projcet == null)
             {
-                return NotFound();
+                return NotFound(projcet);
             }
             try
             {
-                _projectManager.SetProjectStatus(id, status);
+                switch (status)
+                {
+                    case ProjectStatus.Active:
+                        _projectManager.SetProjectAsActive(id);
+                        break;
+                    case ProjectStatus.Completed:
+                        _projectManager.SetProjectAsCompleted(id);
+                        break;
+                    case ProjectStatus.OnHold:
+                        _projectManager.SetProjectAsOnHold(id);
+                        break;
+                    case ProjectStatus.Cancelled:
+                        _projectManager.SetProjectAsCancelled(id);
+                        break;
+                    default:
+                        return BadRequest("Invalid status number.");
+                }
                 return Ok();
             }
             catch (KeyNotFoundException)
@@ -152,6 +158,25 @@ namespace Controller
             {
                 return BadRequest(ex.Message);
             }
+        }
+
+
+        // Can't delete if there is an employee or an tickets
+        // DELETE: api/Project/5
+        [HttpDelete("{id}")]
+        public IActionResult Delete(int id)
+        {
+            try
+            {
+                if (!_projectManager.Delete(id))
+                    return NotFound();
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+
         }
 
         [Route("AddEmployee")]
@@ -186,5 +211,38 @@ namespace Controller
                 return NotFound();
             }
         }
+
+
+        // GET: api/Project/5/tickets
+        //[HttpGet("{id}/tickets")]
+        //public ActionResult<IEnumerable<TicketResponse>> GetTickets(int id)
+        //{
+        //    var tickets = _projectManager.GetTickets(id);
+
+        //    return Ok(tickets);
+        //}
+
+        // GET: api/Project/5/tickets/10
+        //[HttpGet("{projectId}/tickets/{ticketId}")]
+        //public ActionResult<TicketResponse> GetTicket(int projectId, int ticketId)
+        //{
+        //    var ticket = _projectManager.GetTicket(projectId, ticketId);
+
+        //    if (ticket == null)
+        //        return NotFound();
+
+        //    return Ok(ticket);
+        //}
+
+
+
+        // GET: api/Project/5/employees
+        //[HttpGet("{id}/employees")]
+        //public ActionResult<IEnumerable<EmployeeResponse>> GetEmployees(int id)
+        //{
+        //    var employees = _projectManager.GetEmployees(id);
+
+        //    return Ok(employees);
+        //}
     }
 }
