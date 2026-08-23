@@ -275,10 +275,10 @@ namespace Domain.EntityManager
         // =========================================================
         public void Add(Ticket ticket)
         {
-            if (ticket == null)
+            if (ticket is null)
                 throw new ArgumentNullException(nameof(ticket));
 
-            if (string.IsNullOrWhiteSpace(ticket.TicketTitle))
+            if (string.IsNullOrWhiteSpace(ticket.TicketTitle!))
                 throw new ArgumentException(
                     "Ticket title is required.");
 
