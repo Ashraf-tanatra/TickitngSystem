@@ -68,10 +68,8 @@ namespace ApplicationServices.Services
         {
             var project = _projectRepository.GetById(id);
 
-        //        EmployeeCount = project.ProjectEmployees.Count,
-        //        TicketCount = project.ProjectTickets.Count
-        //    };
-        //}
+            if (project == null)
+                return null;
 
             return new ProjectResponse
             {
@@ -96,14 +94,16 @@ namespace ApplicationServices.Services
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
-        //    var project = new Project
-        //    {
-        //        ProjectName = request.ProjectName,
-        //        ProjectDescription = request.ProjectDescription,
-        //        ProjectManagerId = request.ProjectManagerId
-        //    };
+            if (string.IsNullOrWhiteSpace(request.ProjectName))
+                throw new ArgumentException(
+                    "Project name is required.");
 
-        //    _projectRepository.Add(project);
+            if (!_projectRepository.EmployeeExists(
+                    request.ProjectManagerId))
+            {
+                throw new ArgumentException(
+                    "The specified Project Manager does not exist.");
+            }
 
             var project = new Project
             {
@@ -296,9 +296,5 @@ namespace ApplicationServices.Services
         //    };
         //}
 
-        public ProjectResponse Update(int id, UpdateProjectRequest request)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

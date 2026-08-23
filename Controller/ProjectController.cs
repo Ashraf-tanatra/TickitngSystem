@@ -9,9 +9,9 @@ namespace Controller
     [Route("api/[controller]")]
     public class ProjectController : ControllerBase
     {
-        private readonly ProjectManager _projectManager;
+        private readonly IProjectManager _projectManager;
 
-        public ProjectController(ProjectManager projectManager)
+        public ProjectController(IProjectManager projectManager)
         {
             _projectManager = projectManager;
         }

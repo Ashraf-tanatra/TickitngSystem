@@ -1,22 +1,16 @@
 ﻿using ApplicationServices.DTOs.Ticket;
 using ApplicationServices.Interfaces;
+using ApplicationServices.Services;
 using Domain.Entities;
 using Domain.Enum;
 using Domain.Interfaces;
 
 namespace ApplicationServices.Services
 {
-    public static class ErrorsConstant
-    {
-        public const string TicketDescriptionIsRequired = "TicketDescriptionIsRequired";
-
-    }
     public class TicketManager : ITicketManager
     {
         private readonly ITicketRepository _ticketRepository;
-        private readonly IEmployeeRepository _employeeRepository;
 
-        
         public TicketManager(ITicketRepository ticketRepository)
         {
             _ticketRepository = ticketRepository;
@@ -141,7 +135,7 @@ namespace ApplicationServices.Services
             if (!_ticketRepository.EmployeeExists(request.EmployeeId))
                 throw exception;
 
-            var ticket = _ticketRepository.GetById(ticketId);
+            var ticket = _ticketRepository.GetById(id);
 
             ticket.TicketTitle = request.TicketTitle;
             ticket.DueTo = request.DueTo;

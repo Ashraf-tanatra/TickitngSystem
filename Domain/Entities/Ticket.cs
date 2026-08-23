@@ -17,9 +17,9 @@ namespace Domain.Entities
 
         public ICollection<TicketAttachments> TicketAttachments { get; set; } = new List<TicketAttachments>();
 
-        public string? Description { get; set; }
         // Current assigned Employee
         public int EmployeeId { get; set; }
+        public Employee Employee { get; set; } = null!;
 
         public int TicketCreatedById { get; set; }
         public Employee TicketCreatedBy { get; set; } = null!;

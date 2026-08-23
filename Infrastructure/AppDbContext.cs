@@ -18,7 +18,6 @@ namespace Infrastructure
         public DbSet<TicketHistory> TicketHistories { get; set; }
         public DbSet<TicketAttachments> Attachments { get; set; }
 
-        public DbSet<TicketHistory> TicketHistories { get; set; }
 
         protected override void OnModelCreating(
             ModelBuilder modelBuilder)

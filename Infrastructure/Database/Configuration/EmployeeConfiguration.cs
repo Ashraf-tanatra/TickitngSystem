@@ -42,8 +42,7 @@ namespace Infrastructure.Database.Configuration
                    .HasForeignKey(t => t.EmployeeId)
                    .OnDelete(DeleteBehavior.Restrict);
 
-            builder.ToTable("Employees");
-                   .HasMaxLength(10);// may increase this
+            
         }
     }
 }

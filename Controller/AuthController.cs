@@ -1,4 +1,4 @@
-﻿using ApplicationServices.DTOs;
+﻿using ApplicationServices.DTOs.Account;
 using ApplicationServices.DTOs.ApplicationServices.DTOs;
 using ApplicationServices.Interfaces;
 using Microsoft.AspNetCore.Mvc;

@@ -29,7 +29,7 @@ namespace Infrastructure.Database.Configuration
 
 
             // Created Time
-            builder.Property(t => t.CreatedTime)
+            builder.Property(t => t.CreatedAt)
                    .HasColumnType("datetime")
                    .IsRequired();
 

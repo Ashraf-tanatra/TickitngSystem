@@ -27,40 +27,40 @@ namespace Controller
         }
 
 
-        // POST: api/Employee/5/reactivate
-        [HttpPost("{id}/reactivate")]
-        public IActionResult Reactivate(int id,ReactivateAccountRequest request)
-        {
-            try
-            {
-                var result = _employeeManager.Reactivate(id, request);
+        //// POST: api/Employee/5/reactivate
+        //[HttpPost("{id}/reactivate")]
+        //public IActionResult Reactivate(int id,ReactivateAccountRequest request)
+        //{
+        //    try
+        //    {
+        //        var result = _employeeManager.Reactivate(id, request);
 
-                if (!result)
-                    return NotFound(new
-                    {
-                        message = "Employee not found."
-                    });
+        //        if (!result)
+        //            return NotFound(new
+        //            {
+        //                message = "Employee not found."
+        //            });
 
-                return Ok(new
-                {
-                    message = "Employee reactivated successfully."
-                });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    message = ex.Message
-                });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new
-                {
-                    message = ex.Message
-                });
-            }
-        }
+        //        return Ok(new
+        //        {
+        //            message = "Employee reactivated successfully."
+        //        });
+        //    }
+        //    catch (ArgumentException ex)
+        //    {
+        //        return BadRequest(new
+        //        {
+        //            message = ex.Message
+        //        });
+        //    }
+        //    catch (InvalidOperationException ex)
+        //    {
+        //        return BadRequest(new
+        //        {
+        //            message = ex.Message
+        //        });
+        //    }
+        //}
 
 
         // GET: api/Employee/5
