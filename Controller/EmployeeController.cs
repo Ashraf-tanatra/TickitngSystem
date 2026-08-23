@@ -14,10 +14,10 @@ namespace Controller
         public EmployeeController(IEmployeeManager employeeManager)
         {
             _employeeManager = employeeManager;
-
         }
 
-        // GET: api/Employee
+
+        // GET: api/Employee (Get All Employee in Database)
         [HttpGet]
         public ActionResult<IEnumerable<EmployeeResponse>> GetAll()
         {
@@ -25,6 +25,43 @@ namespace Controller
 
             return Ok(employees);
         }
+
+
+        // POST: api/Employee/5/reactivate
+        [HttpPost("{id}/reactivate")]
+        public IActionResult Reactivate(int id,ReactivateAccountRequest request)
+        {
+            try
+            {
+                var result = _employeeManager.Reactivate(id, request);
+
+                if (!result)
+                    return NotFound(new
+                    {
+                        message = "Employee not found."
+                    });
+
+                return Ok(new
+                {
+                    message = "Employee reactivated successfully."
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
+        }
+
 
         // GET: api/Employee/5
         [HttpGet("{id}")]
@@ -38,50 +75,74 @@ namespace Controller
             return Ok(employee);
         }
 
+
+        // GET: api/Employee/5/projects
         [HttpGet("{id}/projects")]
-        public ActionResult<IEnumerable<ProjectResponse>> GetProjects(int id)
+        public ActionResult<IEnumerable<EmployeeProjectResponse>> GetProjects(int id)
         {
-            var projects = _employeeManager.GetProjects(id);
+            try
+            {
+                var projects = _employeeManager.GetProjects(id);
 
-            return Ok(projects);
-
+                return Ok(projects);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
         }
 
-        // POST: api/Employee
-        [HttpPost]
-        public ActionResult<EmployeeResponse> Create(CreateEmployeeRequest request)
-        {
-            var employee = _employeeManager.Create(request);
-
-            return CreatedAtAction(
-                nameof(GetById),
-                new { id = employee.Id },
-                employee);
-        }
 
         // PUT: api/Employee/5
         [HttpPut("{id}")]
         public ActionResult<EmployeeResponse> Update(int id, UpdateEmployeeRequest request)
         {
-            var employee = _employeeManager.Update(id, request);
+            try
+            {
+                var employee =
+                    _employeeManager.Update(id, request);
 
-            if (employee == null)
-                return NotFound();
+                if (employee == null)
+                    return NotFound();
 
-            return Ok(employee);
+                return Ok(employee);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ex.Message);
+            }
         }
 
-        // DELETE: api/Employee/5
+
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            var deleted = _employeeManager.Delete(id);
+            try
+            {
+                var deleted = _employeeManager.Delete(id);
 
-            if (!deleted)
-                return NotFound();
+                if (!deleted)
+                    return NotFound(new
+                    {
+                        message = "Employee not found."
+                    });
 
-            return NoContent();
+                return Ok(new
+                {
+                    message = "Employee deleted successfully."
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
         }
-
     }
 }

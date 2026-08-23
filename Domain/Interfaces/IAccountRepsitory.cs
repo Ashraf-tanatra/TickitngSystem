@@ -10,6 +10,9 @@
 
         void Add(Account account);
 
+        void Update(Account account);
+
         void Delete(Account account);
+        Account? GetById(int id);
     }
 }

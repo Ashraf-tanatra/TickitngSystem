@@ -15,7 +15,10 @@ namespace Domain.Entities
         public TicketPriority Priority { get; set; }
         public string? Description { get; set; }
 
-        public Employee? Employee { get; set; }
+        public ICollection<TicketAttachments> TicketAttachments { get; set; } = new List<TicketAttachments>();
+
+        public string? Description { get; set; }
+        // Current assigned Employee
         public int EmployeeId { get; set; }
 
         public int TicketCreatedById { get; set; }

@@ -63,16 +63,148 @@ namespace Controller
         {
             var ticket = _ticketManager.GetById(id);
 
-            if (ticket == null)
-                return NotFound();
 
-            return Ok(ticket);
+        // =========================================================
+        // PUT: api/Ticket/5/priority
+        // Change Ticket Priority
+        // =========================================================
+        [HttpPut("{ticketId}/priority")]
+        public IActionResult ChangeTicketPriority(
+            int ticketId,
+            TicketPriority priority)
+        {
+            if (ticketId <= 0)
+            {
+                return BadRequest(new
+                {
+                    message = "Ticket id must be greater than 0."
+                });
+            }
+
+            if (!Enum.IsDefined(typeof(TicketPriority), priority))
+            {
+                return BadRequest(new
+                {
+                    message = "Invalid ticket priority."
+                });
+            }
+
+            var ticket = _ticketManager.GetById(ticketId);
+
+            if (ticket == null)
+            {
+                return NotFound(new
+                {
+                    message = "Ticket not found."
+                });
+            }
+
+            try
+            {
+                _ticketManager.ChangeTicketPriority(
+                    ticketId,
+                    priority);
+
+                return Ok(new
+                {
+                    message = "Ticket priority changed successfully."
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
         }
 
         // POST: api/Ticket
+        // Create Ticket
+        // =========================================================
         [HttpPost]
         public IActionResult Create(CreateTicketRequest request)
         {
+            if (ticket == null)
+            {
+                return BadRequest(new
+                {
+                    message = "Ticket data is required."
+                });
+            }
+
+            if (string.IsNullOrWhiteSpace(ticket.TicketTitle))
+            {
+                return BadRequest(new
+                {
+                    message = "Ticket title is required."
+                });
+            }
+
+            if (ticket.ProjectId <= 0)
+            {
+                return BadRequest(new
+                {
+                    message = "Valid project id is required."
+                });
+            }
+
+            if (ticket.EmployeeId <= 0)
+            {
+                return BadRequest(new
+                {
+                    message = "Valid employee id is required."
+                });
+            }
+
+            if (ticket.TicketCreatedById <= 0)
+            {
+                return BadRequest(new
+                {
+                    message = "Valid creator employee id is required."
+                });
+            }
+
+            if (ticket.DueTo == default)
+            {
+                return BadRequest(new
+                {
+                    message = "Due date is required."
+                });
+            }
+
+            if (ticket.DueTo < DateTime.Now)
+            {
+                return BadRequest(new
+                {
+                    message = "Due date cannot be in the past."
+                });
+            }
+
+            if (!_ticketManager.ProjectExists(ticket.ProjectId))
+            {
+                return NotFound(new
+                {
+                    message = "Project not found."
+                });
+            }
+
+            if (!_ticketManager.EmployeeExists(ticket.EmployeeId))
+            {
+                return NotFound(new
+                {
+                    message = "Assigned employee not found."
+                });
+            }
+
+            if (!_ticketManager.EmployeeExists(ticket.TicketCreatedById))
+            {
+                return NotFound(new
+                {
+                    message = "Creator employee not found."
+                });
+            }
+
             try
             {
                 var ticketId = _ticketManager.Create(request);
@@ -81,7 +213,17 @@ namespace Controller
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new
+                {
+                    message = ex.Message
+                });
             }
             catch (UnauthorizedAccessException)
             {
@@ -89,6 +231,8 @@ namespace Controller
             }
         }
         // PUT: api/Ticket/5
+        // Update Ticket
+        // =========================================================
         [HttpPut("{id}")]
         public IActionResult Update(int id, UpdateTicketRequest request)
         {
@@ -97,21 +241,48 @@ namespace Controller
                 _ticketManager.Update(id, request);
                 return NoContent();
             }
-            catch (KeyNotFoundException)
-            {
-                return NotFound();
-            }
             catch (ArgumentException ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new
+                {
+                    message = ex.Message
+                });
             }
         }
         // DELETE: api/Ticket/5
+        // Delete Ticket
+        // =========================================================
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            if (!_ticketManager.Delete(id))
-                return NotFound();
+            if (id <= 0)
+            {
+                return BadRequest(new
+                {
+                    message = "Ticket id must be greater than 0."
+                });
+            }
+
+            var ticket = _ticketManager.GetById(id);
+
+            if (ticket == null)
+            {
+                return NotFound(new
+                {
+                    message = "Ticket not found."
+                });
+            }
+
+            try
+            {
+                _ticketManager.Delete(ticket);
 
             return NoContent();
         }
