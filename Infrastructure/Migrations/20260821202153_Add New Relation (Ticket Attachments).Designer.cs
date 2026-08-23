@@ -4,6 +4,7 @@ using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260821202153_Add New Relation (Ticket Attachments)")]
+    partial class AddNewRelationTicketAttachments
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -70,8 +73,9 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<int>("Gender")
-                        .HasColumnType("int");
+                    b.Property<string>("Gender")
+                        .IsRequired()
+                        .HasColumnType("char(1)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
@@ -99,9 +103,6 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateOnly?>("EndAt")
-                        .HasColumnType("date");
-
                     b.Property<string>("ProjectDescription")
                         .HasMaxLength(255)
                         .HasColumnType("varchar");
@@ -113,13 +114,6 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(125)
                         .HasColumnType("varchar");
-
-                    b.Property<string>("ProjectStatus")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateOnly?>("StartedAt")
-                        .HasColumnType("date");
 
                     b.HasKey("Id");
 
@@ -137,7 +131,9 @@ namespace Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Role")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.HasKey("ProjectId", "EmployeeId");
 
@@ -154,15 +150,15 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TicketId"));
 
-                    b.Property<DateOnly>("CreatedAt")
-                        .HasColumnType("DATE");
+                    b.Property<DateTime>("CreatedTime")
+                        .HasColumnType("datetime");
 
                     b.Property<string>("Description")
-                        .HasMaxLength(2500)
+                        .HasMaxLength(255)
                         .HasColumnType("varchar");
 
-                    b.Property<DateOnly?>("DueTo")
-                        .HasColumnType("DATE");
+                    b.Property<DateTime?>("DueTo")
+                        .HasColumnType("datetime");
 
                     b.Property<int>("EmployeeId")
                         .HasColumnType("int");
@@ -208,16 +204,15 @@ namespace Infrastructure.Migrations
                     b.Property<int>("TicketId")
                         .HasColumnType("int");
 
-                    b.Property<string>("URL")
+                    b.Property<string>("Url")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("VARCHAR");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("TicketId");
 
-                    b.ToTable("Attachments", (string)null);
+                    b.ToTable("TicketAttachments");
                 });
 
             modelBuilder.Entity("Domain.Entities.TicketHistory", b =>
@@ -230,22 +225,25 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("Action")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar");
 
                     b.Property<int>("ActionByEmployeeId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime");
+
                     b.Property<int?>("FromEmployeeId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("ModifiedAt")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("NewValue")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar");
 
                     b.Property<string>("OldValue")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar");
 
                     b.Property<int>("TicketId")
                         .HasColumnType("int");
@@ -263,7 +261,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("ToEmployeeId");
 
-                    b.ToTable("TicketHistories");
+                    b.ToTable("TicketHistories", (string)null);
                 });
 
             modelBuilder.Entity("Account", b =>
@@ -337,7 +335,7 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.Entities.TicketAttachments", b =>
                 {
                     b.HasOne("Domain.Entities.Ticket", "Ticket")
-                        .WithMany("AttachmentURL")
+                        .WithMany("TicketAttachments")
                         .HasForeignKey("TicketId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -348,26 +346,26 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.Entities.TicketHistory", b =>
                 {
                     b.HasOne("Domain.Entities.Employee", "ActionByEmployee")
-                        .WithMany()
+                        .WithMany("TicketHistories")
                         .HasForeignKey("ActionByEmployeeId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Domain.Entities.Employee", "FromEmployee")
                         .WithMany()
                         .HasForeignKey("FromEmployeeId")
-                        .OnDelete(DeleteBehavior.NoAction);
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Domain.Entities.Ticket", "Ticket")
                         .WithMany("TicketHistories")
                         .HasForeignKey("TicketId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Domain.Entities.Employee", "ToEmployee")
-                        .WithMany("TicketHistories")
+                        .WithMany()
                         .HasForeignKey("ToEmployeeId")
-                        .OnDelete(DeleteBehavior.NoAction);
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("ActionByEmployee");
 
@@ -398,7 +396,7 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.Ticket", b =>
                 {
-                    b.Navigation("AttachmentURL");
+                    b.Navigation("TicketAttachments");
 
                     b.Navigation("TicketHistories");
                 });

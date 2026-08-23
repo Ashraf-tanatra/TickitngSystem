@@ -8,32 +8,89 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
+// ==============================
+// Controllers
+// ==============================
+
 builder.Services.AddControllers();
 
-var connectionString = builder.Configuration.GetConnectionString("constr");
+
+// ==============================
+// Database
+// ==============================
+
+var connectionString =
+    builder.Configuration.GetConnectionString("constr");
 
 if (string.IsNullOrWhiteSpace(connectionString))
 {
-    throw new Exception("Connection string 'constr' is NULL or EMPTY!");
+    throw new Exception(
+        "Connection string 'constr' is NULL or EMPTY!");
 }
 
-Console.WriteLine("CONNECTION STRING = " + connectionString);
+Console.WriteLine(
+    "CONNECTION STRING = " + connectionString);
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi("v1");
 
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("constr")));
 
-builder.Services.AddScoped<IEmployeeManager, EmployeeManager>();
-builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+// ==============================
+// Employee
+// ==============================
 
-builder.Services.AddScoped<IProjectManager, ProjectManager>();
-builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
+builder.Services.AddScoped<
+    IEmployeeManager,
+    EmployeeManager>();
 
+builder.Services.AddScoped<
+    IEmployeeRepository,
+    EmployeeRepository>();
+
+// ==============================
+// Project
+// ==============================
+
+builder.Services.AddScoped<
+    IProjectManager,
+    ProjectManager>();
+
+builder.Services.AddScoped<
+    IProjectRepository,
+    ProjectRepository>();
+
+
+// ==============================
+// Ticket
+// ==============================
 builder.Services.AddScoped<ITicketManager, TicketManager>();
 builder.Services.AddScoped<ITicketRepository, TicketRepository>();
+
+
+// ==============================
+// Account / Authentication
+// ==============================
+
+builder.Services.AddScoped<
+    IAuthManager,
+    AuthManager>();
+
+builder.Services.AddScoped<
+    IAccountManager,
+    AccountManager>();
+
+builder.Services.AddScoped<
+    IAccountRepository,
+    AccountRepository>();
+
+
+// ==============================
+// OpenAPI / Scalar
+// ==============================
+
+builder.Services.AddOpenApi();
+
 
 var app = builder.Build();
 
@@ -43,6 +100,6 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference();
 }
 app.MapGet("/", () => "Server is working!");
-app.MapControllers();
+
 
 app.Run();

@@ -4,21 +4,76 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Database.Configuration
 {
-    public class TicketHistoryConfiguration : IEntityTypeConfiguration<TicketHistory>
+    public class TicketHistoryConfiguration
+        : IEntityTypeConfiguration<TicketHistory>
     {
         public void Configure(EntityTypeBuilder<TicketHistory> builder)
         {
-            builder.HasKey(p => p.Id);
-            builder.Property(p => p.Id).ValueGeneratedOnAdd();
+            // Primary Key
+            builder.HasKey(h => h.Id);
 
-            //RelationshipBuilderBase between ticket and ticketHistory 1 --- *
-            builder.HasOne(t => t.Ticket).WithMany(t => t.TicketHistories).HasForeignKey(t => t.TicketId).OnDelete(DeleteBehavior.NoAction);
+            builder.Property(h => h.Id)
+                   .ValueGeneratedOnAdd();
 
             //RelationshipBuilderBase between ticket and employee 1 --- * 
             builder.HasOne(e => e.ToEmployee).WithMany(e => e.TicketHistories).HasForeignKey(k => k.ToEmployeeId).OnDelete(DeleteBehavior.NoAction);
             builder.HasOne(e => e.FromEmployee).WithMany().HasForeignKey(k => k.FromEmployeeId).OnDelete(DeleteBehavior.NoAction);
             builder.HasOne(e => e.ActionByEmployee).WithMany().HasForeignKey(k => k.ActionByEmployeeId).OnDelete(DeleteBehavior.NoAction);
 
+            // Action
+            builder.Property(h => h.Action)
+                   .HasColumnType("varchar")
+                   .HasMaxLength(100)
+                   .IsRequired();
+
+
+            // Old Value
+            builder.Property(h => h.OldValue)
+                   .HasColumnType("varchar")
+                   .HasMaxLength(500);
+
+
+            // New Value
+            builder.Property(h => h.NewValue)
+                   .HasColumnType("varchar")
+                   .HasMaxLength(500);
+
+
+            // Created Time
+            builder.Property(h => h.CreatedAt)
+                   .HasColumnType("datetime")
+                   .IsRequired();
+
+
+            // Ticket
+            builder.HasOne(h => h.Ticket)
+                   .WithMany(t => t.TicketHistories)
+                   .HasForeignKey(h => h.TicketId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+
+            // Employee who performed the action
+            builder.HasOne(h => h.ActionByEmployee)
+                   .WithMany(e => e.TicketHistories)
+                   .HasForeignKey(h => h.ActionByEmployeeId)
+                   .OnDelete(DeleteBehavior.Restrict);
+
+
+            // Previous assigned employee
+            builder.HasOne(h => h.FromEmployee)
+                   .WithMany()
+                   .HasForeignKey(h => h.FromEmployeeId)
+                   .OnDelete(DeleteBehavior.Restrict);
+
+
+            // New assigned employee
+            builder.HasOne(h => h.ToEmployee)
+                   .WithMany()
+                   .HasForeignKey(h => h.ToEmployeeId)
+                   .OnDelete(DeleteBehavior.Restrict);
+
+
+            builder.ToTable("TicketHistories");
         }
     }
 }

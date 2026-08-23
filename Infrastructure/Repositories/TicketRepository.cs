@@ -38,20 +38,26 @@ namespace Infrastructure.Repositories
                 .Include(p => p.Project)
                 .FirstOrDefault(t => t.TicketId == id);
         }
+        // =========================================================
+        // ADD
+        // =========================================================
 
         public void Create(Ticket ticket)
         {
             _context.Tickets.Add(ticket);
+
             _context.SaveChanges();
         }
         public void Update(Ticket ticket)
         {
             _context.Tickets.Update(ticket);
+
             _context.SaveChanges();
         }
         public void Delete(Ticket ticket)
         {
             _context.Tickets.Remove(ticket);
+
             _context.SaveChanges();
         }
 
@@ -101,11 +107,30 @@ namespace Infrastructure.Repositories
         }
         public bool EmployeeExists(int employeeId)
         {
-            return _context.Employees.Any(e => e.Id == employeeId);
+            return _context.Employees
+                .Any(e =>
+                    e.Id == employeeId &&
+                    !e.IsDeleted);
         }
         public bool ProjectExists(int projectId)
         {
-            return _context.Projects.Any(p => p.Id == projectId);
+            return _context.Projects
+                .Any(p => p.Id == projectId);
+        }
+
+
+        // =========================================================
+        // EMPLOYEE BELONGS TO PROJECT
+        // =========================================================
+
+        public bool EmployeeBelongsToProject(
+            int employeeId,
+            int projectId)
+        {
+            return _context.ProjectEmployees
+                .Any(pe =>
+                    pe.EmployeeId == employeeId &&
+                    pe.ProjectId == projectId);
         }
         public bool IsManager(int employeeId, int projectId)
         {

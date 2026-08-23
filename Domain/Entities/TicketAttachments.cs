@@ -1,4 +1,8 @@
-﻿namespace Domain.Entities
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace Domain.Entities
 {
     public class TicketAttachments
     {
@@ -7,5 +11,7 @@
 
         public int TicketId { get; set; }
         public Ticket Ticket { get; set; }
+
+
     }
 }

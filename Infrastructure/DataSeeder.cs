@@ -1,5 +1,5 @@
-﻿using Domain.Entities;
-using Domain.Enum;
+﻿//using Domain.Entities;
+//using Domain.Enum;
 
 namespace Infrastructure
 {
@@ -9,41 +9,41 @@ namespace Infrastructure
         {
             using var context = new AppDbContext();
 
-            context.Database.EnsureDeleted();
-            context.Database.EnsureCreated();
-        }
+//            context.Database.EnsureDeleted();
+//            context.Database.EnsureCreated();
+//        }
 
-        public static void PopulateDatabase()
-        {
-            using (var context = new AppDbContext())
-            {
-                //Employees
-                var employees = LoadEmployee();
-                context.Employees.AddRange(employees);
-                context.SaveChanges();
+//        public static void PopulateDatabase()
+//        {
+//            using (var context = new AppDbContext())
+//            {
+//                //Employees
+//                var employees = LoadEmployee();
+//                context.Employees.AddRange(employees);
+//                context.SaveChanges();
 
-                //Accounts
-                var accounts = loadAccounts();
-                context.Accounts.AddRange(accounts);
-                context.SaveChanges();
+//                //Accounts
+//                var accounts = loadAccounts();
+//                context.Accounts.AddRange(accounts);
+//                context.SaveChanges();
 
-                //Projects
-                var projects = LoadProject();
-                context.Projects.AddRange(projects);
-                context.SaveChanges();
+//                //Projects
+//                var projects = LoadProject();
+//                context.Projects.AddRange(projects);
+//                context.SaveChanges();
 
-                //Tickets
-                var tickets = LoadTicket();
-                context.Tickets.AddRange(tickets);
-                context.SaveChanges();
+//                //Tickets
+//                var tickets = LoadTicket();
+//                context.Tickets.AddRange(tickets);
+//                context.SaveChanges();
 
 
-                //Employees Work Projects
-                var empWorkProj = LoadEmployeeProject();
-                context.ProjectEmployees.AddRange(empWorkProj);
-                context.SaveChanges();
+//                //Employees Work Projects
+//                var empWorkProj = LoadEmployeeProject();
+//                context.ProjectEmployees.AddRange(empWorkProj);
+//                context.SaveChanges();
 
-            }
+//            }
 
         }
         public static List<Employee> LoadEmployee() => new()
@@ -53,12 +53,12 @@ namespace Infrastructure
         new Employee { FName = "Michael",LName = "Brown",Gender = Gender.M,Phone = "555-0103",IsDeleted = false}
         };
 
-        public static List<Account> loadAccounts() => new()
-            {
-            new Account{Email = "john.smith@example.com",PasswordHash = "hashed_password_123",EmployeeId = 1},
-            new Account{Email = "sarah.johnson@example.com",PasswordHash = "hashed_password_456",EmployeeId = 2},
-            new Account{Email = "michael.brown@example.com",PasswordHash = "hashed_password_789",EmployeeId = 3}
-    };
+//        public static List<Account> loadAccounts() => new()
+//            {
+//            new Account{Email = "john.smith@example.com",PasswordHash = "hashed_password_123",EmployeeId = 1},
+//            new Account{Email = "sarah.johnson@example.com",PasswordHash = "hashed_password_456",EmployeeId = 2},
+//            new Account{Email = "michael.brown@example.com",PasswordHash = "hashed_password_789",EmployeeId = 3}
+//    };
 
         public static List<Ticket> LoadTicket() => new()
         {
@@ -89,16 +89,16 @@ namespace Infrastructure
             new Project{ProjectName = "Mobile Application",ProjectDescription = "Develop a new mobile application.",ProjectManagerId = 2},
             new Project{ProjectName = "CRM System",ProjectDescription = "Build an internal customer management system.",ProjectManagerId = 1}
 
-            };
-        public static List<ProjectEmployee> LoadEmployeeProject() => new()
-        {
-            new ProjectEmployee {EmployeeId = 1,ProjectId = 1},
-            new ProjectEmployee {EmployeeId = 1,ProjectId = 3},
-            new ProjectEmployee {EmployeeId = 2,ProjectId = 1},
-            new ProjectEmployee {EmployeeId = 2,ProjectId = 2},
-            new ProjectEmployee {EmployeeId = 3,ProjectId = 2},
-            new ProjectEmployee {EmployeeId = 3,ProjectId = 3}
-        };
+//            };
+//        public static List<ProjectEmployee> LoadEmployeeProject() => new()
+//        {
+//            new ProjectEmployee {EmployeeId = 1,ProjectId = 1},
+//            new ProjectEmployee {EmployeeId = 1,ProjectId = 3},
+//            new ProjectEmployee {EmployeeId = 2,ProjectId = 1},
+//            new ProjectEmployee {EmployeeId = 2,ProjectId = 2},
+//            new ProjectEmployee {EmployeeId = 3,ProjectId = 2},
+//            new ProjectEmployee {EmployeeId = 3,ProjectId = 3}
+//        };
 
-    }
-}
+//    }
+//}
