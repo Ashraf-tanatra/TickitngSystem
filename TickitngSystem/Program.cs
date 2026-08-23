@@ -64,6 +64,13 @@ builder.Services.AddScoped<
 
 
 // ==============================
+// Ticket
+// ==============================
+builder.Services.AddScoped<ITicketManager, TicketManager>();
+builder.Services.AddScoped<ITicketRepository, TicketRepository>();
+
+
+// ==============================
 // Account / Authentication
 // ==============================
 

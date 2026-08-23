@@ -1,6 +1,6 @@
 ﻿public class CreateEmployeeRequest
 {
-    public string? FName { get; set; }
+    public string FName { get; set; } = null!;
 
     public string? LName { get; set; }
 

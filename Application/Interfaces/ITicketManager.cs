@@ -1,19 +1,30 @@
-﻿using ApplicationServices.DTOs;
+﻿using Domain.Entities;
+using Domain.Enum;
 
-namespace Domain.EntityManager
+namespace ApplicationServices.Interfaces
 {
     public interface ITicketManager
     {
-        IEnumerable<TicketResponse> GetAll();
+        Ticket? GetById(int id);
 
-        TicketResponse? GetById(int id);
+        IEnumerable<Ticket> GetAllTicketsForAProject(int projectId);
 
-        TicketResponse Create(CreateTicketRequest request);
+        IEnumerable<Ticket> GetAllTicketsForAnEmployee(int employeeId);
 
-        TicketResponse Update(
-            int id,
-            UpdateTicketRequest request);
+        int GetTicketTotalCountForAnEmployee(int employeeId);
 
-        bool Delete(int id);
+        int GetTicketInProgressCountForAnEmployee(int employeeId);
+
+        int GetTicketCompletedCountForAnEmployee(int employeeId);
+
+
+        void Add(Ticket ticket);
+        void Delete(Ticket ticket);
+        void Update(Ticket ticket);
+        bool ProjectExists(int projectId);
+        bool EmployeeExists(int employeeId);
+        void ChangeTicketPriority(int ticketId, TicketPriority priority);
+        void ReassignTicket(int ticketId,int toEmployeeId,int actionByEmployeeId);
+        void ChangeTicketStatus(int ticketId, TicketStatus status, int actionByEmployeeId);
     }
 }
