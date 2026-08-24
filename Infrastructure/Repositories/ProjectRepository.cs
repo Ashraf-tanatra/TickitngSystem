@@ -35,10 +35,9 @@ namespace Infrastructure.Repositories
                    .Select(p => new string[2]
                    {
                         p.ProjectName,
-                        p.ProjectEmployees.FirstOrDefault(pe=>pe.EmployeeId==employeeId).Role
+                        p.ProjectEmployees!.FirstOrDefault(pe=>pe.EmployeeId==employeeId).Role
                    })
                    .ToList();
-            // //to do after edit the database
         }
         // All employees that work on the project
         public IEnumerable<Employee>? GetEmployees(int projectId)
@@ -61,12 +60,12 @@ namespace Infrastructure.Repositories
         public Project GetById(int id)
         {
             if (!ProjectExits(id))
-                throw new ArgumentException($"Project does not exist.");
+                return null;
 
             return _context.Projects
-                .Include(p => p.ProjectEmployees)
+                .Include(p => p.ProjectEmployees)!
                 .ThenInclude(pe => pe.Employee)
-                .FirstOrDefault(p => p.Id == id);
+                .FirstOrDefault(p => p.Id == id)!;
         }
 
         // Create
@@ -107,6 +106,18 @@ namespace Infrastructure.Repositories
 
         public void AddEmployeeToProject(ProjectEmployee projectEmployee)
         {
+            if (!EmployeeExists(projectEmployee.EmployeeId))
+                throw new ArgumentException($"Employee does not exist.");
+
+            if (!ProjectExits(projectEmployee.ProjectId))
+                throw new ArgumentException($"Project does not exist.");
+
+            var empIsAlreadyInProject = _context.ProjectEmployees
+                .Any(pe => pe.ProjectId == projectEmployee.ProjectId && pe.EmployeeId == projectEmployee.EmployeeId);
+
+            if (empIsAlreadyInProject)
+                throw new ArgumentException($"Employee is already in the project.");
+
             _context.ProjectEmployees.Add(projectEmployee);
             _context.SaveChanges();
         }

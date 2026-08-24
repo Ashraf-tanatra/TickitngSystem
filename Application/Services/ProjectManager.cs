@@ -35,6 +35,8 @@ namespace ApplicationServices.Services
                 ProjectManagerId = project.ProjectManagerId,
                 StartDate = project.StartedAt,
                 EndDate = project.EndAt,
+
+                // hard coded
                 EmployeeRole = (project.ProjectManagerId == employeeId ? "Manager" : null)
                 ?? project.ProjectEmployees?.FirstOrDefault(pe => pe.EmployeeId == employeeId)?.Role
 
@@ -68,8 +70,8 @@ namespace ApplicationServices.Services
         {
             var project = _projectRepository.GetById(id);
 
-            if (project == null)
-                return null;
+            if (!_projectRepository.ProjectExits(id))
+                throw new NullReferenceException("Project does not exist.");
 
             return new ProjectResponse
             {
@@ -81,6 +83,7 @@ namespace ApplicationServices.Services
                 StartDate = project.StartedAt,
                 EndDate = project.EndAt,
 
+                // hard coded
                 EmployeeRole = (project.ProjectManagerId == id ? "Manager" : null)
                 ?? project.ProjectEmployees?.FirstOrDefault(pe => pe.EmployeeId == id)?.Role,
 

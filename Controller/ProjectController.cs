@@ -66,12 +66,18 @@ namespace Controller
         [HttpGet("{id:int}")]
         public ActionResult<ProjectResponse> GetById(int id)
         {
-            var project = _projectManager.GetById(id);
-
-            if (project == null)
+            if (!_projectManager.ProjectExits(id))
                 return NotFound();
+            try
+            {
+                var project = _projectManager.GetById(id);
 
-            return Ok(project);
+                return Ok(project);
+            }
+            catch (Exception ex)
+            {
+                return NotFound(ex.Message);
+            }
         }
 
         // POST: api/Project

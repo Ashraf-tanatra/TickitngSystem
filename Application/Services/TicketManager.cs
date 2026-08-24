@@ -112,10 +112,10 @@ namespace ApplicationServices.Services
                 ProjectId = request.ProjectId,
                 TicketCreatedById = request.TicketCreatedById,
             };
-            if (!_ticketRepository.IsManager(ticket.TicketCreatedById, ticket.ProjectId))
+            if (!_ticketRepository.IsManager(ticket.TicketCreatedById, ticket.ProjectId)) //need fixes
                 throw new UnauthorizedAccessException();
-            if ((int)ticket.Priority < 0 || (int)ticket.Priority > 3)
-                throw new ArgumentException("Priority must be between 1 and 3.");
+            if ((int)ticket.Priority < 0 || (int)ticket.Priority > 2)
+                throw new ArgumentException("Priority must be between 0 and 2.");
 
             _ticketRepository.Create(ticket);
             return ticket.TicketId;
