@@ -9,7 +9,7 @@ namespace Domain.Entities
 
         public required string TicketTitle { get; set; }
 
-        public DateOnly? DueTo { get; set; }
+        public DateTime? DueTo { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public TicketStatus TicketStatus { get; set; }= TicketStatus.Pending;

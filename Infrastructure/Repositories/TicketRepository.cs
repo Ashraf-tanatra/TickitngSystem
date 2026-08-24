@@ -68,18 +68,26 @@ namespace Infrastructure.Repositories
             throw new NotImplementedException();
         }
 
+  
         public int GetTicketCompletedCountForAnEmployee(int employeeId)
         {
-            return _context.Employees
-                .Any(e =>
-                    e.Id == employeeId &&
-                    !e.IsDeleted);
+            return _context.Tickets
+                .Count(t =>
+                    t.EmployeeId == employeeId &&
+                    t.TicketStatus == TicketStatus.Completed);
         }
 
         public void ChangeTicketStatus(int ticketId, TicketStatus status)
         {
-            return _context.Projects
-                .Any(p => p.Id == projectId);
+            var ticket = _context.Tickets
+                .FirstOrDefault(t => t.TicketId == ticketId);
+
+            if (ticket == null)
+                throw new KeyNotFoundException("Ticket not found.");
+
+            ticket.TicketStatus = status;
+
+            _context.SaveChanges();
         }
 
 
@@ -98,6 +106,11 @@ namespace Infrastructure.Repositories
         }
 
         public void ChangeTicketPriority(int ticketId, TicketPriority priority)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Add(Ticket ticket)
         {
             throw new NotImplementedException();
         }
