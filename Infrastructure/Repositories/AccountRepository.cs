@@ -66,5 +66,25 @@ namespace Infrastructure.Repositories
             _context.Accounts.Remove(account);
             _context.SaveChanges();
         }
+
+        // SOFT DELETE
+        public void SoftDelete(Account account)
+        {
+            account.IsDeleted = true;
+            account.DeletedAt = DateTime.Now;
+
+            _context.Accounts.Update(account);
+            _context.SaveChanges();
+        }
+
+        //REACTIVE 
+        public void Reactivate(Account account)
+        {
+            account.IsDeleted = false;
+            account.DeletedAt = null;
+
+            _context.Accounts.Update(account);
+            _context.SaveChanges();
+        }
     }
 }

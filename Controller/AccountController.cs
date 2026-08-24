@@ -15,7 +15,6 @@ namespace Controller
             _accountManager = accountManager;
         }
 
-
         // =========================
         // GET ACCOUNT BY EMAIL
         // =========================
@@ -45,14 +44,59 @@ namespace Controller
         }
 
 
+        // =========================================================
+        // Reactivate Account
+        // =========================================================
+        [HttpPost("reactivate" + "{email}")]
+        public IActionResult Reactivate(string email)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(email))
+                {
+                    return BadRequest(new
+                    {
+                        message = "Email is required."
+                    });
+                }
+
+                var result = _accountManager.Reactivate(email);
+
+                if (!result)
+                {
+                    return NotFound(new
+                    {
+                        message = "Account not found."
+                    });
+                }
+
+                return Ok(new
+                {
+                    message = "Account reactivated successfully."
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
+        }
+
         // =========================
         // UPDATE ACCOUNT
         // =========================
 
         [HttpPut("{id}")]
-        public ActionResult<AccountResponse> Update(
-            int id,
-            UpdateAccountRequest request)
+        public ActionResult<AccountResponse> Update(int id,UpdateAccountRequest request)
         {
             try
             {
@@ -96,25 +140,34 @@ namespace Controller
         // =========================
 
         [HttpDelete("{email}")]
-        public IActionResult Delete(string email)
+        public IActionResult SoftDelete(string email)
         {
             try
             {
-                var deleted =
-                    _accountManager.Delete(email);
+                var result = _accountManager.SoftDelete(email);
 
-                if (!deleted)
+                if (!result)
+                {
                     return NotFound(new
                     {
                         message = "Account not found."
                     });
+                }
 
                 return Ok(new
                 {
-                    message = "Account deleted successfully."
+                    message = "Account deleted successfully. " +
+                              "You can reactivate it within 30 days."
                 });
             }
             catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
+            catch (InvalidOperationException ex)
             {
                 return BadRequest(new
                 {

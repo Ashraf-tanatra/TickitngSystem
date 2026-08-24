@@ -15,6 +15,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
+// ==============================
+// Background Services
+// ==============================
+
+//builder.Services.AddHostedService<DeletedAccountCleanupService>();
 
 // ==============================
 // Database
@@ -32,8 +37,8 @@ if (string.IsNullOrWhiteSpace(connectionString))
 Console.WriteLine(
     "CONNECTION STRING = " + connectionString);
 
-builder.Services.AddControllers();
-builder.Services.AddOpenApi("v1");
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(connectionString));
 
 
 // ==============================
@@ -47,6 +52,7 @@ builder.Services.AddScoped<
 builder.Services.AddScoped<
     IEmployeeRepository,
     EmployeeRepository>();
+
 
 // ==============================
 // Project
@@ -64,8 +70,14 @@ builder.Services.AddScoped<
 // ==============================
 // Ticket
 // ==============================
-builder.Services.AddScoped<ITicketManager, TicketManager>();
-builder.Services.AddScoped<ITicketRepository, TicketRepository>();
+
+builder.Services.AddScoped<
+    ITicketManager,
+    TicketManager>();
+
+builder.Services.AddScoped<
+    ITicketRepository,
+    TicketRepository>();
 
 
 // ==============================
@@ -89,17 +101,21 @@ builder.Services.AddScoped<
 // OpenAPI / Scalar
 // ==============================
 
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi("v1");
 
 
 var app = builder.Build();
 
+
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi(); // Exposes the JSON endpoint (e.g., /openapi/v1.json)
+    app.MapOpenApi();
     app.MapScalarApiReference();
 }
+
+
 app.MapGet("/", () => "Server is working!");
 
+app.MapControllers();
 
 app.Run();

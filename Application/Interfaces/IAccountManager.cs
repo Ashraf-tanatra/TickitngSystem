@@ -15,9 +15,13 @@ namespace ApplicationServices.Interfaces
 
         bool Delete(string email);
 
+        bool SoftDelete(string email);
+
         bool ValidEmailFormat(string email);
 
         bool PasswordFormat(string password);
+
+        bool Reactivate(string email);
 
         AccountResponse? Update( int id, UpdateAccountRequest request);
     }

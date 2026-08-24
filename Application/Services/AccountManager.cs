@@ -207,5 +207,65 @@ namespace ApplicationServices.Services
 
             return true;
         }
+
+        public bool Reactivate(string email)
+        {
+            // 1. Validate email
+            if (string.IsNullOrWhiteSpace(email))
+                throw new ArgumentException("Email is required.");
+
+            // 2. Get account
+            var account = _accountRepository.GetByEmail(email);
+
+            if (account == null)
+                return false;
+
+            // 3. Check if account is already active
+            if (!account.IsDeleted)
+                throw new InvalidOperationException(
+                    "Account is already active.");
+
+            // 4. DeletedAt must exist
+            if (!account.DeletedAt.HasValue)
+                throw new InvalidOperationException(
+                    "Account deletion date is missing.");
+
+            // 5. Check 30-day reactivation period
+            if (account.DeletedAt.Value.AddDays(30) < DateTime.Now)
+                throw new InvalidOperationException(
+                    "The 30-day reactivation period has expired.");
+
+            // 6. Reactivate account
+            account.IsDeleted = false;
+            account.DeletedAt = null;
+
+            // 7. Save changes
+            _accountRepository.Update(account);
+
+            return true;
+        }
+
+        public bool SoftDelete(string email)
+        {
+            // 1. Validate email
+            if (string.IsNullOrWhiteSpace(email))
+                throw new ArgumentException("Email is required.");
+
+            // 2. Find account
+            var account = _accountRepository.GetByEmail(email);
+
+            if (account == null)
+                return false;
+
+            // 3. Check if already deleted
+            if (account.IsDeleted)
+                throw new InvalidOperationException(
+                    "Account is already deleted.");
+
+            // 4. Soft delete
+            _accountRepository.SoftDelete(account);
+
+            return true;
+        }
     }
 }

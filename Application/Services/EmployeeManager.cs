@@ -19,67 +19,7 @@ namespace ApplicationServices.Services
         }
 
 
-        // CREATE
-        //public EmployeeResponse Create(CreateEmployeeRequest request)
-        //{
-        //    if (request == null)
-        //        throw new ArgumentNullException(nameof(request));
-
-        //    if (string.IsNullOrWhiteSpace(request.FName))
-        //        throw new ArgumentException("First name is required.");
-
-        //    if (string.IsNullOrWhiteSpace(request.LName))
-        //        throw new ArgumentException("Last name is required.");
-
-        //    if (string.IsNullOrWhiteSpace(request.Email))
-        //        throw new ArgumentException("Email is required.");
-
-        //    if (string.IsNullOrWhiteSpace(request.Phone))
-        //        throw new ArgumentException("Phone is required.");
-
-        //    if (string.IsNullOrWhiteSpace(request.Password))
-        //        throw new ArgumentException("Password is required.");
-
-        //    if (request.Password != request.ConfirmPassword)
-        //        throw new ArgumentException(
-        //            "Password and confirm password do not match.");
-
-        //    if (!request.AcceptTerms)
-        //        throw new ArgumentException(
-        //            "You must accept the Terms of Service and Privacy Policy.");
-
-        //    // Check Email
-        //    if (_accountRepository.EmailExists(request.Email))
-        //        throw new InvalidOperationException(
-        //            "An account with this email already exists.");
-
-        //    // Check Phone
-        //    if (_employeeRepository.ExistsByPhone(request.Phone))
-        //        throw new InvalidOperationException(
-        //            "An employee with this phone already exists.");
-
-        //    // Create Employee and Account
-        //    var employee = new Employee
-        //    {
-        //        FName = request.FName,
-        //        LName = request.LName,
-        //        Phone = request.Phone,
-        //        Gender = (Enum.Gender)request.Gender
-        //    };
-
-        //    var account = new Account
-        //    {
-        //        Email = request.Email,
-        //        PasswordHash = request.Password,
-        //        Employee = employee
-        //    };
-
-        //    employee.Account = account;
-
-        //    _employeeRepository.Add(employee);
-
-        //    return MapToResponse(employee);
-        //}
+        
 
 
         // GET ALL
@@ -315,5 +255,66 @@ namespace ApplicationServices.Services
                 IsDeleted = employee.IsDeleted
             };
         }
+        // CREATE
+        //public EmployeeResponse Create(CreateEmployeeRequest request)
+        //{
+        //    if (request == null)
+        //        throw new ArgumentNullException(nameof(request));
+
+        //    if (string.IsNullOrWhiteSpace(request.FName))
+        //        throw new ArgumentException("First name is required.");
+
+        //    if (string.IsNullOrWhiteSpace(request.LName))
+        //        throw new ArgumentException("Last name is required.");
+
+        //    if (string.IsNullOrWhiteSpace(request.Email))
+        //        throw new ArgumentException("Email is required.");
+
+        //    if (string.IsNullOrWhiteSpace(request.Phone))
+        //        throw new ArgumentException("Phone is required.");
+
+        //    if (string.IsNullOrWhiteSpace(request.Password))
+        //        throw new ArgumentException("Password is required.");
+
+        //    if (request.Password != request.ConfirmPassword)
+        //        throw new ArgumentException(
+        //            "Password and confirm password do not match.");
+
+        //    if (!request.AcceptTerms)
+        //        throw new ArgumentException(
+        //            "You must accept the Terms of Service and Privacy Policy.");
+
+        //    // Check Email
+        //    if (_accountRepository.EmailExists(request.Email))
+        //        throw new InvalidOperationException(
+        //            "An account with this email already exists.");
+
+        //    // Check Phone
+        //    if (_employeeRepository.ExistsByPhone(request.Phone))
+        //        throw new InvalidOperationException(
+        //            "An employee with this phone already exists.");
+
+        //    // Create Employee and Account
+        //    var employee = new Employee
+        //    {
+        //        FName = request.FName,
+        //        LName = request.LName,
+        //        Phone = request.Phone,
+        //        Gender = (Enum.Gender)request.Gender
+        //    };
+
+        //    var account = new Account
+        //    {
+        //        Email = request.Email,
+        //        PasswordHash = request.Password,
+        //        Employee = employee
+        //    };
+
+        //    employee.Account = account;
+
+        //    _employeeRepository.Add(employee);
+
+        //    return MapToResponse(employee);
+        //}
     }
 }

@@ -4,33 +4,34 @@ namespace Domain.Entities
 {
     public class Ticket
     {
-        // Used by Employee
-        public int TicketId { get; } //Auto Generated 
+        // Primary Key
+        public int TicketId { get; }
+
         public required string TicketTitle { get; set; }
 
         public DateOnly? DueTo { get; set; }
-        public DateOnly CreatedAt { get; set; } = DateOnly.FromDateTime(DateTime.Now);
 
-        public TicketStatus TicketStatus { get; set; } = TicketStatus.Pending;
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public TicketStatus TicketStatus { get; set; }= TicketStatus.Pending;
+
         public TicketPriority Priority { get; set; }
+
         public string? Description { get; set; }
-
+        // Ticket Attachments
         public ICollection<TicketAttachments> TicketAttachments { get; set; } = new List<TicketAttachments>();
-
         // Current assigned Employee
         public int EmployeeId { get; set; }
-        public Employee Employee { get; set; } = null!;
-
+        public Employee Employee { get; set; }= null!;
+        // Employee who created the ticket
         public int TicketCreatedById { get; set; }
-        public Employee TicketCreatedBy { get; set; } = null!;
-
+        public Employee TicketCreatedBy { get; set; }= null!;
+        // Project
         public int ProjectId { get; set; }
-        public Project Project { get; set; }
-
-        public ICollection<TicketHistory>? TicketHistories { get; set; }
-        public ICollection<TicketAttachments>? AttachmentURL { get; set; }
-
-        public override string ToString() => $"{TicketId} Ticket Title: {TicketTitle} Created On: {CreatedAt}\n" +
-                   $"Ticket Status: {TicketStatus}";
+        public Project Project { get; set; }= null!;
+        // Ticket History
+        public ICollection<TicketHistory> TicketHistories { get; set; }= new List<TicketHistory>();
+        public override string ToString()
+        {return $"{TicketId} Ticket Title: {TicketTitle} " +$"Created On: {CreatedAt}\n" +$"Ticket Status: {TicketStatus}";
+        }
     }
 }
