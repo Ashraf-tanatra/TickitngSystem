@@ -23,8 +23,7 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi("v1");
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("constr")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("constr")));
 
 builder.Services.AddScoped<IEmployeeManager, EmployeeManager>();
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
@@ -39,8 +38,8 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi(); // Exposes the JSON endpoint (e.g., /openapi/v1.json)
-    app.MapScalarApiReference();
+    app.MapOpenApi(); // /openapi/v1.json
+    app.MapScalarApiReference(); // /scalar
 }
 app.MapGet("/", () => "Server is working!");
 app.MapControllers();

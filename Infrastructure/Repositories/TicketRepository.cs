@@ -109,10 +109,9 @@ namespace Infrastructure.Repositories
         }
         public bool IsManager(int employeeId, int projectId)
         {
-            return _context.Tickets
-                .Include(p => p.Project)
-                .Where(p => p.ProjectId == projectId)
-                .Any(x => x.Project.ProjectManagerId == employeeId);
+            return _context.Projects
+                .Where(p => p.Id == projectId)
+                .Any(x => x.ProjectManagerId == employeeId);
         }
     }
 }
