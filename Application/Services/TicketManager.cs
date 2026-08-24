@@ -1,5 +1,6 @@
 ﻿using ApplicationServices.DTOs.Ticket;
 using ApplicationServices.Interfaces;
+using ApplicationServices.Services;
 using Domain.Entities;
 using Domain.Interfaces;
 
@@ -132,16 +133,4 @@ namespace ApplicationServices.Services
     //{
     //    var tickets = _ticketRepository.GetAll();
 
-    //    return tickets.Select(ticket => new TicketResponse
-    //    {
-    //        TicketId = ticket.TicketId,
-    //        TicketTitle = ticket.TicketTitle,
-    //        DueTo = ticket.DueTo,
-    //        TicketStatus = ticket.TicketStatus.ToString(),
-    //        Priority = ticket.Priority.ToString(),
-    //        Description = ticket.Description,
-    //        EmployeeId = ticket.EmployeeId,
-    //        ProjectId = ticket.ProjectId
-    //    });
-    //}
 }

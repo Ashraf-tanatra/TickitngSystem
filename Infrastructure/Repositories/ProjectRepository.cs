@@ -71,14 +71,12 @@ namespace Infrastructure.Repositories
         // Create
         public void Create(Project project)
         {
-            _context.Projects.Add(project);
-            _context.SaveChanges();
+            throw new NotImplementedException();
         }
         // Update
         public void Update(Project project)
         {
-            _context.Projects.Update(project);
-            _context.SaveChanges();
+            throw new NotImplementedException();
         }
         // Delete // ? may not Delete the project just set it as cancelled
         public void Delete(Project project)

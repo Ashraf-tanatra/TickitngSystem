@@ -12,34 +12,84 @@ namespace Infrastructure.Repositories
             _context = context;
         }
 
+
+        // GET ACCOUNT BY EMAIL
         public Account? GetByEmail(string email)
+        {
+            Console.WriteLine("1 - Before query ===============================>===============================>");
+
+            var account = _context.Accounts
+                .Include(a => a.Employee)
+                .FirstOrDefault(a => a.Email == email);
+
+            Console.WriteLine("2 - After query===============================>===============================>");
+
+            return account;
+        }
+        public Account? GetById(int id)
         {
             return _context.Accounts
                 .Include(a => a.Employee)
-                .FirstOrDefault(a => a.Email == email);
+                .FirstOrDefault(a => a.Id == id);
         }
 
+
+        // CHECK EMAIL
         public bool EmailExists(string email)
         {
             return _context.Accounts
                 .Any(a => a.Email == email);
         }
 
+
+        // CHECK EMPLOYEE
         public bool EmployeeExists(int employeeId)
         {
             return _context.Employees
                 .Any(e => e.Id == employeeId);
         }
 
+
+        // ADD ACCOUNT
         public void Add(Account account)
         {
             _context.Accounts.Add(account);
             _context.SaveChanges();
         }
 
+
+        // UPDATE ACCOUNT
+        public void Update(Account account)
+        {
+            _context.Accounts.Update(account);
+            _context.SaveChanges();
+        }
+
+
+        // HARD DELETE
         public void Delete(Account account)
         {
             _context.Accounts.Remove(account);
+            _context.SaveChanges();
+        }
+
+        // SOFT DELETE
+        public void SoftDelete(Account account)
+        {
+            account.IsDeleted = true;
+            account.DeletedAt = DateTime.Now;
+
+            _context.Accounts.Update(account);
+            _context.SaveChanges();
+        }
+
+        //REACTIVE 
+        public void Reactivate(Account account)
+        {
+            account.IsDeleted = false;
+            account.DeletedAt = null;
+
+            _context.Accounts.Update(account);
             _context.SaveChanges();
         }
     }

@@ -4,45 +4,34 @@ namespace Domain.Entities
 {
     public class Ticket
     {
-        // Used by Employee
-        public int TicketId { get; } //Auto Generated 
+        // Primary Key
+        public int TicketId { get; }
+
         public required string TicketTitle { get; set; }
 
         public DateTime? DueTo { get; set; }
-        public DateTime CreatedTime { get; set; } = DateTime.Now;
 
-        public TicketStatus TicketStatus { get; set; } = TicketStatus.Pending;
-        public TicketPriority Priority { get; set; } = TicketPriority.Low;
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public TicketStatus TicketStatus { get; set; }= TicketStatus.Pending;
+
+        public TicketPriority Priority { get; set; }
 
         public string? Description { get; set; }
-
-        public Employee? Employee { get; set; }
+        // Ticket Attachments
+        public ICollection<TicketAttachments> TicketAttachments { get; set; } = new List<TicketAttachments>();
+        // Current assigned Employee
         public int EmployeeId { get; set; }
+        public Employee Employee { get; set; }= null!;
+        // Employee who created the ticket
         public int TicketCreatedById { get; set; }
-        public Employee TicketCreatedBy { get; set; }
-
-        public required int ProjectId { get; set; }
-        public Project Project { get; set; }
-        public ICollection<TicketHistory> TicketHistories { get; set; } = new List<TicketHistory>();
-
-        public ICollection<TicketAttachments>? AttachmentURL { get; set; }
-
-        // Used by Employee and project manager
-        public void SetAsOnProgress() => TicketStatus = TicketStatus.InProgress;
-        public void TicketCompleted() => TicketStatus = TicketStatus.Completed;
-        public void TicketCancelled() => TicketStatus = TicketStatus.Cancelled;
-        public void TicketDone() => TicketStatus = TicketStatus.Done;
-        public void TicketReOpened() => TicketStatus = TicketStatus.Reopened;
-
-        // Used by Project Manager only
-        public void SetPriorityToHigh() => Priority = TicketPriority.High;
-        public void SetPriorityToLow() => Priority = TicketPriority.Low;
-        public void SetPriorityToMedium() => Priority = TicketPriority.Medium;
-
+        public Employee TicketCreatedBy { get; set; }= null!;
+        // Project
+        public int ProjectId { get; set; }
+        public Project Project { get; set; }= null!;
+        // Ticket History
+        public ICollection<TicketHistory> TicketHistories { get; set; }= new List<TicketHistory>();
         public override string ToString()
-        {
-            return $"{TicketId} Ticket Title: {TicketTitle} Created On: {CreatedTime}\n" +
-                   $"Ticket Status: {TicketStatus}";
+        {return $"{TicketId} Ticket Title: {TicketTitle} " +$"Created On: {CreatedAt}\n" +$"Ticket Status: {TicketStatus}";
         }
     }
 }

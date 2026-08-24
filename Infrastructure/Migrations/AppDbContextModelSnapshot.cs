@@ -30,18 +30,24 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasColumnType("varchar");
 
                     b.Property<int>("EmployeeId")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasColumnType("varchar");
 
                     b.HasKey("Id");
 
@@ -51,7 +57,7 @@ namespace Infrastructure.Migrations
                     b.HasIndex("EmployeeId")
                         .IsUnique();
 
-                    b.ToTable("Accounts");
+                    b.ToTable("Accounts", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.Employee", b =>
@@ -70,8 +76,9 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<int>("Gender")
-                        .HasColumnType("int");
+                    b.Property<string>("Gender")
+                        .IsRequired()
+                        .HasColumnType("char(1)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
@@ -137,7 +144,9 @@ namespace Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Role")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.HasKey("ProjectId", "EmployeeId");
 
@@ -154,14 +163,14 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TicketId"));
 
-                    b.Property<DateTime>("CreatedTime")
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime");
 
                     b.Property<string>("Description")
                         .HasMaxLength(2500)
                         .HasColumnType("varchar");
 
-                    b.Property<DateTime?>("DueTo")
+                    b.Property<DateOnly?>("DueTo")
                         .HasColumnType("date");
 
                     b.Property<int>("EmployeeId")
@@ -183,7 +192,7 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("TicketTitle")
                         .IsRequired()
-                        .HasMaxLength(20)
+                        .HasMaxLength(100)
                         .HasColumnType("varchar");
 
                     b.HasKey("TicketId");
@@ -211,7 +220,7 @@ namespace Infrastructure.Migrations
                     b.Property<string>("URL")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("VARCHAR");
+                        .HasColumnType("varchar");
 
                     b.HasKey("Id");
 
@@ -263,7 +272,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("ToEmployeeId");
 
-                    b.ToTable("TicketHistories");
+                    b.ToTable("TicketHistories", (string)null);
                 });
 
             modelBuilder.Entity("Account", b =>
@@ -282,7 +291,7 @@ namespace Infrastructure.Migrations
                     b.HasOne("Domain.Entities.Employee", "ProjectManager")
                         .WithMany()
                         .HasForeignKey("ProjectManagerId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("ProjectManager");
@@ -293,13 +302,13 @@ namespace Infrastructure.Migrations
                     b.HasOne("Domain.Entities.Employee", "Employee")
                         .WithMany("ProjectEmployees")
                         .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("Domain.Entities.Project", "Project")
                         .WithMany("ProjectEmployees")
                         .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Employee");
@@ -337,7 +346,7 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.Entities.TicketAttachments", b =>
                 {
                     b.HasOne("Domain.Entities.Ticket", "Ticket")
-                        .WithMany("AttachmentURL")
+                        .WithMany("TicketAttachments")
                         .HasForeignKey("TicketId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -365,7 +374,7 @@ namespace Infrastructure.Migrations
                         .IsRequired();
 
                     b.HasOne("Domain.Entities.Employee", "ToEmployee")
-                        .WithMany("TicketHistories")
+                        .WithMany()
                         .HasForeignKey("ToEmployeeId")
                         .OnDelete(DeleteBehavior.NoAction);
 
@@ -380,12 +389,9 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.Employee", b =>
                 {
-                    b.Navigation("Account")
-                        .IsRequired();
+                    b.Navigation("Account");
 
                     b.Navigation("ProjectEmployees");
-
-                    b.Navigation("TicketHistories");
 
                     b.Navigation("Tickets");
                 });
@@ -399,7 +405,7 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.Ticket", b =>
                 {
-                    b.Navigation("AttachmentURL");
+                    b.Navigation("TicketAttachments");
 
                     b.Navigation("TicketHistories");
                 });

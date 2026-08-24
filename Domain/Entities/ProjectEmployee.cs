@@ -1,4 +1,6 @@
-﻿namespace Domain.Entities
+﻿using Domain.Enum;
+
+namespace Domain.Entities
 {
     public class ProjectEmployee
     {

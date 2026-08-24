@@ -6,20 +6,23 @@ namespace ApplicationServices.Interfaces
 {
     public interface IEmployeeManager
     {
-        EmployeeResponse Create(CreateEmployeeRequest request);
+        //EmployeeResponse Create(CreateEmployeeRequest request);
 
         EmployeeResponse? GetById(int id);
 
-        IEnumerable<EmployeeResponse> GetAll();
+        IEnumerable<EmployeeResponse> GetAll(); 
 
-        EmployeeResponse? Update(
-            int id,
-            UpdateEmployeeRequest request);
+        EmployeeResponse? Update( int id, UpdateEmployeeRequest request); // make it void 
 
         bool Delete(int id);
-        IEnumerable<ProjectResponse> GetProjects(int employeeId);
 
+        IEnumerable<EmployeeProjectResponse> GetProjects(int employeeId);
 
+        void Add(Employee employee);
 
+        bool ValidPhoneNumberFormat(string phone);
+
+        bool ExistsByPhone(string phone);
+        //bool Reactivate(int id,ReactivateAccountRequest request);
     }
 }

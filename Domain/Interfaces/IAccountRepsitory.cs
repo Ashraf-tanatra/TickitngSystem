@@ -10,6 +10,11 @@
 
         void Add(Account account);
 
+        void Update(Account account);
+
         void Delete(Account account);
+        void Reactivate(Account account);
+        void SoftDelete(Account account);
+        Account? GetById(int id);
     }
 }

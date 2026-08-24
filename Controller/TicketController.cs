@@ -54,9 +54,9 @@ namespace Controller
         {
             try
             {
-                var ticket = _ticketManager.Update(id, request);
+                _ticketManager.Update(id, request);
 
-                return Ok(ticket);
+                return NoContent();
             }
             catch (KeyNotFoundException)
             {
