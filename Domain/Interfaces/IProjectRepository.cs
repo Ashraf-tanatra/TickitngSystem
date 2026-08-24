@@ -5,7 +5,6 @@ namespace Domain.Interfaces
 {
     public interface IProjectRepository
     {
-        //IEnumerable<Project> GetAll();
         IEnumerable<Project>? GetAllProjectWorkedByEmployee(int employeeId);
         IEnumerable<String[]>? GetAllProjectWorkedByEmployeeTopThree(int employeeId);
         IEnumerable<Employee>? GetEmployees(int projectId);
@@ -23,14 +22,9 @@ namespace Domain.Interfaces
         void SetProjectAsCompleted(int projectId);
         void SetProjectAsOnHold(int projectId);
 
-        bool EmployeeExists(int employeeId); // ?
+        bool EmployeeExists(int employeeId);
 
         IEnumerable<Project>? GetAllProjectWorkedByEmployeeWithFilter(int employeeId, ProjectStatus FilterByStatus);
-
-
-        //bool IsManager(int employeeId); // ?
-
-        //IEnumerable<Ticket> GetTickets(int projectId);
 
     }
 }

@@ -5,112 +5,64 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Database.Configuration
 {
-    public class TicketConfiguration
-        : IEntityTypeConfiguration<Ticket>
+    public class TicketConfiguration : IEntityTypeConfiguration<Ticket>
     {
-        public void Configure(
-            EntityTypeBuilder<Ticket> builder)
+        public void Configure(EntityTypeBuilder<Ticket> builder)
         {
-            // =====================================================
             // Primary Key
-            // =====================================================
+            builder.HasKey(x => x.TicketId);
+            builder.Property(x => x.TicketId)
+                        .ValueGeneratedOnAdd();
 
-            builder.HasKey(t => t.TicketId);
-
-            builder.Property(t => t.TicketId)
-                   .ValueGeneratedOnAdd();
-
-
-            // =====================================================
-            // Ticket Title
-            // =====================================================
-
-            builder.Property(t => t.TicketTitle)
-                   .HasColumnType("varchar")
+            // Title
+            builder.Property(x => x.TicketTitle)
+                   .HasColumnType("VARCHAR")
                    .HasMaxLength(100)
                    .IsRequired();
 
+            // Priority
+            builder.Property(x => x.Priority)
+                   .HasConversion(
+                       x => x.ToString(),
+                       x => (TicketPriority)Enum.Parse(typeof(TicketPriority), x));
 
-            // =====================================================
+            // Status
+            builder.Property(x => x.TicketStatus)
+                   .HasConversion(
+                       x => x.ToString(),
+                       x => (TicketStatus)Enum.Parse(typeof(TicketStatus), x));
+
             // Due Date
-            // =====================================================
-            builder.Property(t => t.DueTo)
-                   .HasColumnType("date");
+            builder.Property(x => x.DueTo)
+                   .HasColumnType("DATE");
 
-            
+            // Created Time
+            builder.Property(x => x.CreatedAt)
+                   .HasColumnType("DATE");
 
-
-            // =====================================================
-            // Created Date
-            // =====================================================
-
-            builder.Property(t => t.CreatedAt)
-                   .HasColumnType("datetime")
-                   .IsRequired();
-
-            // =====================================================
-            // Ticket Status
-            // =====================================================
-
-            builder.Property(t => t.TicketStatus)
-                   .HasConversion(
-                       status => status.ToString(),
-                       status => Enum.Parse<TicketStatus>(status))
-                   .IsRequired();
-
-
-            // =====================================================
-            // Ticket Priority
-            // =====================================================
-
-            builder.Property(t => t.Priority)
-                   .HasConversion(
-                       priority => priority.ToString(),
-                       priority => Enum.Parse<TicketPriority>(priority))
-                   .IsRequired();
-
-
-            // =====================================================
             // Description
-            // =====================================================
-
-            builder.Property(t => t.Description)
-                   .HasColumnType("varchar")
+            builder.Property(x => x.Description)
+                   .HasColumnType("VARCHAR")
                    .HasMaxLength(2500);
 
-
-            // =====================================================
-            // Current Assigned Employee
-            // =====================================================
-
-            builder.HasOne(t => t.Employee)
+            // Assigned Employee
+            builder.HasOne(x => x.Employee)
                    .WithMany(e => e.Tickets)
-                   .HasForeignKey(t => t.EmployeeId)
+                   .HasForeignKey(x => x.EmployeeId)
                    .OnDelete(DeleteBehavior.Restrict);
 
-
-            // =====================================================
-            // Employee Who Created The Ticket
-            // =====================================================
-
-            builder.HasOne(t => t.TicketCreatedBy)
+            // Ticket Created By
+            builder.HasOne(x => x.TicketCreatedBy)
                    .WithMany()
-                   .HasForeignKey(t => t.TicketCreatedById)
+                   .HasForeignKey(x => x.TicketCreatedById)
                    .OnDelete(DeleteBehavior.Restrict);
 
-
-
-
-            // =====================================================
             // Project
-            // =====================================================
-
-            builder.HasOne(t => t.Project)
+            builder.HasOne(x => x.Project)
                    .WithMany(p => p.ProjectTickets)
-                   .HasForeignKey(t => t.ProjectId)
+                   .HasForeignKey(x => x.ProjectId)
                    .IsRequired()
                    .OnDelete(DeleteBehavior.Restrict);
-
 
             builder.ToTable("Tickets");
         }

@@ -163,15 +163,15 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TicketId"));
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime");
+                    b.Property<DateOnly>("CreatedAt")
+                        .HasColumnType("DATE");
 
                     b.Property<string>("Description")
                         .HasMaxLength(2500)
-                        .HasColumnType("varchar");
+                        .HasColumnType("VARCHAR");
 
                     b.Property<DateOnly?>("DueTo")
-                        .HasColumnType("date");
+                        .HasColumnType("DATE");
 
                     b.Property<int>("EmployeeId")
                         .HasColumnType("int");
@@ -193,7 +193,7 @@ namespace Infrastructure.Migrations
                     b.Property<string>("TicketTitle")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("varchar");
+                        .HasColumnType("VARCHAR");
 
                     b.HasKey("TicketId");
 
@@ -220,7 +220,7 @@ namespace Infrastructure.Migrations
                     b.Property<string>("URL")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("varchar");
+                        .HasColumnType("VARCHAR");
 
                     b.HasKey("Id");
 
@@ -291,7 +291,7 @@ namespace Infrastructure.Migrations
                     b.HasOne("Domain.Entities.Employee", "ProjectManager")
                         .WithMany()
                         .HasForeignKey("ProjectManagerId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("ProjectManager");
@@ -346,7 +346,7 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.Entities.TicketAttachments", b =>
                 {
                     b.HasOne("Domain.Entities.Ticket", "Ticket")
-                        .WithMany("TicketAttachments")
+                        .WithMany("AttachmentURL")
                         .HasForeignKey("TicketId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -405,7 +405,7 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.Ticket", b =>
                 {
-                    b.Navigation("TicketAttachments");
+                    b.Navigation("AttachmentURL");
 
                     b.Navigation("TicketHistories");
                 });

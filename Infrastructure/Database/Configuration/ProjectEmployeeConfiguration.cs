@@ -30,8 +30,7 @@ namespace Infrastructure.Database.Configuration
 
             // Role
             builder.Property(pe => pe.Role)
-                   .HasMaxLength(20)
-                   .IsRequired();
+                   .HasMaxLength(50);
 
             builder.ToTable("ProjectEmployees");
         }

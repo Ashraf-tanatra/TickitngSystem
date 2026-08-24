@@ -1,15 +1,11 @@
-﻿using Domain.Enum;
-
-namespace Domain.Entities
+﻿namespace Domain.Entities
 {
     public class ProjectEmployee
     {
-        // Foreign Key
-        public int ProjectId { get; set; }
-        // Foreign Key
-        public int EmployeeId { get; set; }
-        public Project Project { get; set; }
-        public Employee Employee { get; set; }
+        public int ProjectId { get; set; } // Foreign Key
+        public Project Project { get; set; } = null!;
+        public int EmployeeId { get; set; }  // Foreign Key
+        public Employee Employee { get; set; } = null!;
 
         public string? Role { get; set; }
     }

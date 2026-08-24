@@ -9,21 +9,14 @@ using Scalar.AspNetCore;
 var builder = WebApplication.CreateBuilder(args);
 
 
-// ==============================
-// Controllers
-// ==============================
+
 
 builder.Services.AddControllers();
 
-// ==============================
-// Background Services
-// ==============================
+
 
 //builder.Services.AddHostedService<DeletedAccountCleanupService>();
 
-// ==============================
-// Database
-// ==============================
 
 var connectionString =
     builder.Configuration.GetConnectionString("constr");

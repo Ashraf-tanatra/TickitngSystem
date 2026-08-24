@@ -364,3 +364,7 @@ FodyWeavers.xsd
 
 Testing/
 /TickitngSystem/UploadedFiles
+/Test/Program.cs
+/Infrastructure/AppDbContext.cs
+/Infrastructure/appsettings.json
+/TickitngSystem/appsettings.json

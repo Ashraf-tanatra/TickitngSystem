@@ -4,7 +4,7 @@ public class CreateTicketRequest
 {
     public string TicketTitle { get; set; } = null!;
 
-    public DateTime? DueTo { get; set; }
+    public DateOnly? DueTo { get; set; }
 
     public TicketPriority Priority { get; set; }
 

@@ -10,20 +10,17 @@ namespace Infrastructure.Database.Configuration
     {
         public void Configure(EntityTypeBuilder<Project> builder)
         {
-            // Primary Key
-            builder.HasKey(p => p.Id);
+            builder.HasKey(x => x.Id);
 
-            builder.Property(p => p.Id)
+            builder.Property(x => x.Id)
                    .ValueGeneratedOnAdd();
 
-            // Project Name
-            builder.Property(p => p.ProjectName)
+            builder.Property(x => x.ProjectName)
                    .HasColumnType("varchar")
                    .HasMaxLength(125)
                    .IsRequired();
 
-            // Project Description
-            builder.Property(p => p.ProjectDescription)
+            builder.Property(x => x.ProjectDescription)
                    .HasColumnType("varchar")
                    .HasMaxLength(255);
 
@@ -35,13 +32,7 @@ namespace Infrastructure.Database.Configuration
 
             builder.HasOne(x => x.ProjectManager)
                    .WithMany()
-                   .HasForeignKey(p => p.ProjectManagerId)
-                   .OnDelete(DeleteBehavior.NoAction);
-
-            // Project -> Tickets
-            builder.HasMany(p => p.ProjectTickets)
-                   .WithOne(t => t.Project)
-                   .HasForeignKey(t => t.ProjectId)
+                   .HasForeignKey(x => x.ProjectManagerId)
                    .OnDelete(DeleteBehavior.Restrict);
 
             builder.ToTable("Projects");

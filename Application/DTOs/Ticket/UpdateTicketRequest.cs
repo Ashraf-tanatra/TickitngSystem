@@ -2,7 +2,7 @@
 {
     public string TicketTitle { get; set; } = string.Empty;
 
-    public DateTime? DueTo { get; set; }
+    public DateOnly? DueTo { get; set; }
 
     public string? Description { get; set; }
 

@@ -1,6 +1,5 @@
 ﻿using ApplicationServices.DTOs.Ticket;
 using ApplicationServices.Interfaces;
-using ApplicationServices.Services;
 using Domain.Entities;
 using Domain.Interfaces;
 

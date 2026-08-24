@@ -4,32 +4,21 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Database.Configuration
 {
-    public class TicketAttachmentConfiguration
-        : IEntityTypeConfiguration<TicketAttachments>
+    public class TicketAttachmentConfiguration : IEntityTypeConfiguration<TicketAttachments>
     {
-        public void Configure(
-            EntityTypeBuilder<TicketAttachments> builder)
+        public void Configure(EntityTypeBuilder<TicketAttachments> builder)
         {
-            // Primary Key
-            builder.HasKey(a => a.Id);
+            builder.HasKey(p => p.Id);
+            builder.Property(a => a.Id).ValueGeneratedOnAdd();
 
-            builder.Property(a => a.Id)
-                   .ValueGeneratedOnAdd();
+            builder.Property(u => u.URL)
+                .HasColumnType("VARCHAR")
+                .HasMaxLength(255);
 
-
-            // URL
-            builder.Property(a => a.URL)
-                   .HasColumnType("varchar")
-                   .HasMaxLength(255)
-                   .IsRequired();
-
-
-            // Ticket -> Attachments
-            builder.HasOne(a => a.Ticket)
-                   .WithMany(t => t.TicketAttachments)
-                   .HasForeignKey(a => a.TicketId)
-                   .OnDelete(DeleteBehavior.Cascade);
-
+            builder.HasOne(t => t.Ticket)
+                .WithMany(a => a.AttachmentURL)
+                .HasForeignKey(a => a.TicketId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             builder.ToTable("Attachments");
         }
