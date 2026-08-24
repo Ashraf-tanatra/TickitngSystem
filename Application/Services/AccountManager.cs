@@ -14,42 +14,61 @@ namespace ApplicationServices.Services
             _accountRepository = accountRepository;
         }
 
+        // =========================================================
+        // CREATE ACCOUNT
+        // =========================================================
         public AccountResponse CreateAccount(CreateAccountRequest request)
         {
-            // 1. Validate request
+            // Validate request
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
             if (string.IsNullOrWhiteSpace(request.Email))
                 throw new ArgumentException("Email is required.");
 
+            if (!ValidEmailFormat(request.Email))
+                throw new ArgumentException("Invalid email format.");
+
             if (string.IsNullOrWhiteSpace(request.Password))
                 throw new ArgumentException("Password is required.");
 
-            // 2. Check duplicate email
+            if (!PasswordFormat(request.Password))
+            {
+                throw new ArgumentException(
+                    "Password must be at least 8 characters and contain " +
+                    "uppercase, lowercase, number, and special character.");
+            }
+
+            // Check duplicate email
             if (_accountRepository.GetByEmail(request.Email) != null)
             {
                 throw new InvalidOperationException(
                     "An account with this email already exists.");
             }
 
-            // 3. Create Account
+            // Create account
             var account = new Account
             {
                 Email = request.Email,
                 PasswordHash = request.Password
             };
 
-            // 4. Save
+            // Save
             _accountRepository.Add(account);
 
-            // 5. Return response
-            return new AccountResponse // ?
+            // Return response
+            return new AccountResponse
             {
-                Email = account.Email
+                Id = account.Id,
+                Email = account.Email,
+                EmployeeId = account.EmployeeId
             };
         }
 
+
+        // =========================================================
+        // VALIDATE EMAIL
+        // =========================================================
         public bool ValidEmailFormat(string email)
         {
             if (string.IsNullOrWhiteSpace(email))
@@ -67,6 +86,10 @@ namespace ApplicationServices.Services
             }
         }
 
+
+        // =========================================================
+        // VALIDATE PASSWORD
+        // =========================================================
         public bool PasswordFormat(string password)
         {
             if (string.IsNullOrWhiteSpace(password))
@@ -90,6 +113,10 @@ namespace ApplicationServices.Services
             return true;
         }
 
+
+        // =========================================================
+        // GET ACCOUNT BY EMAIL
+        // =========================================================
         public AccountResponse? GetByEmail(string email)
         {
             if (string.IsNullOrWhiteSpace(email))
@@ -102,13 +129,16 @@ namespace ApplicationServices.Services
 
             return new AccountResponse
             {
-                Id=account.Id,
+                Id = account.Id,
                 Email = account.Email,
-                EmployeeId=account.EmployeeId
+                EmployeeId = account.EmployeeId
             };
         }
 
+
+        // =========================================================
         // GET ENTITY BY EMAIL
+        // =========================================================
         public Account? GetEntityByEmail(string email)
         {
             if (string.IsNullOrWhiteSpace(email))
@@ -117,7 +147,13 @@ namespace ApplicationServices.Services
             return _accountRepository.GetByEmail(email);
         }
 
-        public AccountResponse? Update(int id,UpdateAccountRequest request)
+
+        // =========================================================
+        // UPDATE ACCOUNT
+        // =========================================================
+        public AccountResponse? Update(
+            int id,
+            UpdateAccountRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -127,29 +163,37 @@ namespace ApplicationServices.Services
             if (account == null)
                 return null;
 
-            if (account.Employee == null ||
-                account.Employee.IsDeleted)
+            // Check account status
+            if (account.IsDeleted)
             {
                 throw new InvalidOperationException(
-                    "Cannot update a deactivated account.");
+                    "Cannot update a deleted account.");
             }
 
             // Current password is required
             if (string.IsNullOrWhiteSpace(request.CurrentPassword))
+            {
                 throw new ArgumentException(
                     "Current password is required.");
+            }
 
             // Check current password
             if (account.PasswordHash != request.CurrentPassword)
+            {
                 throw new UnauthorizedAccessException(
                     "Current password is incorrect.");
+            }
 
-            // Update Email
+            // =====================================================
+            // UPDATE EMAIL
+            // =====================================================
             if (!string.IsNullOrWhiteSpace(request.Email))
             {
                 if (!ValidEmailFormat(request.Email))
+                {
                     throw new ArgumentException(
                         "Invalid email format.");
+                }
 
                 if (request.Email != account.Email &&
                     _accountRepository.EmailExists(request.Email))
@@ -161,21 +205,28 @@ namespace ApplicationServices.Services
                 account.Email = request.Email;
             }
 
-            // Update Password
+            // =====================================================
+            // UPDATE PASSWORD
+            // =====================================================
             if (!string.IsNullOrWhiteSpace(request.NewPassword))
             {
                 if (!PasswordFormat(request.NewPassword))
+                {
                     throw new ArgumentException(
                         "Password must be at least 8 characters and contain " +
                         "uppercase, lowercase, number, and special character.");
+                }
 
                 if (request.NewPassword != request.ConfirmNewPassword)
+                {
                     throw new ArgumentException(
                         "New password and confirm password do not match.");
+                }
 
                 account.PasswordHash = request.NewPassword;
             }
 
+            // Save changes
             _accountRepository.Update(account);
 
             return new AccountResponse
@@ -185,6 +236,11 @@ namespace ApplicationServices.Services
                 EmployeeId = account.EmployeeId
             };
         }
+
+
+        // =========================================================
+        // CHECK ACCOUNT EXISTS
+        // =========================================================
         public bool Exists(string email)
         {
             if (string.IsNullOrWhiteSpace(email))
@@ -193,7 +249,11 @@ namespace ApplicationServices.Services
             return _accountRepository.GetByEmail(email) != null;
         }
 
-        public bool Delete(string email)// may delete this
+
+        // =========================================================
+        // HARD DELETE
+        // =========================================================
+        public bool Delete(string email)
         {
             if (string.IsNullOrWhiteSpace(email))
                 return false;
@@ -208,62 +268,74 @@ namespace ApplicationServices.Services
             return true;
         }
 
-        public bool Reactivate(string email)
+
+        // =========================================================
+        // SOFT DELETE
+        // =========================================================
+        public bool SoftDelete(string email)
         {
-            // 1. Validate email
+            // Validate email
             if (string.IsNullOrWhiteSpace(email))
                 throw new ArgumentException("Email is required.");
 
-            // 2. Get account
+            // Find account
             var account = _accountRepository.GetByEmail(email);
 
             if (account == null)
                 return false;
 
-            // 3. Check if account is already active
-            if (!account.IsDeleted)
+            // Check if already deleted
+            if (account.IsDeleted)
+            {
                 throw new InvalidOperationException(
-                    "Account is already active.");
+                    "Account is already deleted.");
+            }
 
-            // 4. DeletedAt must exist
-            if (!account.DeletedAt.HasValue)
-                throw new InvalidOperationException(
-                    "Account deletion date is missing.");
-
-            // 5. Check 30-day reactivation period
-            if (account.DeletedAt.Value.AddDays(30) < DateTime.Now)
-                throw new InvalidOperationException(
-                    "The 30-day reactivation period has expired.");
-
-            // 6. Reactivate account
-            account.IsDeleted = false;
-            account.DeletedAt = null;
-
-            // 7. Save changes
-            _accountRepository.Update(account);
+            // Soft delete
+            _accountRepository.SoftDelete(account);
 
             return true;
         }
 
-        public bool SoftDelete(string email)
+
+        // =========================================================
+        // REACTIVATE ACCOUNT
+        // =========================================================
+        public bool Reactivate(string email)
         {
-            // 1. Validate email
+            // Validate email
             if (string.IsNullOrWhiteSpace(email))
                 throw new ArgumentException("Email is required.");
 
-            // 2. Find account
+            // Get account
             var account = _accountRepository.GetByEmail(email);
 
             if (account == null)
                 return false;
 
-            // 3. Check if already deleted
-            if (account.IsDeleted)
+            // Check if account is already active
+            if (!account.IsDeleted)
+            {
                 throw new InvalidOperationException(
-                    "Account is already deleted.");
+                    "Account is already active.");
+            }
 
-            // 4. Soft delete
-            _accountRepository.SoftDelete(account);
+            // DeletedAt must exist
+            if (!account.DeletedAt.HasValue)
+            {
+                throw new InvalidOperationException(
+                    "Account deletion date is missing.");
+            }
+
+            // Check 30-day reactivation period
+            if (account.DeletedAt.Value.AddDays(30) < DateTime.Now)
+            {
+                throw new InvalidOperationException(
+                    "The 30-day reactivation period has expired.");
+            }
+
+            // Reactivate account
+            _accountRepository.Reactivate(account);
 
             return true;
         }

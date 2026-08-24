@@ -16,9 +16,15 @@ namespace Infrastructure.Repositories
         // GET ACCOUNT BY EMAIL
         public Account? GetByEmail(string email)
         {
-            return _context.Accounts
+            Console.WriteLine("1 - Before query ===============================>===============================>");
+
+            var account = _context.Accounts
                 .Include(a => a.Employee)
                 .FirstOrDefault(a => a.Email == email);
+
+            Console.WriteLine("2 - After query===============================>===============================>");
+
+            return account;
         }
         public Account? GetById(int id)
         {
