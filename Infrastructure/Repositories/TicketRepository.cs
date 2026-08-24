@@ -1,7 +1,6 @@
 ﻿using Domain.Entities;
 using Domain.Enum;
 using Domain.Interfaces;
-using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories
 {
@@ -13,30 +12,10 @@ namespace Infrastructure.Repositories
         {
             _context = context;
         }
-        public IEnumerable<Ticket>? GetAllTicketsForAProject(int projectId)
-        {
-            return _context.Tickets
-                .Where(t => t.ProjectId == projectId)
-                .Include(e => e.Employee)
-                .Include(p => p.Project)
-                .ToList();
-        }
-        public IEnumerable<Ticket>? GetAllTicketsForAnEmployee(int employeeId)
-        {
-            return _context.Tickets
-                .Where(t => t.EmployeeId == employeeId
-                && t.TicketStatus != TicketStatus.Done
-                && t.TicketStatus != TicketStatus.Cancelled)
-                .Include(e => e.Employee)
-                .Include(p => p.Project)
-                .ToList();
-        }
+
         public Ticket? GetById(int id)
         {
-            return _context.Tickets
-                .Include(e => e.Employee)
-                .Include(p => p.Project)
-                .FirstOrDefault(t => t.TicketId == id);
+            return _context.Tickets.FirstOrDefault(t => t.TicketId == id);
         }
         // =========================================================
         // ADD
@@ -60,59 +39,44 @@ namespace Infrastructure.Repositories
 
             _context.SaveChanges();
         }
+        public bool EmployeeExists(int employeeId)
+        {
+            return _context.Employees.Any(e => e.Id == employeeId);
+        }
+        public bool ProjectExists(int projectId)
+        {
+            return _context.Projects.Any(p => p.Id == projectId);
+        }
+
+        public IEnumerable<Ticket> GetAllTicketsForAProject(int projectId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerable<Ticket> GetAllTicketsForAnEmployee(int employeeId)
+        {
+            throw new NotImplementedException();
+        }
 
         public int GetTicketTotalCountForAnEmployee(int employeeId)
         {
-            return _context.Tickets
-                .Count(t => t.EmployeeId == employeeId
-                && t.TicketStatus != TicketStatus.Done
-                && t.TicketStatus != TicketStatus.Cancelled);
+            throw new NotImplementedException();
         }
+
         public int GetTicketInProgressCountForAnEmployee(int employeeId)
         {
-            return _context.Tickets.Count(t => t.EmployeeId == employeeId && t.TicketStatus == TicketStatus.InProgress);
+            throw new NotImplementedException();
         }
+
         public int GetTicketCompletedCountForAnEmployee(int employeeId)
-        {
-            return _context.Tickets.Count(t => t.EmployeeId == employeeId && t.TicketStatus == TicketStatus.Completed);
-        }
-
-        public void ChangeTicketStatus(int ticketId, TicketStatus status)
-        {
-            _context.Tickets.Where(t => t.TicketId == ticketId)
-                .ExecuteUpdate(s => s.SetProperty(t => t.TicketStatus, status));
-            _context.SaveChangesAsync();
-        }
-        public void ChangeTicketPriority(int ticketId, TicketPriority priority)
-        {
-            _context.Tickets.Where(t => t.TicketId == ticketId)
-                .ExecuteUpdate(s => s.SetProperty(t => t.Priority, priority));
-            _context.SaveChangesAsync();
-        }
-
-        public void AddAttachmentToTicket(int ticketId, string filePath)
-        {
-            var attachment = new TicketAttachments
-            {
-                URL = filePath,
-                TicketId = ticketId
-            };
-            _context.Attachments.Add(attachment);
-            _context.SaveChanges();
-        }
-
-        public bool TicketExists(int ticketId)
-        {
-            return _context.Tickets.Any(t => t.TicketId == ticketId);
-        }
-        public bool EmployeeExists(int employeeId)
         {
             return _context.Employees
                 .Any(e =>
                     e.Id == employeeId &&
                     !e.IsDeleted);
         }
-        public bool ProjectExists(int projectId)
+
+        public void ChangeTicketStatus(int ticketId, TicketStatus status)
         {
             return _context.Projects
                 .Any(p => p.Id == projectId);
@@ -132,12 +96,17 @@ namespace Infrastructure.Repositories
                     pe.EmployeeId == employeeId &&
                     pe.ProjectId == projectId);
         }
-        public bool IsManager(int employeeId, int projectId)
+
+        public void ChangeTicketPriority(int ticketId, TicketPriority priority)
         {
-            return _context.Tickets
-                .Include(p => p.Project)
-                .Where(p => p.ProjectId == projectId)
-                .Any(x => x.Project.ProjectManagerId == employeeId);
+            throw new NotImplementedException();
         }
+
+
+
+        //public IEnumerable<Ticket> GetAll()
+        //{
+        //    return _context.Tickets.ToList();
+        //}
     }
 }

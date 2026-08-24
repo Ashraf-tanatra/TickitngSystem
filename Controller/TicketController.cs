@@ -28,21 +28,21 @@ namespace Controller
 
         // POST: api/Ticket
         [HttpPost]
-        public IActionResult Create(CreateTicketRequest request)
+        public ActionResult<TicketResponse> Create(
+            CreateTicketRequest request)
         {
             try
             {
-                var ticketId = _ticketManager.Create(request);
+                var ticket = _ticketManager.Create(request);
 
-                return Ok(ticketId);
+                return CreatedAtAction(
+                    nameof(GetById),
+                    new { id = ticket.TicketId },
+                    ticket);
             }
             catch (ArgumentException ex)
             {
                 return BadRequest(ex.Message);
-            }
-            catch (UnauthorizedAccessException)
-            {
-                return Unauthorized();
             }
         }
 

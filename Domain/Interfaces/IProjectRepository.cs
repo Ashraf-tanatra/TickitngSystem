@@ -14,18 +14,23 @@ namespace Domain.Interfaces
 
         void Create(Project project);
         void Update(Project project);
-        void Delete(int projectId, int employeeId);
+        void Delete(Project project);
 
         void AddEmployeeToProject(ProjectEmployee projectEmployee);
 
-        void SetProjectStatus(int projectId, ProjectStatus status);
+        void SetProjectAsActive(int projectId);
+        void SetProjectAsCancelled(int projectId);
+        void SetProjectAsCompleted(int projectId);
+        void SetProjectAsOnHold(int projectId);
 
-        bool EmployeeExists(int employeeId);
-        bool ProjectExits(int projectId);
-        bool TicketExists(int ticketId);
-        bool IsManager(int projectId, int employeeId);
+        bool EmployeeExists(int employeeId); // ?
 
         IEnumerable<Project>? GetAllProjectWorkedByEmployeeWithFilter(int employeeId, ProjectStatus FilterByStatus);
+
+
+        //bool IsManager(int employeeId); // ?
+
+        //IEnumerable<Ticket> GetTickets(int projectId);
 
     }
 }

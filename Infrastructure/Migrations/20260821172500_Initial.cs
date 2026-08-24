@@ -102,9 +102,15 @@ namespace Infrastructure.Migrations
                 {
                     TicketId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+<<<<<<<< HEAD:Infrastructure/Migrations/20260824060743_Initial.cs
                     TicketTitle = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false),
                     DueTo = table.Column<DateOnly>(type: "date", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime", nullable: false),
+========
+                    TicketTitle = table.Column<string>(type: "varchar(20)", maxLength: 20, nullable: false),
+                    DueTo = table.Column<DateTime>(type: "date", nullable: true),
+                    CreatedTime = table.Column<DateTime>(type: "datetime", nullable: false),
+>>>>>>>> UATTwo:Infrastructure/Migrations/20260821172500_Initial.cs
                     TicketStatus = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Priority = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Description = table.Column<string>(type: "varchar(2500)", maxLength: 2500, nullable: true),
