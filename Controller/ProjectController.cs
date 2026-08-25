@@ -1,4 +1,5 @@
 ﻿using ApplicationServices.DTOs.Project;
+using ApplicationServices.DTOs.Ticket;
 using ApplicationServices.Interfaces;
 using Domain.Enum;
 using Microsoft.AspNetCore.Mvc;
@@ -214,15 +215,25 @@ namespace Controller
 
 
         // GET: api/Project/5/tickets
-        //[HttpGet("{id}/tickets")]
-        //public ActionResult<IEnumerable<TicketResponse>> GetTickets(int id)
-        //{
-        //    var tickets = _projectManager.GetTickets(id);
+        [HttpGet("{id}/tickets")]
+        public ActionResult<IEnumerable<TicketResponse>> GetTickets(int id)
+        {
+            try
+            {
+                var tickets =_projectManager.GetTicketsAsync(id);
 
-        //    return Ok(tickets);
-        //}
+                return Ok(tickets);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new
+                {
+                    message = ex.Message
+                });
+            }
+        }
 
-        // GET: api/Project/5/tickets/10
+        //GET: api/Project/5/tickets/10
         //[HttpGet("{projectId}/tickets/{ticketId}")]
         //public ActionResult<TicketResponse> GetTicket(int projectId, int ticketId)
         //{

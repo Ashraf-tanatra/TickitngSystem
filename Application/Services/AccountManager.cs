@@ -1,6 +1,7 @@
 ﻿using ApplicationServices.DTOs.Account;
 using ApplicationServices.Interfaces;
 using Domain.Interfaces;
+using Microsoft.AspNetCore.Identity;
 using System.Net.Mail;
 
 namespace ApplicationServices.Services
@@ -186,9 +187,7 @@ namespace ApplicationServices.Services
                     "Current password is required.");
             }
 
-            // Check current password
-            if (account.PasswordHash !=
-                request.CurrentPassword)
+            if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword,account.PasswordHash))
             {
                 throw new UnauthorizedAccessException(
                     "Current password is incorrect.");
@@ -239,8 +238,7 @@ namespace ApplicationServices.Services
                         "New password and confirm password do not match.");
                 }
 
-                account.PasswordHash =
-                    request.NewPassword;
+                account.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
             }
 
             await _accountRepository.UpdateAsync(account);
@@ -317,6 +315,24 @@ namespace ApplicationServices.Services
             return true;
         }
 
+        public async Task SetVerificationCodeAsync(Account account,string code,DateTime expiresAt)
+        {
+            account.VerificationCode = code;
+            account.VerificationCodeExpiresAt = expiresAt;
+            account.IsEmailVerified = false;
+
+            await _accountRepository.UpdateAsync(account);
+        }
+
+        public async Task VerifyEmailAsync(Account account)
+        {
+            account.IsEmailVerified = true;
+            account.VerificationCode = null;
+            account.VerificationCodeExpiresAt = null;
+
+            await _accountRepository.UpdateAsync(account);
+        }
+
         // =========================================================
         // REACTIVATE ACCOUNT
         // =========================================================
@@ -328,8 +344,7 @@ namespace ApplicationServices.Services
                 throw new ArgumentException(
                     "Email is required.");
 
-            var account =
-                await _accountRepository.GetByEmailAsync(email);
+            var account = await _accountRepository.GetByEmailAsync(email);
 
             if (account == null)
                 return false;
@@ -353,10 +368,41 @@ namespace ApplicationServices.Services
                     "The 30-day reactivation period has expired.");
             }
 
+
             await _accountRepository
                 .ReactivateAsync(account);
 
             return true;
+        }
+
+        // =========================================================
+        // RESET PASSWORD
+        // =========================================================
+
+        public async Task ResetPasswordAsync(
+            Account account,
+            string newPassword)
+        {
+            account.PasswordHash =
+                BCrypt.Net.BCrypt.HashPassword(newPassword);
+
+            account.PasswordResetCode = null;
+            account.PasswordResetCodeExpiresAt = null;
+
+            await _accountRepository.UpdateAsync(account);
+        }// =========================================================
+         // SET PASSWORD RESET CODE
+         // =========================================================
+
+        public async Task SetPasswordResetCodeAsync(
+            Account account,
+            string code,
+            DateTime expiresAt)
+        {
+            account.PasswordResetCode = code;
+            account.PasswordResetCodeExpiresAt = expiresAt;
+
+            await _accountRepository.UpdateAsync(account);
         }
     }
 }

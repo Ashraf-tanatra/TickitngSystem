@@ -10,9 +10,7 @@ namespace Controller
     public class EmployeeController : ControllerBase
     {
         private readonly IEmployeeManager _employeeManager;
-
-        public EmployeeController(
-            IEmployeeManager employeeManager)
+        public EmployeeController(IEmployeeManager employeeManager)
         {
             _employeeManager = employeeManager;
         }
@@ -87,7 +85,12 @@ namespace Controller
                         .UpdateAsync(id, request);
 
                 if (employee == null)
-                    return NotFound();
+                {
+                    return NotFound(new
+                    {
+                        message = Constants.Employee.EmployeeNotFound
+                    });
+                }
 
                 return Ok(employee);
             }
@@ -114,15 +117,52 @@ namespace Controller
                     await _employeeManager.DeleteAsync(id);
 
                 if (!deleted)
+                {
                     return NotFound(new
                     {
-                        message = "Employee not found."
+                        message = Constants.Employee.EmployeeNotFound
                     });
+                }
 
                 return Ok(new
                 {
                     message =
-                        "Employee deleted successfully."
+                        Constants.Employee.EmployeeDeletedSuccessfully
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
+        }
+
+        // =========================================================
+        // REACTIVATE EMPLOYEE
+        // =========================================================
+
+        [HttpPost("reactivate/{id}")]
+        public async Task<IActionResult> Reactivate(int id)
+        {
+            try
+            {
+                var result =
+                    await _employeeManager.ReactivateAsync(id);
+
+                if (!result)
+                {
+                    return NotFound(new
+                    {
+                        message = Constants.Employee.EmployeeNotFound
+                    });
+                }
+
+                return Ok(new
+                {
+                    message =
+                        Constants.Employee.EmployeeReactivatedSuccessfully
                 });
             }
             catch (InvalidOperationException ex)

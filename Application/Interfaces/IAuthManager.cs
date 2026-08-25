@@ -11,10 +11,10 @@ namespace ApplicationServices.Interfaces
         Task<LoginResponse> Login(
             LoginRequest request);
 
-        //void VerifyEmail(
-        //    VerifyEmailRequest request);
+        Task VerifyEmail(VerifyEmailRequest request);
 
-        //Task ResendVerificationCode(
-        //    ResendVerificationCodeRequest request);
+        Task ForgotPassword(ForgotPasswordRequest request);
+
+        Task ResetPassword(ResetPasswordRequest request);
     }
 }

@@ -33,7 +33,7 @@ namespace Controller
                 {
                     return NotFound(new
                     {
-                        message = "Account not found."
+                        message = Constants.Account.AccountNotFound
                     });
                 }
 
@@ -62,7 +62,7 @@ namespace Controller
                 {
                     return BadRequest(new
                     {
-                        message = "Email is required."
+                        message = Constants.Account.EmailRequired
                     });
                 }
 
@@ -74,14 +74,13 @@ namespace Controller
                 {
                     return NotFound(new
                     {
-                        message = "Account not found."
+                        message = Constants.Account.AccountNotFound
                     });
                 }
 
                 return Ok(new
                 {
-                    message =
-                        "Account reactivated successfully."
+                    message = Constants.Account.AccountReactivatedSuccessfully
                 });
             }
             catch (ArgumentException ex)
@@ -119,7 +118,7 @@ namespace Controller
                 {
                     return NotFound(new
                     {
-                        message = "Account not found."
+                        message = Constants.Account.AccountNotFound
                     });
                 }
 
@@ -166,15 +165,13 @@ namespace Controller
                 {
                     return NotFound(new
                     {
-                        message = "Account not found."
+                        message = Constants.Account.AccountNotFound
                     });
                 }
 
                 return Ok(new
                 {
-                    message =
-                        "Account deleted successfully. " +
-                        "You can reactivate it within 30 days."
+                    message =Constants.Account.AccountDeletedSuccessfully
                 });
             }
             catch (ArgumentException ex)

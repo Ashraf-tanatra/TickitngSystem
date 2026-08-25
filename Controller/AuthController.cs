@@ -21,8 +21,7 @@ namespace Controller
         // =========================================================
 
         [HttpPost("signup")]
-        public async Task<ActionResult<AccountResponse>> SignUp(
-            [FromBody] SignUpRequest request)
+        public async Task<ActionResult<AccountResponse>> SignUp([FromBody] SignUpRequest request)
         {
             try
             {
@@ -42,12 +41,50 @@ namespace Controller
         }
 
         // =========================================================
+        // POST: api/Auth/verify-email
+        // =========================================================
+
+        [HttpPost("verify-email")]
+        public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailRequest request)
+        {
+            try
+            {
+                await _authManager.VerifyEmail(request);
+
+                return Ok(new
+                {
+                    message = "Email verified successfully."
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new
+                {
+                    message = ex.Message
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
+        }
+
+        // =========================================================
         // POST: api/Auth/login
         // =========================================================
 
         [HttpPost("login")]
-        public async Task<ActionResult<LoginResponse>> Login(
-            [FromBody] LoginRequest request)
+        public async Task<ActionResult<LoginResponse>> Login([FromBody] LoginRequest request)
         {
             try
             {
@@ -70,65 +107,84 @@ namespace Controller
         }
 
         // =========================================================
-        // VERIFY EMAIL
+        // POST: api/Auth/reset-password
         // =========================================================
 
-        //[HttpPost("verify-email")]
-        //public async Task<IActionResult> VerifyEmail(
-        //    [FromBody] VerifyEmailRequest request)
-        //{
-        //    try
-        //    {
-        //        await _authManager.VerifyEmail(request);
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+        {
+            try
+            {
+                await _authManager.ResetPassword(request);
 
-        //        return Ok(new
-        //        {
-        //            message = "Email verified successfully."
-        //        });
-        //    }
-        //    catch (ArgumentException ex)
-        //    {
-        //        return BadRequest(ex.Message);
-        //    }
-        //    catch (KeyNotFoundException ex)
-        //    {
-        //        return NotFound(ex.Message);
-        //    }
-        //    catch (InvalidOperationException ex)
-        //    {
-        //        return BadRequest(ex.Message);
-        //    }
-        //}
+                return Ok(new
+                {
+                    message =
+                        "Password reset successfully."
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new
+                {
+                    message = ex.Message
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
+        }
 
         // =========================================================
-        // RESEND VERIFICATION CODE
+        // POST: api/Auth/forgot-password
         // =========================================================
 
-        //[HttpPost("resend-verification-code")]
-        //public async Task<IActionResult> ResendVerificationCode(
-        //    [FromBody] ResendVerificationCodeRequest request)
-        //{
-        //    try
-        //    {
-        //        await _authManager.ResendVerificationCode(request);
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+        {
+            try
+            {
+                await _authManager.ForgotPassword(request);
 
-        //        return Ok(new
-        //        {
-        //            message = "Verification code sent successfully."
-        //        });
-        //    }
-        //    catch (ArgumentException ex)
-        //    {
-        //        return BadRequest(ex.Message);
-        //    }
-        //    catch (KeyNotFoundException ex)
-        //    {
-        //        return NotFound(ex.Message);
-        //    }
-        //    catch (InvalidOperationException ex)
-        //    {
-        //        return BadRequest(ex.Message);
-        //    }
-        //}
+                return Ok(new
+                {
+                    message =
+                        "Password reset code sent successfully."
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new
+                {
+                    message = ex.Message
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
+        }
+
     }
 }

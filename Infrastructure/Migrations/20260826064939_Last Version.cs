@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class LastVersion : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -21,7 +21,7 @@ namespace Infrastructure.Migrations
                     LName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Phone = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
                     Gender = table.Column<string>(type: "char(1)", nullable: false),
-                    DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    DeletedAt = table.Column<DateOnly>(type: "date", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
@@ -36,10 +36,13 @@ namespace Infrastructure.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Email = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false),
-                    PasswordHash = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: false),
                     EmployeeId = table.Column<int>(type: "int", nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    PasswordHash = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: false),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    VerificationCode = table.Column<string>(type: "VARCHAR(6)", maxLength: 6, nullable: true),
+                    VerificationCodeExpiresAt = table.Column<DateTime>(type: "DATETIME", nullable: true),
+                    IsEmailVerified = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -58,11 +61,11 @@ namespace Infrastructure.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    ProjectName = table.Column<string>(type: "varchar(125)", maxLength: 125, nullable: false),
-                    ProjectDescription = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true),
-                    ProjectStatus = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    StartedAt = table.Column<DateOnly>(type: "date", nullable: true),
                     EndAt = table.Column<DateOnly>(type: "date", nullable: true),
+                    StartedAt = table.Column<DateOnly>(type: "date", nullable: true),
+                    ProjectDescription = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true),
+                    ProjectName = table.Column<string>(type: "varchar(125)", maxLength: 125, nullable: false),
+                    ProjectStatus = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ProjectManagerId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -82,7 +85,7 @@ namespace Infrastructure.Migrations
                 {
                     ProjectId = table.Column<int>(type: "int", nullable: false),
                     EmployeeId = table.Column<int>(type: "int", nullable: false),
-                    Role = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false)
+                    Role = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -105,15 +108,15 @@ namespace Infrastructure.Migrations
                 {
                     TicketId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    TicketTitle = table.Column<string>(type: "VARCHAR(100)", maxLength: 100, nullable: false),
                     DueTo = table.Column<DateOnly>(type: "DATE", nullable: true),
-                    CreatedAt = table.Column<DateOnly>(type: "DATE", nullable: false),
-                    TicketStatus = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Priority = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Description = table.Column<string>(type: "VARCHAR(2500)", maxLength: 2500, nullable: true),
-                    EmployeeId = table.Column<int>(type: "int", nullable: false),
-                    TicketCreatedById = table.Column<int>(type: "int", nullable: false),
-                    ProjectId = table.Column<int>(type: "int", nullable: false)
+                    Priority = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    TicketTitle = table.Column<string>(type: "VARCHAR(100)", maxLength: 100, nullable: false),
+                    TicketStatus = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedAt = table.Column<DateOnly>(type: "DATE", nullable: false),
+                    ProjectId = table.Column<int>(type: "int", nullable: false),
+                    EmployeeId = table.Column<int>(type: "int", nullable: true),
+                    TicketCreatedById = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {

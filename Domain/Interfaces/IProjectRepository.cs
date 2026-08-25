@@ -25,6 +25,7 @@ namespace Domain.Interfaces
         bool EmployeeExists(int employeeId);
 
         IEnumerable<Project>? GetAllProjectWorkedByEmployeeWithFilter(int employeeId, ProjectStatus FilterByStatus);
+        IEnumerable<Ticket> GetTicketsAsync(int projectId);
 
     }
 }

@@ -20,5 +20,8 @@ namespace Domain.Interfaces
 
         Task<IEnumerable<Project>> GetProjectsAsync(
             int employeeId);
+
+        Task<IEnumerable<Project>> GetActiveProjectsAsync(int employeeId);
+        Task<IEnumerable<Ticket>> GetEmployeeTickets(int employeeId);
     }
 }

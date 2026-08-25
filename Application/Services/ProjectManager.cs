@@ -1,4 +1,5 @@
 ﻿using ApplicationServices.DTOs.Project;
+using ApplicationServices.DTOs.Ticket;
 using ApplicationServices.Interfaces;
 using Domain.Entities;
 using Domain.Enum;
@@ -188,6 +189,33 @@ namespace ApplicationServices.Services
 
             return true;
         }
+        private IEnumerable<TicketResponse> MapTicketsToResponse(IEnumerable<Ticket> tickets)
+        {
+            return tickets.Select(ticket => new TicketResponse
+            {
+                TicketId = ticket.TicketId,
+                TicketTitle = ticket.TicketTitle,
+                DueTo = ticket.DueTo,
+                TicketStatus = ticket.TicketStatus.ToString(),
+                Priority = ticket.Priority.ToString(),
+                Description = ticket.Description,
+                EmployeeId = (int)ticket.EmployeeId,
+                ProjectId = ticket.ProjectId
+            });
+        }
+        public  IEnumerable<TicketResponse> GetTicketsAsync(int projectId)
+        {
+            var project =  _projectRepository.GetById(projectId);
+
+            if (project == null)
+                throw new KeyNotFoundException(
+                    "Project not found.");
+
+            var tickets = _projectRepository.GetTicketsAsync(projectId);
+
+            return MapTicketsToResponse(tickets);
+        }
+
 
         public void ProjectAddEmployee(ProjectEmployeeRequest request)
         {
@@ -253,6 +281,8 @@ namespace ApplicationServices.Services
             });
         }
 
+        
+
 
 
 
@@ -293,23 +323,7 @@ namespace ApplicationServices.Services
         //    });
         //}
 
-        //GET TICKETS
-        //public IEnumerable<TicketResponse> GetTickets(int projectId)
-        //{
-        //    var tickets = _projectRepository.GetTickets(projectId);
 
-        //    return tickets.Select(ticket => new TicketResponse
-        //    {
-        //        TicketId = ticket.TicketId,
-        //        TicketTitle = ticket.TicketTitle,
-        //        DueTo = ticket.DueTo,
-        //        TicketStatus = ticket.TicketStatus.ToString(),
-        //        Priority = ticket.Priority.ToString(),
-        //        Description = ticket.Description,
-        //        EmployeeId = ticket.EmployeeId,
-        //        ProjectId = ticket.ProjectId
-        //    });
-        //}
 
         // GET TICKET BY ID
         //public TicketResponse? GetTicket(int projectId, int ticketId)

@@ -30,8 +30,26 @@ namespace ApplicationServices.Interfaces
             int id,
             UpdateAccountRequest request);
 
+        // EMAIL VERIFICATION
+        Task SetVerificationCodeAsync(
+            Account account,
+            string code,
+            DateTime expiresAt);
+
         bool ValidEmailFormat(string email);
 
         bool PasswordFormat(string password);
+
+        Task VerifyEmailAsync(Account account);
+
+        // PASSWORD RESET
+        Task SetPasswordResetCodeAsync(
+            Account account,
+            string code,
+            DateTime expiresAt);
+
+        Task ResetPasswordAsync(
+            Account account,
+            string newPassword);
     }
 }

@@ -1,4 +1,5 @@
-﻿using Domain.Interfaces;
+﻿using Domain.Entities;
+using Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories
@@ -18,17 +19,9 @@ namespace Infrastructure.Repositories
 
         public async Task<Account?> GetByEmailAsync(string email)
         {
-            Console.WriteLine(
-                "1 - Before query ===============================>");
-
-            var account = await _context.Accounts
+            return await _context.Accounts
                 .Include(a => a.Employee)
                 .FirstOrDefaultAsync(a => a.Email == email);
-
-            Console.WriteLine(
-                "2 - After query ===============================>");
-
-            return account;
         }
 
         // =========================================================
@@ -48,6 +41,8 @@ namespace Infrastructure.Repositories
 
         public async Task<bool> EmailExistsAsync(string email)
         {
+            // Deleted accounts are still considered existing
+            // because they can be reactivated within 30 days.
             return await _context.Accounts
                 .AnyAsync(a => a.Email == email);
         }
@@ -102,7 +97,7 @@ namespace Infrastructure.Repositories
         public async Task SoftDeleteAsync(Account account)
         {
             account.IsDeleted = true;
-            account.DeletedAt = DateTime.Now;
+            account.DeletedAt = DateTime.UtcNow;
 
             _context.Accounts.Update(account);
 

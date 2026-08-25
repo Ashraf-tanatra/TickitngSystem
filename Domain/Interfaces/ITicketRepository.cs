@@ -22,6 +22,7 @@ namespace Domain.Interfaces
 
         bool EmployeeExists(int employeeId);
         bool ProjectExists(int projectId);
+        Task<IEnumerable<Ticket>> GetByEmployeeAndProjectAsync(int employeeId, int projectId);
 
 
         //void SetStatusToInProgress(int ticketId);

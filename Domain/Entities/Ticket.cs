@@ -9,8 +9,8 @@ namespace Domain.Entities
         public string? Description { get; set; }
         public TicketPriority Priority { get; set; }
         public required string TicketTitle { get; set; }
-        public DateOnly CreatedAt { get; set; } = DateOnly.FromDateTime(DateTime.Now);
         public TicketStatus TicketStatus { get; set; } = TicketStatus.Pending;
+        public DateOnly CreatedAt { get; set; } = DateOnly.FromDateTime(DateTime.Now);
 
 
         // RelationShips for EF_Core 
@@ -19,21 +19,18 @@ namespace Domain.Entities
         public Project Project { get; set; } = null!;
 
         // Current assigned Employee
-        public int EmployeeId { get; set; }
-        public Employee Employee { get; set; } = null!;
+        public int? EmployeeId { get; set; }
+        public Employee? Employee { get; set; } = null!;
 
         // Employee who created the ticket
         public int TicketCreatedById { get; set; }
         public Employee TicketCreatedBy { get; set; } = null!;
-
+        // Ticket History
+        public ICollection<TicketHistory> TicketHistories { get; set; } = new List<TicketHistory>();
         // Ticket Attachments
         public ICollection<TicketAttachments> AttachmentURL { get; set; } = new List<TicketAttachments>();
 
-        // Ticket History
-        public ICollection<TicketHistory> TicketHistories { get; set; } = new List<TicketHistory>();
-
-        public override string ToString() => $"{TicketId} Ticket Title: {TicketTitle} " +
-            $"Created On: {CreatedAt}\nTicket Status: {TicketStatus}";
+        public override string ToString() => $"{TicketId} Ticket Title: {TicketTitle} " +$"Created On: {CreatedAt}\nTicket Status: {TicketStatus}";
 
     }
 }

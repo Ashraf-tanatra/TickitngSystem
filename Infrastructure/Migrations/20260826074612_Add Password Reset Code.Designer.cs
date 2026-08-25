@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260824132950_Initial")]
-    partial class Initial
+    [Migration("20260826074612_Add Password Reset Code")]
+    partial class AddPasswordResetCode
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -47,10 +47,26 @@ namespace Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsEmailVerified")
+                        .HasColumnType("bit");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("varchar");
+
+                    b.Property<string>("PasswordResetCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("PasswordResetCodeExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("VerificationCode")
+                        .HasMaxLength(6)
+                        .HasColumnType("VARCHAR");
+
+                    b.Property<DateTime?>("VerificationCodeExpiresAt")
+                        .HasColumnType("DATETIME");
 
                     b.HasKey("Id");
 
@@ -71,8 +87,8 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<DateOnly?>("DeletedAt")
+                        .HasColumnType("date");
 
                     b.Property<string>("FName")
                         .IsRequired()
@@ -147,9 +163,8 @@ namespace Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Role")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("ProjectId", "EmployeeId");
 
@@ -176,7 +191,7 @@ namespace Infrastructure.Migrations
                     b.Property<DateOnly?>("DueTo")
                         .HasColumnType("DATE");
 
-                    b.Property<int>("EmployeeId")
+                    b.Property<int?>("EmployeeId")
                         .HasColumnType("int");
 
                     b.Property<string>("Priority")
@@ -324,8 +339,7 @@ namespace Infrastructure.Migrations
                     b.HasOne("Domain.Entities.Employee", "Employee")
                         .WithMany("Tickets")
                         .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Domain.Entities.Project", "Project")
                         .WithMany("ProjectTickets")

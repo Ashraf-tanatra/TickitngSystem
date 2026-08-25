@@ -8,9 +8,12 @@
 		<InterceptorsNamespaces>
 			$(InterceptorsNamespaces);Microsoft.AspNetCore.OpenApi.Generated
 		</InterceptorsNamespaces>
+
+		<UserSecretsId>0ed71885-1799-471b-8f56-d012c600741d</UserSecretsId>
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="BCrypt.Net-Next" Version="4.2.0" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.11">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

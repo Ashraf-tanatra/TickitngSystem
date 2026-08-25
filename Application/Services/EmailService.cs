@@ -1,40 +1,48 @@
 ﻿using ApplicationServices.Interfaces;
 using Microsoft.Extensions.Configuration;
-using System.Net;
+using Resend;
 using System.Net.Mail;
 
 public class EmailService : IEmailService
 {
+    private readonly IResend _resend;
     private readonly IConfiguration _configuration;
 
-    public EmailService(IConfiguration configuration)
+    public EmailService(
+        IResend resend,
+        IConfiguration configuration)
     {
+        _resend = resend;
         _configuration = configuration;
     }
 
-    public async Task SendVerificationCodeAsync(string email, string code)
+    public async Task SendVerificationCodeAsync(
+        string email,
+        string code)
     {
-        var smtpHost = _configuration["Email:SmtpHost"];
-        var smtpPort = int.Parse(_configuration["Email:SmtpPort"]!);
-        var username = _configuration["Email:Username"];
-        var password = _configuration["Email:Password"];
+        var fromEmail =
+            _configuration["Resend:FromEmail"];
 
-        using var client = new SmtpClient(smtpHost, smtpPort)
+        var message = new EmailMessage
         {
-            Credentials = new NetworkCredential(username, password),
-            EnableSsl = true
-        };
+            From = fromEmail!,
+            Subject = "Ticketing System - Email Verification",
+            HtmlBody = $@"
+                <h2>Email Verification</h2>
 
-        var message = new MailMessage
-        {
-            From = new MailAddress(username!),
-            Subject = "TaskFlow Email Verification",
-            Body = $"Your verification code is: {code}",
-            IsBodyHtml = false
+                <p>Your verification code is:</p>
+
+                <h1>{code}</h1>
+
+                <p>This code will expire in 10 minutes.</p>
+
+                <p>If you did not create this account,
+                please ignore this email.</p>
+            "
         };
 
         message.To.Add(email);
 
-        await client.SendMailAsync(message);
+        await _resend.EmailSendAsync(message);
     }
 }

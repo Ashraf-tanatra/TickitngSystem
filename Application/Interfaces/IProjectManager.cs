@@ -1,4 +1,5 @@
 ﻿using ApplicationServices.DTOs.Project;
+using ApplicationServices.DTOs.Ticket;
 using Domain.Enum;
 
 namespace ApplicationServices.Interfaces
@@ -25,8 +26,7 @@ namespace ApplicationServices.Interfaces
 
         IEnumerable<ProjectResponse>? GetAllProjectWorkedByEmployeeWithFilter(int employeeId, ProjectStatus FilterByStatus);
 
-        //IEnumerable<TicketResponse> GetTickets(int projectId);
 
-        //TicketResponse? GetTicket(int projectId, int TicketId);
+        IEnumerable<TicketResponse> GetTicketsAsync(int projectId);
     }
 }

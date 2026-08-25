@@ -29,7 +29,7 @@ namespace ApplicationServices.Services
                 TicketStatus = ticket.TicketStatus.ToString(),
                 Priority = ticket.Priority.ToString(),
                 Description = ticket.Description,
-                EmployeeId = ticket.EmployeeId,
+                EmployeeId = (int)ticket.EmployeeId,
                 ProjectId = ticket.ProjectId
             };
         }
@@ -71,7 +71,7 @@ namespace ApplicationServices.Services
                 TicketStatus = ticket.TicketStatus.ToString(),
                 Priority = ticket.Priority.ToString(),
                 Description = ticket.Description,
-                EmployeeId = ticket.EmployeeId,
+                EmployeeId = (int)ticket.EmployeeId,
                 ProjectId = ticket.ProjectId
             };
         }
@@ -110,7 +110,7 @@ namespace ApplicationServices.Services
                 TicketStatus = ticket.TicketStatus.ToString(),
                 Priority = ticket.Priority.ToString(),
                 Description = ticket.Description,
-                EmployeeId = ticket.EmployeeId,
+                EmployeeId = (int)ticket.EmployeeId,
                 ProjectId = ticket.ProjectId
             };
         }
@@ -126,10 +126,31 @@ namespace ApplicationServices.Services
 
             return true;
         }
+        public async Task<IEnumerable<TicketResponse>> GetByEmployeeAndProjectAsync(int employeeId,int projectId)
+        {
+            // validation/business rules here
+            var tickets =await _ticketRepository.GetByEmployeeAndProjectAsync(employeeId,projectId);
+            return MapToResponse(tickets);
+        }
+
+        private IEnumerable<TicketResponse> MapToResponse(
+      IEnumerable<Ticket> tickets)
+        {
+            return tickets.Select(ticket => new TicketResponse
+            {
+                TicketId = ticket.TicketId,
+                TicketTitle = ticket.TicketTitle,
+                DueTo = ticket.DueTo,
+                TicketStatus = ticket.TicketStatus.ToString(),
+                Priority = ticket.Priority.ToString(),
+                Description = ticket.Description,
+                EmployeeId = (int)ticket.EmployeeId,
+                ProjectId = ticket.ProjectId
+            });
+        }
+
     }
 
-    //public IEnumerable<TicketResponse> GetAll() 
-    //{
-    //    var tickets = _ticketRepository.GetAll();
+   
 
 }

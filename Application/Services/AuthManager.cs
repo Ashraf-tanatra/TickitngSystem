@@ -2,7 +2,6 @@
 using ApplicationServices.DTOs.ApplicationServices.DTOs;
 using ApplicationServices.Interfaces;
 using Domain.Entities;
-using Domain.Interfaces;
 
 namespace ApplicationServices.Services
 {
@@ -10,52 +9,58 @@ namespace ApplicationServices.Services
     {
         private readonly IEmployeeManager _employeeManager;
         private readonly IAccountManager _accountManager;
+        private readonly IEmailService _emailService;
 
         public AuthManager(
             IAccountManager accountManager,
-            IEmployeeManager employeeManager)
+            IEmployeeManager employeeManager,
+            IEmailService emailService)
         {
             _accountManager = accountManager;
             _employeeManager = employeeManager;
+            _emailService = emailService;
         }
 
         // =========================================================
         // SIGN UP
         // =========================================================
 
-        public async Task<AccountResponse> SignUp(
-            SignUpRequest request)
+        public async Task<AccountResponse> SignUp(SignUpRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
+            // =====================================================
+            // REQUIRED FIELDS
+            // =====================================================
+
             if (string.IsNullOrWhiteSpace(request.FName))
                 throw new ArgumentException(
-                    "First name is required.");
+                    Constants.Employee.FirstNameRequired);
 
             if (string.IsNullOrWhiteSpace(request.LName))
                 throw new ArgumentException(
-                    "Last name is required.");
+                    Constants.Employee.LastNameRequired);
 
             if (string.IsNullOrWhiteSpace(request.Email))
                 throw new ArgumentException(
-                    "Email is required.");
+                    Constants.Account.EmailRequired);
 
             if (string.IsNullOrWhiteSpace(request.Phone))
                 throw new ArgumentException(
-                    "Phone is required.");
+                    Constants.Employee.PhoneRequired);
 
             if (string.IsNullOrWhiteSpace(request.Password))
                 throw new ArgumentException(
-                    "Password is required.");
+                    Constants.Account.PasswordRequired);
 
             if (request.Password != request.ConfirmPassword)
                 throw new ArgumentException(
-                    "Password and confirm password do not match.");
+                    Constants.Account.PasswordsDoNotMatch);
 
             if (!request.AcceptTerms)
                 throw new ArgumentException(
-                    "You must accept the Terms of Service and Privacy Policy.");
+                    Constants.Account.TermsNotAccepted);
 
             // =====================================================
             // FORMAT VALIDATION
@@ -63,16 +68,15 @@ namespace ApplicationServices.Services
 
             if (!_accountManager.ValidEmailFormat(request.Email))
                 throw new ArgumentException(
-                    "Invalid email format.");
+                    Constants.Account.InvalidEmail);
 
             if (!_accountManager.PasswordFormat(request.Password))
                 throw new ArgumentException(
-                    "Password must be at least 8 characters and contain " +
-                    "uppercase, lowercase, number, and special character.");
+                    Constants.Account.InvalidPassword);
 
             if (!_employeeManager.ValidPhoneNumberFormat(request.Phone))
                 throw new ArgumentException(
-                    "Phone number must contain exactly 10 digits.");
+                    Constants.Employee.InvalidPhoneNumber);
 
             // =====================================================
             // CHECK DUPLICATES
@@ -80,14 +84,11 @@ namespace ApplicationServices.Services
 
             if (await _accountManager.ExistsAsync(request.Email))
                 throw new InvalidOperationException(
-                    "An account with this email already exists.");
+                    Constants.Account.EmailAlreadyExists);
 
-            // NOTE:
-            // ExistsByPhone is still synchronous in your current
-            // IEmployeeManager, so it remains synchronous here.
             if (await _employeeManager.ExistsByPhoneAsync(request.Phone))
                 throw new InvalidOperationException(
-                    "An employee with this phone already exists.");
+                    Constants.Employee.PhoneAlreadyExists);
 
             // =====================================================
             // CREATE EMPLOYEE
@@ -103,14 +104,37 @@ namespace ApplicationServices.Services
             };
 
             // =====================================================
+            // GENERATE VERIFICATION CODE
+            // =====================================================
+
+            var verificationCode =
+                Random.Shared.Next(100000, 1000000).ToString();
+
+            var verificationCodeExpiresAt =
+                DateTime.Now.AddMinutes(10);
+
+            // =====================================================
             // CREATE ACCOUNT
             // =====================================================
 
             var account = new Account
             {
                 Email = request.Email,
-                PasswordHash = request.Password,
-                Employee = employee
+
+                PasswordHash =
+                    BCrypt.Net.BCrypt.HashPassword(
+                        request.Password),
+
+                Employee = employee,
+
+                IsDeleted = false,
+
+                VerificationCode = verificationCode,
+
+                VerificationCodeExpiresAt =
+                    verificationCodeExpiresAt,
+
+                IsEmailVerified = false
             };
 
             employee.Account = account;
@@ -119,9 +143,15 @@ namespace ApplicationServices.Services
             // SAVE EMPLOYEE + ACCOUNT
             // =====================================================
 
-            // This remains synchronous until EmployeeManager/Add
-            // is also converted to async.
-            _employeeManager.AddAsync(employee);
+            await _employeeManager.AddAsync(employee);
+
+            // =====================================================
+            // SEND VERIFICATION EMAIL
+            // =====================================================
+
+            await _emailService.SendVerificationCodeAsync(
+                account.Email!,
+                verificationCode);
 
             // =====================================================
             // RESPONSE
@@ -139,19 +169,22 @@ namespace ApplicationServices.Services
         // LOGIN
         // =========================================================
 
-        public async Task<LoginResponse> Login(
-            LoginRequest request)
+        public async Task<LoginResponse> Login(LoginRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
             if (string.IsNullOrWhiteSpace(request.Email))
                 throw new ArgumentException(
-                    "Email is required.");
+                    Constants.Account.EmailRequired);
 
             if (string.IsNullOrWhiteSpace(request.Password))
                 throw new ArgumentException(
-                    "Password is required.");
+                    Constants.Account.PasswordRequired);
+
+            // =====================================================
+            // GET ACCOUNT
+            // =====================================================
 
             var account =
                 await _accountManager
@@ -163,28 +196,46 @@ namespace ApplicationServices.Services
 
             if (account == null)
                 throw new UnauthorizedAccessException(
-                    "Invalid email or password.");
+                    Constants.Account.InvalidCredentials);
 
             // =====================================================
-            // CHECK EMPLOYEE / ACCOUNT STATUS
+            // CHECK ACCOUNT STATUS
+            // =====================================================
+
+            if (account.IsDeleted)
+                throw new UnauthorizedAccessException(
+                    Constants.Account.AccountDeactivated);
+
+            // =====================================================
+            // CHECK EMPLOYEE STATUS
             // =====================================================
 
             if (account.Employee == null ||
                 account.Employee.IsDeleted)
             {
                 throw new UnauthorizedAccessException(
-                    "This account is deactivated.");
+                    Constants.Account.AccountDeactivated);
             }
+
+            // =====================================================
+            // CHECK EMAIL VERIFICATION
+            // =====================================================
+
+            if (!account.IsEmailVerified)
+                throw new UnauthorizedAccessException(
+                    Constants.Account.EmailNotVerified);
 
             // =====================================================
             // CHECK PASSWORD
             // =====================================================
 
-            // TEMPORARY
-            // Replace with password hashing later.
-            if (account.PasswordHash != request.Password)
+            if (!BCrypt.Net.BCrypt.Verify(
+                    request.Password,
+                    account.PasswordHash))
+            {
                 throw new UnauthorizedAccessException(
-                    "Invalid email or password.");
+                    Constants.Account.InvalidCredentials);
+            }
 
             // =====================================================
             // LOGIN RESPONSE
@@ -198,5 +249,231 @@ namespace ApplicationServices.Services
                 LName = account.Employee.LName
             };
         }
+
+        // =========================================================
+        // FORGOT PASSWORD
+        // =========================================================
+
+        public async Task ForgotPassword(ForgotPasswordRequest request)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            if (string.IsNullOrWhiteSpace(request.Email))
+                throw new ArgumentException(
+                    Constants.Account.EmailRequired);
+
+            // =====================================================
+            // VALIDATE EMAIL FORMAT
+            // =====================================================
+
+            if (!_accountManager.ValidEmailFormat(request.Email))
+                throw new ArgumentException(
+                    Constants.Account.InvalidEmail);
+
+            // =====================================================
+            // GET ACCOUNT
+            // =====================================================
+
+            var account =
+                await _accountManager
+                    .GetEntityByEmailAsync(request.Email);
+
+            if (account == null)
+                throw new KeyNotFoundException(
+                    Constants.Account.AccountNotFound);
+
+            // =====================================================
+            // CHECK ACCOUNT STATUS
+            // =====================================================
+
+            if (account.IsDeleted)
+                throw new InvalidOperationException(
+                    Constants.Account.AccountDeactivated);
+
+            // =====================================================
+            // GENERATE RESET CODE
+            // =====================================================
+
+            var resetCode =
+                Random.Shared.Next(100000, 1000000).ToString();
+
+            var resetCodeExpiresAt =
+                DateTime.Now.AddMinutes(10);
+
+            // =====================================================
+            // SAVE RESET CODE
+            // =====================================================
+
+            await _accountManager.SetPasswordResetCodeAsync(
+                account,
+                resetCode,
+                resetCodeExpiresAt);
+
+            // =====================================================
+            // SEND RESET CODE
+            // =====================================================
+
+            await _emailService.SendVerificationCodeAsync(
+                account.Email!,
+                resetCode);
+        }
+
+        // =========================================================
+        // RESET PASSWORD
+        // =========================================================
+
+        public async Task ResetPassword(ResetPasswordRequest request)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            // =====================================================
+            // REQUIRED FIELDS
+            // =====================================================
+
+            if (string.IsNullOrWhiteSpace(request.Email))
+                throw new ArgumentException(
+                    Constants.Account.EmailRequired);
+
+            if (string.IsNullOrWhiteSpace(request.Code))
+                throw new ArgumentException(
+                    Constants.Account.ResetCodeRequired);
+
+            if (string.IsNullOrWhiteSpace(request.NewPassword))
+                throw new ArgumentException(
+                    Constants.Account.PasswordRequired);
+
+            // =====================================================
+            // VALIDATE EMAIL
+            // =====================================================
+
+            if (!_accountManager.ValidEmailFormat(request.Email))
+                throw new ArgumentException(
+                    Constants.Account.InvalidEmail);
+
+            // =====================================================
+            // VALIDATE PASSWORD
+            // =====================================================
+
+            if (!_accountManager.PasswordFormat(request.NewPassword))
+                throw new ArgumentException(
+                    Constants.Account.InvalidPassword);
+
+            // =====================================================
+            // CHECK PASSWORD CONFIRMATION
+            // =====================================================
+
+            if (request.NewPassword != request.ConfirmPassword)
+                throw new ArgumentException(
+                    Constants.Account.PasswordsDoNotMatch);
+
+            // =====================================================
+            // GET ACCOUNT
+            // =====================================================
+
+            var account =
+                await _accountManager
+                    .GetEntityByEmailAsync(request.Email);
+
+            if (account == null)
+                throw new KeyNotFoundException(
+                    Constants.Account.AccountNotFound);
+
+            // =====================================================
+            // CHECK ACCOUNT STATUS
+            // =====================================================
+
+            if (account.IsDeleted)
+                throw new InvalidOperationException(
+                    Constants.Account.AccountDeactivated);
+
+            // =====================================================
+            // CHECK RESET CODE
+            // =====================================================
+
+            if (string.IsNullOrWhiteSpace(
+                account.PasswordResetCode))
+            {
+                throw new InvalidOperationException(
+                    Constants.Account.InvalidResetCode);
+            }
+
+            if (account.PasswordResetCode != request.Code)
+            {
+                throw new InvalidOperationException(
+                    Constants.Account.InvalidResetCode);
+            }
+
+            // =====================================================
+            // CHECK CODE EXPIRATION
+            // =====================================================
+
+            if (!account.PasswordResetCodeExpiresAt.HasValue)
+            {
+                throw new InvalidOperationException(
+                    Constants.Account.ResetCodeExpired);
+            }
+
+            if (account.PasswordResetCodeExpiresAt.Value < DateTime.Now)
+            {
+                throw new InvalidOperationException(
+                    Constants.Account.ResetCodeExpired);
+            }
+
+            // =====================================================
+            // RESET PASSWORD
+            // =====================================================
+
+            await _accountManager.ResetPasswordAsync(
+                account,
+                request.NewPassword);
+        }
+
+        public async Task VerifyEmail(VerifyEmailRequest request)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            if (string.IsNullOrWhiteSpace(request.Email))
+                throw new ArgumentException(
+                    Constants.Account.EmailRequired);
+
+            if (string.IsNullOrWhiteSpace(request.Code))
+                throw new ArgumentException(
+                    Constants.Account.VerificationCodeRequired);
+
+            var account =
+                await _accountManager
+                    .GetEntityByEmailAsync(request.Email);
+
+            if (account == null)
+                throw new KeyNotFoundException(
+                    Constants.Account.AccountNotFound);
+
+            if (account.IsEmailVerified)
+                throw new InvalidOperationException(
+                    Constants.Account.EmailAlreadyVerified);
+
+            if (string.IsNullOrWhiteSpace(account.VerificationCode))
+                throw new InvalidOperationException(
+                    Constants.Account.InvalidVerificationCode);
+
+            if (account.VerificationCode != request.Code)
+                throw new InvalidOperationException(
+                    Constants.Account.InvalidVerificationCode);
+
+            if (!account.VerificationCodeExpiresAt.HasValue)
+                throw new InvalidOperationException(
+                    Constants.Account.VerificationCodeExpired);
+
+            if (account.VerificationCodeExpiresAt.Value < DateTime.Now)
+                throw new InvalidOperationException(
+                    Constants.Account.VerificationCodeExpired);
+
+            await _accountManager.VerifyEmailAsync(account);
+        }
+
+        
     }
 }

@@ -4,6 +4,7 @@ using Domain.Interfaces;
 using Infrastructure;
 using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Resend;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,7 +17,7 @@ builder.Services.AddControllers();
 
 
 builder.Services.AddHostedService<DeletedAccountCleanupService>();
-
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 var connectionString =
     builder.Configuration.GetConnectionString("constr");
@@ -30,8 +31,7 @@ if (string.IsNullOrWhiteSpace(connectionString))
 Console.WriteLine(
     "CONNECTION STRING = " + connectionString);
 
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(connectionString));
+builder.Services.AddDbContext<AppDbContext>(options =>options.UseSqlServer(connectionString));
 
 
 // ==============================
@@ -46,6 +46,12 @@ builder.Services.AddScoped<
     IEmployeeRepository,
     EmployeeRepository>();
 
+
+// ==============================
+// Auto BackUp
+// ==============================
+
+builder.Services.AddScoped<DeletedAccountCleanupService>();
 
 // ==============================
 // Project
@@ -88,6 +94,20 @@ builder.Services.AddScoped<
 builder.Services.AddScoped<
     IAccountRepository,
     AccountRepository>();
+
+builder.Services.AddOptions();
+
+builder.Services.AddHttpClient<ResendClient>();
+
+builder.Services.Configure<ResendClientOptions>(options =>
+{
+    options.ApiToken =
+        builder.Configuration["Resend:ApiKey"]!;
+});
+
+builder.Services.AddTransient<IResend, ResendClient>();
+
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 
 // ==============================

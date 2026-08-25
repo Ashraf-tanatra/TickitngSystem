@@ -1,5 +1,7 @@
 <Solution>
+  <Folder Name="/Solution Items/" />
   <Project Path="Application/ApplicationServices.csproj" />
+  <Project Path="Constants/DomainShared.csproj" Id="3d28e26b-084c-4b3c-9666-b38f55b0ad92" />
   <Project Path="Controller/Controller.csproj" />
   <Project Path="Domain/Domain.csproj" />
   <Project Path="Infrastructure/Infrastructure.csproj" />
