@@ -11,63 +11,36 @@ namespace Controller
     {
         private readonly IEmployeeManager _employeeManager;
 
-        public EmployeeController(IEmployeeManager employeeManager)
+        public EmployeeController(
+            IEmployeeManager employeeManager)
         {
             _employeeManager = employeeManager;
         }
 
+        // =========================================================
+        // GET ALL
+        // =========================================================
 
-        // GET: api/Employee (Get All Employee in Database)
         [HttpGet]
-        public ActionResult<IEnumerable<EmployeeResponse>> GetAll()
+        public async Task<ActionResult<IEnumerable<EmployeeResponse>>>
+            GetAll()
         {
-            var employees = _employeeManager.GetAll();
+            var employees =
+                await _employeeManager.GetAllAsync();
 
             return Ok(employees);
         }
 
+        // =========================================================
+        // GET BY ID
+        // =========================================================
 
-        //// POST: api/Employee/5/reactivate
-        //[HttpPost("{id}/reactivate")]
-        //public IActionResult Reactivate(int id,ReactivateAccountRequest request)
-        //{
-        //    try
-        //    {
-        //        var result = _employeeManager.Reactivate(id, request);
-
-        //        if (!result)
-        //            return NotFound(new
-        //            {
-        //                message = "Employee not found."
-        //            });
-
-        //        return Ok(new
-        //        {
-        //            message = "Employee reactivated successfully."
-        //        });
-        //    }
-        //    catch (ArgumentException ex)
-        //    {
-        //        return BadRequest(new
-        //        {
-        //            message = ex.Message
-        //        });
-        //    }
-        //    catch (InvalidOperationException ex)
-        //    {
-        //        return BadRequest(new
-        //        {
-        //            message = ex.Message
-        //        });
-        //    }
-        //}
-
-
-        // GET: api/Employee/5
         [HttpGet("{id}")]
-        public ActionResult<EmployeeResponse> GetById(int id)
+        public async Task<ActionResult<EmployeeResponse>>
+            GetById(int id)
         {
-            var employee = _employeeManager.GetById(id);
+            var employee =
+                await _employeeManager.GetByIdAsync(id);
 
             if (employee == null)
                 return NotFound();
@@ -75,14 +48,19 @@ namespace Controller
             return Ok(employee);
         }
 
+        // =========================================================
+        // GET PROJECTS
+        // =========================================================
 
-        // GET: api/Employee/5/projects
         [HttpGet("{id}/projects")]
-        public ActionResult<IEnumerable<EmployeeProjectResponse>> GetProjects(int id)
+        public async Task<
+            ActionResult<IEnumerable<EmployeeProjectResponse>>>
+            GetProjects(int id)
         {
             try
             {
-                var projects = _employeeManager.GetProjects(id);
+                var projects =
+                    await _employeeManager.GetProjectsAsync(id);
 
                 return Ok(projects);
             }
@@ -92,15 +70,21 @@ namespace Controller
             }
         }
 
+        // =========================================================
+        // UPDATE
+        // =========================================================
 
-        // PUT: api/Employee/5
         [HttpPut("{id}")]
-        public ActionResult<EmployeeResponse> Update(int id, UpdateEmployeeRequest request)
+        public async Task<ActionResult<EmployeeResponse>>
+            Update(
+                int id,
+                UpdateEmployeeRequest request)
         {
             try
             {
                 var employee =
-                    _employeeManager.Update(id, request);
+                    await _employeeManager
+                        .UpdateAsync(id, request);
 
                 if (employee == null)
                     return NotFound();
@@ -117,13 +101,17 @@ namespace Controller
             }
         }
 
+        // =========================================================
+        // DELETE
+        // =========================================================
 
         [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
             try
             {
-                var deleted = _employeeManager.Delete(id);
+                var deleted =
+                    await _employeeManager.DeleteAsync(id);
 
                 if (!deleted)
                     return NotFound(new
@@ -133,7 +121,8 @@ namespace Controller
 
                 return Ok(new
                 {
-                    message = "Employee deleted successfully."
+                    message =
+                        "Employee deleted successfully."
                 });
             }
             catch (InvalidOperationException ex)

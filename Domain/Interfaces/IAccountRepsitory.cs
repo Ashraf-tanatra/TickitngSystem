@@ -1,20 +1,20 @@
-﻿namespace Domain.Interfaces
+﻿using Domain.Entities;
+
+namespace Domain.Interfaces
 {
     public interface IAccountRepository
     {
-        Account? GetByEmail(string email);
+        Task<Account?> GetByEmailAsync(string email);
+        Task<Account?> GetByIdAsync(int id);
 
-        bool EmailExists(string email);
+        Task<bool> EmailExistsAsync(string email);
+        Task<bool> EmployeeExistsAsync(int employeeId);
 
-        bool EmployeeExists(int employeeId); //?
+        Task AddAsync(Account account);
+        Task UpdateAsync(Account account);
 
-        void Add(Account account);
-
-        void Update(Account account);
-
-        void Delete(Account account);
-        void Reactivate(Account account);
-        void SoftDelete(Account account);
-        Account? GetById(int id);
+        Task DeleteAsync(Account account);
+        Task SoftDeleteAsync(Account account);
+        Task ReactivateAsync(Account account);
     }
 }

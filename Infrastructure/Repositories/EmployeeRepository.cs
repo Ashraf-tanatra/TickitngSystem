@@ -1,7 +1,6 @@
 ﻿using Domain.Entities;
 using Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 
 namespace Infrastructure.Repositories
 {
@@ -14,69 +13,88 @@ namespace Infrastructure.Repositories
             _context = context;
         }
 
-
+        // =========================================================
         // GET ALL
-        public IEnumerable<Employee> GetAll()
+        // =========================================================
+
+        public async Task<IEnumerable<Employee>> GetAllAsync()
         {
-            return _context.Employees
-                .ToList();
+            return await _context.Employees
+                .ToListAsync();
         }
 
-
+        // =========================================================
         // GET BY ID
-        public Employee? GetById(int id)
+        // =========================================================
+
+        public async Task<Employee?> GetByIdAsync(int id)
         {
-            return _context.Employees
-                .FirstOrDefault(e => e.Id == id);
+            return await _context.Employees
+                .FirstOrDefaultAsync(e => e.Id == id);
         }
 
-
+        // =========================================================
         // ADD
-        public void Add(Employee employee)
+        // =========================================================
+
+        public async Task AddAsync(Employee employee)
         {
             _context.Employees.Add(employee);
-            _context.SaveChanges();
+
+            await _context.SaveChangesAsync();
         }
 
-
+        // =========================================================
         // UPDATE
-        public void Update(Employee employee)
+        // =========================================================
+
+        public async Task UpdateAsync(Employee employee)
         {
             _context.Employees.Update(employee);
-            _context.SaveChanges();
+
+            await _context.SaveChangesAsync();
         }
 
-
+        // =========================================================
         // CHECK PHONE
-        public bool ExistsByPhone(string phone)
+        // =========================================================
+
+        public async Task<bool> ExistsByPhoneAsync(string phone)
         {
-            return _context.Employees
-                .Any(e =>
+            return await _context.Employees
+                .AnyAsync(e =>
                     e.Phone == phone &&
                     !e.IsDeleted);
         }
 
-
+        // =========================================================
         // CHECK PHONE EXCEPT CURRENT EMPLOYEE
-        public bool ExistsByPhoneExcept(string phone,int employeeId)
+        // =========================================================
+
+        public async Task<bool> ExistsByPhoneExceptAsync(
+            string phone,
+            int employeeId)
         {
-            return _context.Employees
-                .Any(e =>
+            return await _context.Employees
+                .AnyAsync(e =>
                     e.Phone == phone &&
                     e.Id != employeeId &&
                     !e.IsDeleted);
         }
-        public IEnumerable<Project> GetProjects(int employeeId)
+
+        // =========================================================
+        // GET PROJECTS
+        // =========================================================
+
+        public async Task<IEnumerable<Project>> GetProjectsAsync(
+            int employeeId)
         {
-            return _context.Projects
+            return await _context.Projects
                 .Where(p => p.ProjectEmployees
                     .Any(pe => pe.EmployeeId == employeeId))
-
                 .Include(p => p.ProjectEmployees)
-
                 .Include(p => p.ProjectTickets)
-
-                .ToList();
+                .ToListAsync();
         }
     }
 }

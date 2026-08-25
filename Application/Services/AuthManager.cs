@@ -6,44 +6,48 @@ using Domain.Interfaces;
 
 namespace ApplicationServices.Services
 {
-    public class AuthManager : IAuthManager //no need for this
+    public class AuthManager : IAuthManager
     {
         private readonly IEmployeeManager _employeeManager;
         private readonly IAccountManager _accountManager;
 
-        private readonly IEmployeeRepository _employeeRepository;
-        private readonly IAccountRepository _accountRepository;
-
-        public AuthManager(IAccountManager accountManager,IEmployeeManager employeeManager)
+        public AuthManager(
+            IAccountManager accountManager,
+            IEmployeeManager employeeManager)
         {
             _accountManager = accountManager;
             _employeeManager = employeeManager;
         }
 
-        
-
-        // =========================
+        // =========================================================
         // SIGN UP
-        // =========================
-        public async Task<AccountResponse> SignUp(SignUpRequest request)
+        // =========================================================
+
+        public async Task<AccountResponse> SignUp(
+            SignUpRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
             if (string.IsNullOrWhiteSpace(request.FName))
-                throw new ArgumentException("First name is required.");
+                throw new ArgumentException(
+                    "First name is required.");
 
             if (string.IsNullOrWhiteSpace(request.LName))
-                throw new ArgumentException("Last name is required.");
+                throw new ArgumentException(
+                    "Last name is required.");
 
             if (string.IsNullOrWhiteSpace(request.Email))
-                throw new ArgumentException("Email is required.");
+                throw new ArgumentException(
+                    "Email is required.");
 
             if (string.IsNullOrWhiteSpace(request.Phone))
-                throw new ArgumentException("Phone is required.");
+                throw new ArgumentException(
+                    "Phone is required.");
 
             if (string.IsNullOrWhiteSpace(request.Password))
-                throw new ArgumentException("Password is required.");
+                throw new ArgumentException(
+                    "Password is required.");
 
             if (request.Password != request.ConfirmPassword)
                 throw new ArgumentException(
@@ -53,7 +57,10 @@ namespace ApplicationServices.Services
                 throw new ArgumentException(
                     "You must accept the Terms of Service and Privacy Policy.");
 
+            // =====================================================
             // FORMAT VALIDATION
+            // =====================================================
+
             if (!_accountManager.ValidEmailFormat(request.Email))
                 throw new ArgumentException(
                     "Invalid email format.");
@@ -67,18 +74,25 @@ namespace ApplicationServices.Services
                 throw new ArgumentException(
                     "Phone number must contain exactly 10 digits.");
 
+            // =====================================================
             // CHECK DUPLICATES
-            // Check if Email already exists
-            if (_accountManager.Exists(request.Email))
+            // =====================================================
+
+            if (await _accountManager.ExistsAsync(request.Email))
                 throw new InvalidOperationException(
                     "An account with this email already exists.");
 
-            // Check if Phone already exists
-            if (_employeeManager.ExistsByPhone(request.Phone))
+            // NOTE:
+            // ExistsByPhone is still synchronous in your current
+            // IEmployeeManager, so it remains synchronous here.
+            if (await _employeeManager.ExistsByPhoneAsync(request.Phone))
                 throw new InvalidOperationException(
                     "An employee with this phone already exists.");
 
-            // Create Employee
+            // =====================================================
+            // CREATE EMPLOYEE
+            // =====================================================
+
             var employee = new Employee
             {
                 FName = request.FName,
@@ -88,17 +102,9 @@ namespace ApplicationServices.Services
                 IsDeleted = false
             };
 
-            //// =========================
-            //// Generate Verification Code
-            //// =========================
-
-            //var verificationCode = Random.Shared
-            //    .Next(100000, 1000000)
-            //    .ToString();
-
-            // =========================
-            // Create Account
-            // =========================
+            // =====================================================
+            // CREATE ACCOUNT
+            // =====================================================
 
             var account = new Account
             {
@@ -107,26 +113,19 @@ namespace ApplicationServices.Services
                 Employee = employee
             };
 
-            // Connect both sides of the relationship
             employee.Account = account;
 
-            // =========================
-            // Save Employee + Account
-            // =========================
+            // =====================================================
+            // SAVE EMPLOYEE + ACCOUNT
+            // =====================================================
 
-            _employeeManager.Add(employee);
+            // This remains synchronous until EmployeeManager/Add
+            // is also converted to async.
+            _employeeManager.AddAsync(employee);
 
-            // =========================
-            // Send Verification Email
-            // =========================
-
-            //await _emailService.SendVerificationCodeAsync(
-            //    account.Email!,
-            //    verificationCode);
-
-            // =========================
-            // Response
-            // =========================
+            // =====================================================
+            // RESPONSE
+            // =====================================================
 
             return new AccountResponse
             {
@@ -136,10 +135,12 @@ namespace ApplicationServices.Services
             };
         }
 
-        // =========================
+        // =========================================================
         // LOGIN
-        // =========================
-        public LoginResponse Login(LoginRequest request)
+        // =========================================================
+
+        public async Task<LoginResponse> Login(
+            LoginRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -152,16 +153,21 @@ namespace ApplicationServices.Services
                 throw new ArgumentException(
                     "Password is required.");
 
-            var account = _accountManager.GetEntityByEmail(request.Email);
+            var account =
+                await _accountManager
+                    .GetEntityByEmailAsync(request.Email);
 
-            // Account doesn't exist
+            // =====================================================
+            // ACCOUNT DOESN'T EXIST
+            // =====================================================
+
             if (account == null)
                 throw new UnauthorizedAccessException(
                     "Invalid email or password.");
 
-            // =========================
-            // Check Employee
-            // =========================
+            // =====================================================
+            // CHECK EMPLOYEE / ACCOUNT STATUS
+            // =====================================================
 
             if (account.Employee == null ||
                 account.Employee.IsDeleted)
@@ -170,19 +176,9 @@ namespace ApplicationServices.Services
                     "This account is deactivated.");
             }
 
-            // =========================
-            // Check Email Verification
-            // =========================
-
-            //if (!account.EmailConfirmed)
-            //{
-            //    throw new UnauthorizedAccessException(
-            //        "Please verify your email before logging in.");
-            //}
-
-            // =========================
-            // Check Password
-            // =========================
+            // =====================================================
+            // CHECK PASSWORD
+            // =====================================================
 
             // TEMPORARY
             // Replace with password hashing later.
@@ -190,9 +186,9 @@ namespace ApplicationServices.Services
                 throw new UnauthorizedAccessException(
                     "Invalid email or password.");
 
-            // =========================
-            // Login Response
-            // =========================
+            // =====================================================
+            // LOGIN RESPONSE
+            // =====================================================
 
             return new LoginResponse
             {
@@ -202,111 +198,5 @@ namespace ApplicationServices.Services
                 LName = account.Employee.LName
             };
         }
-
-
-        // =========================
-        // VERIFY EMAIL
-        // =========================
-
-        //public void VerifyEmail(VerifyEmailRequest request)
-        //{
-        //    if (request == null)
-        //        throw new ArgumentNullException(nameof(request));
-
-        //    if (string.IsNullOrWhiteSpace(request.Email))
-        //        throw new ArgumentException(
-        //            "Email is required.");
-
-        //    if (string.IsNullOrWhiteSpace(request.Code))
-        //        throw new ArgumentException(
-        //            "Verification code is required.");
-
-        //    var account =
-        //        _accountRepository.GetByEmail(request.Email);
-
-        //    if (account == null)
-        //        throw new KeyNotFoundException(
-        //            "Account not found.");
-
-        //    if (account.EmailConfirmed)
-        //        throw new InvalidOperationException(
-        //            "Email is already verified.");
-
-        //    if (account.VerificationCode != request.Code)
-        //        throw new ArgumentException(
-        //            "Invalid verification code.");
-
-        //    if (account.VerificationCodeExpiresAt == null ||
-        //        account.VerificationCodeExpiresAt < DateTime.UtcNow)
-        //    {
-        //        throw new InvalidOperationException(
-        //            "Verification code has expired.");
-        //    }
-
-        //    // =========================
-        //    // Confirm Email
-        //    // =========================
-
-        //    account.EmailConfirmed = true;
-
-        //    // Remove used verification code
-        //    account.VerificationCode = null;
-        //    account.VerificationCodeExpiresAt = null;
-
-        //    _accountRepository.Update(account);
-        //}
-
-
-        // =========================
-        // RESEND VERIFICATION CODE
-        // =========================
-        //public async Task ResendVerificationCode(
-        //    ResendVerificationCodeRequest request)
-        //{
-        //    if (request == null)
-        //        throw new ArgumentNullException(nameof(request));
-
-        //    if (string.IsNullOrWhiteSpace(request.Email))
-        //        throw new ArgumentException(
-        //            "Email is required.");
-
-        //    var account =
-        //        _accountRepository.GetByEmail(request.Email);
-
-        //    if (account == null)
-        //        throw new KeyNotFoundException(
-        //            "Account not found.");
-
-        //    if (account.EmailConfirmed)
-        //        throw new InvalidOperationException(
-        //            "Email is already verified.");
-
-        //    // =========================
-        //    // Generate New Code
-        //    // =========================
-
-        //    var verificationCode = Random.Shared
-        //        .Next(100000, 1000000)
-        //        .ToString();
-
-        //    account.VerificationCode = verificationCode;
-
-        //    account.VerificationCodeExpiresAt =
-        //        DateTime.UtcNow.AddMinutes(10);
-
-        //    // =========================
-        //    // Save New Code
-        //    // =========================
-
-        //    _accountRepository.Update(account);
-
-        //    // =========================
-        //    // Send New Code
-        //    // =========================
-
-        //    await _emailService.SendVerificationCodeAsync(
-        //        account.Email!,
-        //        verificationCode);
-        //}
     }
 }

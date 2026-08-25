@@ -36,7 +36,7 @@ namespace Infrastructure.Database.Configuration
             builder.Property(x => x.DueTo)
                    .HasColumnType("DATE");
 
-            // Created Time
+            // Created Date
             builder.Property(x => x.CreatedAt)
                    .HasColumnType("DATE");
 

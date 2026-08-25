@@ -9,7 +9,8 @@ namespace ApplicationServices.Services
     {
         private readonly IAccountRepository _accountRepository;
 
-        public AccountManager(IAccountRepository accountRepository)
+        public AccountManager(
+            IAccountRepository accountRepository)
         {
             _accountRepository = accountRepository;
         }
@@ -17,46 +18,46 @@ namespace ApplicationServices.Services
         // =========================================================
         // CREATE ACCOUNT
         // =========================================================
-        public AccountResponse CreateAccount(CreateAccountRequest request)
+
+        public async Task<AccountResponse> CreateAccountAsync(
+            CreateAccountRequest request)
         {
-            // Validate request
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
             if (string.IsNullOrWhiteSpace(request.Email))
-                throw new ArgumentException("Email is required.");
+                throw new ArgumentException(
+                    "Email is required.");
 
             if (!ValidEmailFormat(request.Email))
-                throw new ArgumentException("Invalid email format.");
+                throw new ArgumentException(
+                    "Invalid email format.");
 
             if (string.IsNullOrWhiteSpace(request.Password))
-                throw new ArgumentException("Password is required.");
+                throw new ArgumentException(
+                    "Password is required.");
 
             if (!PasswordFormat(request.Password))
-            {
                 throw new ArgumentException(
                     "Password must be at least 8 characters and contain " +
                     "uppercase, lowercase, number, and special character.");
-            }
 
             // Check duplicate email
-            if (_accountRepository.GetByEmail(request.Email) != null)
+            if (await _accountRepository
+                .GetByEmailAsync(request.Email) != null)
             {
                 throw new InvalidOperationException(
                     "An account with this email already exists.");
             }
 
-            // Create account
             var account = new Account
             {
                 Email = request.Email,
                 PasswordHash = request.Password
             };
 
-            // Save
-            _accountRepository.Add(account);
+            await _accountRepository.AddAsync(account);
 
-            // Return response
             return new AccountResponse
             {
                 Id = account.Id,
@@ -65,10 +66,10 @@ namespace ApplicationServices.Services
             };
         }
 
-
         // =========================================================
         // VALIDATE EMAIL
         // =========================================================
+
         public bool ValidEmailFormat(string email)
         {
             if (string.IsNullOrWhiteSpace(email))
@@ -86,10 +87,10 @@ namespace ApplicationServices.Services
             }
         }
 
-
         // =========================================================
         // VALIDATE PASSWORD
         // =========================================================
+
         public bool PasswordFormat(string password)
         {
             if (string.IsNullOrWhiteSpace(password))
@@ -113,16 +114,19 @@ namespace ApplicationServices.Services
             return true;
         }
 
-
         // =========================================================
         // GET ACCOUNT BY EMAIL
         // =========================================================
-        public AccountResponse? GetByEmail(string email)
+
+        public async Task<AccountResponse?> GetByEmailAsync(
+            string email)
         {
             if (string.IsNullOrWhiteSpace(email))
-                throw new ArgumentException("Email is required.");
+                throw new ArgumentException(
+                    "Email is required.");
 
-            var account = _accountRepository.GetByEmail(email);
+            var account =
+                await _accountRepository.GetByEmailAsync(email);
 
             if (account == null)
                 return null;
@@ -135,30 +139,34 @@ namespace ApplicationServices.Services
             };
         }
 
-
         // =========================================================
         // GET ENTITY BY EMAIL
         // =========================================================
-        public Account? GetEntityByEmail(string email)
+
+        public async Task<Account?> GetEntityByEmailAsync(
+            string email)
         {
             if (string.IsNullOrWhiteSpace(email))
-                throw new ArgumentException("Email is required.");
+                throw new ArgumentException(
+                    "Email is required.");
 
-            return _accountRepository.GetByEmail(email);
+            return await _accountRepository
+                .GetByEmailAsync(email);
         }
-
 
         // =========================================================
         // UPDATE ACCOUNT
         // =========================================================
-        public AccountResponse? Update(
+
+        public async Task<AccountResponse?> UpdateAsync(
             int id,
             UpdateAccountRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
-            var account = _accountRepository.GetById(id);
+            var account =
+                await _accountRepository.GetByIdAsync(id);
 
             if (account == null)
                 return null;
@@ -171,14 +179,16 @@ namespace ApplicationServices.Services
             }
 
             // Current password is required
-            if (string.IsNullOrWhiteSpace(request.CurrentPassword))
+            if (string.IsNullOrWhiteSpace(
+                request.CurrentPassword))
             {
                 throw new ArgumentException(
                     "Current password is required.");
             }
 
             // Check current password
-            if (account.PasswordHash != request.CurrentPassword)
+            if (account.PasswordHash !=
+                request.CurrentPassword)
             {
                 throw new UnauthorizedAccessException(
                     "Current password is incorrect.");
@@ -187,6 +197,7 @@ namespace ApplicationServices.Services
             // =====================================================
             // UPDATE EMAIL
             // =====================================================
+
             if (!string.IsNullOrWhiteSpace(request.Email))
             {
                 if (!ValidEmailFormat(request.Email))
@@ -196,7 +207,8 @@ namespace ApplicationServices.Services
                 }
 
                 if (request.Email != account.Email &&
-                    _accountRepository.EmailExists(request.Email))
+                    await _accountRepository
+                        .EmailExistsAsync(request.Email))
                 {
                     throw new InvalidOperationException(
                         "An account with this email already exists.");
@@ -208,26 +220,30 @@ namespace ApplicationServices.Services
             // =====================================================
             // UPDATE PASSWORD
             // =====================================================
-            if (!string.IsNullOrWhiteSpace(request.NewPassword))
+
+            if (!string.IsNullOrWhiteSpace(
+                request.NewPassword))
             {
-                if (!PasswordFormat(request.NewPassword))
+                if (!PasswordFormat(
+                    request.NewPassword))
                 {
                     throw new ArgumentException(
                         "Password must be at least 8 characters and contain " +
                         "uppercase, lowercase, number, and special character.");
                 }
 
-                if (request.NewPassword != request.ConfirmNewPassword)
+                if (request.NewPassword !=
+                    request.ConfirmNewPassword)
                 {
                     throw new ArgumentException(
                         "New password and confirm password do not match.");
                 }
 
-                account.PasswordHash = request.NewPassword;
+                account.PasswordHash =
+                    request.NewPassword;
             }
 
-            // Save changes
-            _accountRepository.Update(account);
+            await _accountRepository.UpdateAsync(account);
 
             return new AccountResponse
             {
@@ -237,105 +253,108 @@ namespace ApplicationServices.Services
             };
         }
 
-
         // =========================================================
         // CHECK ACCOUNT EXISTS
         // =========================================================
-        public bool Exists(string email)
+
+        public async Task<bool> ExistsAsync(
+            string email)
         {
             if (string.IsNullOrWhiteSpace(email))
                 return false;
 
-            return _accountRepository.GetByEmail(email) != null;
+            return await _accountRepository
+                .GetByEmailAsync(email) != null;
         }
-
 
         // =========================================================
         // HARD DELETE
         // =========================================================
-        public bool Delete(string email)
+
+        public async Task<bool> DeleteAsync(
+            string email)
         {
             if (string.IsNullOrWhiteSpace(email))
                 return false;
 
-            var account = _accountRepository.GetByEmail(email);
+            var account =
+                await _accountRepository.GetByEmailAsync(email);
 
             if (account == null)
                 return false;
 
-            _accountRepository.Delete(account);
+            await _accountRepository.DeleteAsync(account);
 
             return true;
         }
 
-
         // =========================================================
         // SOFT DELETE
         // =========================================================
-        public bool SoftDelete(string email)
-        {
-            // Validate email
-            if (string.IsNullOrWhiteSpace(email))
-                throw new ArgumentException("Email is required.");
 
-            // Find account
-            var account = _accountRepository.GetByEmail(email);
+        public async Task<bool> SoftDeleteAsync(
+            string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                throw new ArgumentException(
+                    "Email is required.");
+
+            var account =
+                await _accountRepository.GetByEmailAsync(email);
 
             if (account == null)
                 return false;
 
-            // Check if already deleted
             if (account.IsDeleted)
             {
                 throw new InvalidOperationException(
                     "Account is already deleted.");
             }
 
-            // Soft delete
-            _accountRepository.SoftDelete(account);
+            await _accountRepository
+                .SoftDeleteAsync(account);
 
             return true;
         }
 
-
         // =========================================================
         // REACTIVATE ACCOUNT
         // =========================================================
-        public bool Reactivate(string email)
-        {
-            // Validate email
-            if (string.IsNullOrWhiteSpace(email))
-                throw new ArgumentException("Email is required.");
 
-            // Get account
-            var account = _accountRepository.GetByEmail(email);
+        public async Task<bool> ReactivateAsync(
+            string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                throw new ArgumentException(
+                    "Email is required.");
+
+            var account =
+                await _accountRepository.GetByEmailAsync(email);
 
             if (account == null)
                 return false;
 
-            // Check if account is already active
             if (!account.IsDeleted)
             {
                 throw new InvalidOperationException(
                     "Account is already active.");
             }
 
-            // DeletedAt must exist
             if (!account.DeletedAt.HasValue)
             {
                 throw new InvalidOperationException(
                     "Account deletion date is missing.");
             }
 
-            // Check 30-day reactivation period
-            if (account.DeletedAt.Value.AddDays(30) < DateTime.Now)
+            if (account.DeletedAt.Value.AddDays(30)
+                < DateTime.Now)
             {
                 throw new InvalidOperationException(
                     "The 30-day reactivation period has expired.");
             }
 
-            // Reactivate account
-            _accountRepository.Reactivate(account);
+            await _accountRepository
+                .ReactivateAsync(account);
 
             return true;
         }

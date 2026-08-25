@@ -8,8 +8,9 @@ namespace ApplicationServices.Interfaces
         Task<AccountResponse> SignUp(
             SignUpRequest request);
 
-        LoginResponse Login(
+        Task<LoginResponse> Login(
             LoginRequest request);
+
         //void VerifyEmail(
         //    VerifyEmailRequest request);
 

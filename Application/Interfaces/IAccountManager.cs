@@ -5,24 +5,33 @@ namespace ApplicationServices.Interfaces
 {
     public interface IAccountManager
     {
-        AccountResponse CreateAccount(CreateAccountRequest request);
+        Task<AccountResponse> CreateAccountAsync(
+            CreateAccountRequest request);
 
-        AccountResponse? GetByEmail(string email);
+        Task<AccountResponse?> GetByEmailAsync(
+            string email);
 
-        Account? GetEntityByEmail(string email);
+        Task<Account?> GetEntityByEmailAsync(
+            string email);
 
-        bool Exists(string email);
+        Task<bool> ExistsAsync(
+            string email);
 
-        bool Delete(string email);
+        Task<bool> DeleteAsync(
+            string email);
 
-        bool SoftDelete(string email);
+        Task<bool> SoftDeleteAsync(
+            string email);
+
+        Task<bool> ReactivateAsync(
+            string email);
+
+        Task<AccountResponse?> UpdateAsync(
+            int id,
+            UpdateAccountRequest request);
 
         bool ValidEmailFormat(string email);
 
         bool PasswordFormat(string password);
-
-        bool Reactivate(string email);
-
-        AccountResponse? Update( int id, UpdateAccountRequest request);
     }
 }

@@ -16,16 +16,18 @@ namespace Controller
             _authManager = authManager;
         }
 
-        // =========================
+        // =========================================================
         // POST: api/Auth/signup
-        // =========================
+        // =========================================================
+
         [HttpPost("signup")]
         public async Task<ActionResult<AccountResponse>> SignUp(
             [FromBody] SignUpRequest request)
         {
             try
             {
-                var account = await _authManager.SignUp(request);
+                var account =
+                    await _authManager.SignUp(request);
 
                 return StatusCode(201, account);
             }
@@ -39,16 +41,45 @@ namespace Controller
             }
         }
 
-        //// =========================
-        //// POST: api/Auth/verify-email
-        //// =========================
+        // =========================================================
+        // POST: api/Auth/login
+        // =========================================================
+
+        [HttpPost("login")]
+        public async Task<ActionResult<LoginResponse>> Login(
+            [FromBody] LoginRequest request)
+        {
+            try
+            {
+                var response =
+                    await _authManager.Login(request);
+
+                return Ok(response);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return StatusCode(401, new
+                {
+                    message = ex.Message
+                });
+            }
+        }
+
+        // =========================================================
+        // VERIFY EMAIL
+        // =========================================================
+
         //[HttpPost("verify-email")]
-        //public ActionResult VerifyEmail(
+        //public async Task<IActionResult> VerifyEmail(
         //    [FromBody] VerifyEmailRequest request)
         //{
         //    try
         //    {
-        //        _authManager.VerifyEmail(request);
+        //        await _authManager.VerifyEmail(request);
 
         //        return Ok(new
         //        {
@@ -69,9 +100,10 @@ namespace Controller
         //    }
         //}
 
-        // =========================
-        // POST: api/Auth/resend-verification-code
-        // =========================
+        // =========================================================
+        // RESEND VERIFICATION CODE
+        // =========================================================
+
         //[HttpPost("resend-verification-code")]
         //public async Task<IActionResult> ResendVerificationCode(
         //    [FromBody] ResendVerificationCodeRequest request)
@@ -98,31 +130,5 @@ namespace Controller
         //        return BadRequest(ex.Message);
         //    }
         //}
-
-        // =========================
-        // POST: api/Auth/login
-        // =========================
-        [HttpPost("login")]
-        public ActionResult<LoginResponse> Login(
-            [FromBody] LoginRequest request)
-        {
-            try
-            {
-                var response = _authManager.Login(request);
-
-                return Ok(response);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return StatusCode(401, new
-                {
-                    message = ex.Message
-                });
-            }
-        }
     }
 }

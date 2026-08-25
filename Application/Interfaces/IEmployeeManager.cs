@@ -6,23 +6,23 @@ namespace ApplicationServices.Interfaces
 {
     public interface IEmployeeManager
     {
-        //EmployeeResponse Create(CreateEmployeeRequest request);
+        Task<EmployeeResponse?> GetByIdAsync(int id);
 
-        EmployeeResponse? GetById(int id);
+        Task<IEnumerable<EmployeeResponse>> GetAllAsync();
 
-        IEnumerable<EmployeeResponse> GetAll(); 
+        Task<EmployeeResponse?> UpdateAsync(
+            int id,
+            UpdateEmployeeRequest request);
 
-        EmployeeResponse? Update( int id, UpdateEmployeeRequest request); // make it void 
+        Task<bool> DeleteAsync(int id);
 
-        bool Delete(int id);
+        Task<IEnumerable<EmployeeProjectResponse>> GetProjectsAsync(
+            int employeeId);
 
-        IEnumerable<EmployeeProjectResponse> GetProjects(int employeeId);
-
-        void Add(Employee employee);
+        Task AddAsync(Employee employee);
 
         bool ValidPhoneNumberFormat(string phone);
 
-        bool ExistsByPhone(string phone);
-        //bool Reactivate(int id,ReactivateAccountRequest request);
+        Task<bool> ExistsByPhoneAsync(string phone);
     }
 }

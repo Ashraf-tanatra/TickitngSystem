@@ -15,7 +15,7 @@ builder.Services.AddControllers();
 
 
 
-//builder.Services.AddHostedService<DeletedAccountCleanupService>();
+builder.Services.AddHostedService<DeletedAccountCleanupService>();
 
 
 var connectionString =

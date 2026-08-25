@@ -10,27 +10,32 @@ namespace Controller
     {
         private readonly IAccountManager _accountManager;
 
-        public AccountController(IAccountManager accountManager)
+        public AccountController(
+            IAccountManager accountManager)
         {
             _accountManager = accountManager;
         }
 
-        // =========================
+        // =========================================================
         // GET ACCOUNT BY EMAIL
-        // =========================
+        // =========================================================
 
         [HttpGet("{email}")]
-        public ActionResult<AccountResponse> GetByEmail(string email)
+        public async Task<ActionResult<AccountResponse>> GetByEmail(
+            string email)
         {
             try
             {
-                var account = _accountManager.GetByEmail(email);
+                var account =
+                    await _accountManager.GetByEmailAsync(email);
 
                 if (account == null)
+                {
                     return NotFound(new
                     {
                         message = "Account not found."
                     });
+                }
 
                 return Ok(account);
             }
@@ -43,12 +48,13 @@ namespace Controller
             }
         }
 
+        // =========================================================
+        // REACTIVATE ACCOUNT
+        // =========================================================
 
-        // =========================================================
-        // Reactivate Account
-        // =========================================================
-        [HttpPost("reactivate" + "{email}")]
-        public IActionResult Reactivate(string email)
+        [HttpPost("reactivate/{email}")]
+        public async Task<IActionResult> Reactivate(
+            string email)
         {
             try
             {
@@ -60,7 +66,9 @@ namespace Controller
                     });
                 }
 
-                var result = _accountManager.Reactivate(email);
+                var result =
+                    await _accountManager
+                        .ReactivateAsync(email);
 
                 if (!result)
                 {
@@ -72,7 +80,8 @@ namespace Controller
 
                 return Ok(new
                 {
-                    message = "Account reactivated successfully."
+                    message =
+                        "Account reactivated successfully."
                 });
             }
             catch (ArgumentException ex)
@@ -91,23 +100,28 @@ namespace Controller
             }
         }
 
-        // =========================
+        // =========================================================
         // UPDATE ACCOUNT
-        // =========================
+        // =========================================================
 
         [HttpPut("{id}")]
-        public ActionResult<AccountResponse> Update(int id,UpdateAccountRequest request)
+        public async Task<ActionResult<AccountResponse>> Update(
+            int id,
+            UpdateAccountRequest request)
         {
             try
             {
                 var account =
-                    _accountManager.Update(id, request);
+                    await _accountManager
+                        .UpdateAsync(id, request);
 
                 if (account == null)
+                {
                     return NotFound(new
                     {
                         message = "Account not found."
                     });
+                }
 
                 return Ok(account);
             }
@@ -134,17 +148,19 @@ namespace Controller
             }
         }
 
-
-        // =========================
-        // DELETE ACCOUNT
-        // =========================
+        // =========================================================
+        // SOFT DELETE ACCOUNT
+        // =========================================================
 
         [HttpDelete("{email}")]
-        public IActionResult SoftDelete(string email)
+        public async Task<IActionResult> SoftDelete(
+            string email)
         {
             try
             {
-                var result = _accountManager.SoftDelete(email);
+                var result =
+                    await _accountManager
+                        .SoftDeleteAsync(email);
 
                 if (!result)
                 {
@@ -156,8 +172,9 @@ namespace Controller
 
                 return Ok(new
                 {
-                    message = "Account deleted successfully. " +
-                              "You can reactivate it within 30 days."
+                    message =
+                        "Account deleted successfully. " +
+                        "You can reactivate it within 30 days."
                 });
             }
             catch (ArgumentException ex)

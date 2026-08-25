@@ -11,30 +11,34 @@ namespace ApplicationServices.Services
         private readonly IEmployeeRepository _employeeRepository;
         private readonly IAccountRepository _accountRepository;
 
-        public EmployeeManager(IEmployeeRepository employeeRepository, IAccountRepository accountRepository)
+        public EmployeeManager(
+            IEmployeeRepository employeeRepository,
+            IAccountRepository accountRepository)
         {
             _employeeRepository = employeeRepository;
             _accountRepository = accountRepository;
-
         }
 
-
-        
-
-
+        // =========================================================
         // GET ALL
-        public IEnumerable<EmployeeResponse> GetAll()
+        // =========================================================
+
+        public async Task<IEnumerable<EmployeeResponse>> GetAllAsync()
         {
-            var employees = _employeeRepository.GetAll();
+            var employees =
+                await _employeeRepository.GetAllAsync();
 
             return employees.Select(MapToResponse);
         }
 
-
+        // =========================================================
         // GET BY ID
-        public EmployeeResponse? GetById(int id)
+        // =========================================================
+
+        public async Task<EmployeeResponse?> GetByIdAsync(int id)
         {
-            var employee = _employeeRepository.GetById(id);
+            var employee =
+                await _employeeRepository.GetByIdAsync(id);
 
             if (employee == null)
                 return null;
@@ -42,13 +46,19 @@ namespace ApplicationServices.Services
             return MapToResponse(employee);
         }
 
-        // Update
-        public EmployeeResponse? Update(int id, UpdateEmployeeRequest request)
+        // =========================================================
+        // UPDATE
+        // =========================================================
+
+        public async Task<EmployeeResponse?> UpdateAsync(
+            int id,
+            UpdateEmployeeRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
-            var employee = _employeeRepository.GetById(id);
+            var employee =
+                await _employeeRepository.GetByIdAsync(id);
 
             if (employee == null)
                 return null;
@@ -75,7 +85,7 @@ namespace ApplicationServices.Services
                     "Phone number must contain exactly 10 digits.");
 
             // Check duplicate phone
-            if (_employeeRepository.ExistsByPhoneExcept(
+            if (await _employeeRepository.ExistsByPhoneExceptAsync(
                     request.Phone,
                     id))
             {
@@ -88,16 +98,19 @@ namespace ApplicationServices.Services
             employee.Phone = request.Phone;
             employee.Gender = request.Gender;
 
-            _employeeRepository.Update(employee);
+            await _employeeRepository.UpdateAsync(employee);
 
             return MapToResponse(employee);
         }
 
-
+        // =========================================================
         // DELETE
-        public bool Delete(int id)
+        // =========================================================
+
+        public async Task<bool> DeleteAsync(int id)
         {
-            var employee = _employeeRepository.GetById(id);
+            var employee =
+                await _employeeRepository.GetByIdAsync(id);
 
             if (employee == null)
                 return false;
@@ -110,25 +123,33 @@ namespace ApplicationServices.Services
             employee.DeletedAt = DateTime.UtcNow;
 
             var account = employee.Account;
-            _accountRepository.Delete(account);
 
-            _employeeRepository.Update(employee);
+            if (account != null)
+            {
+                await _accountRepository.DeleteAsync(account);
+            }
+
+            await _employeeRepository.UpdateAsync(employee);
 
             return true;
         }
 
-
+        // =========================================================
         // GET EMPLOYEE PROJECTS
+        // =========================================================
 
-        public IEnumerable<EmployeeProjectResponse> GetProjects(int employeeId)
+        public async Task<IEnumerable<EmployeeProjectResponse>>
+            GetProjectsAsync(int employeeId)
         {
-            var employee = _employeeRepository.GetById(employeeId);
+            var employee =
+                await _employeeRepository.GetByIdAsync(employeeId);
 
             if (employee == null)
                 throw new KeyNotFoundException(
                     "Employee not found.");
 
-            var projects = _employeeRepository.GetProjects(employeeId);
+            var projects =
+                await _employeeRepository.GetProjectsAsync(employeeId);
 
             return projects
                 .Where(project =>
@@ -136,91 +157,41 @@ namespace ApplicationServices.Services
                         .Any(pe => pe.EmployeeId == employeeId))
                 .Select(project =>
                 {
-                    var projectEmployee = project.ProjectEmployees
-                        .First(pe => pe.EmployeeId == employeeId);
+                    var projectEmployee =
+                        project.ProjectEmployees
+                            .First(pe => pe.EmployeeId == employeeId);
 
                     return new EmployeeProjectResponse
                     {
                         Id = project.Id,
                         ProjectName = project.ProjectName,
-                        ProjectDescription = project.ProjectDescription,
+                        ProjectDescription =
+                            project.ProjectDescription,
                         Role = projectEmployee.Role.ToString(),
-                        EmployeeCount = project.ProjectEmployees.Count,
-                        TicketCount = project.ProjectTickets.Count
+                        EmployeeCount =
+                            project.ProjectEmployees.Count,
+                        TicketCount =
+                            project.ProjectTickets.Count
                     };
                 });
         }
 
-        ////ReActive Employee
-        //public bool Reactivate(int id,ReactivateAccountRequest request)
-        //{
-        //    if (request == null)
-        //        throw new ArgumentNullException(nameof(request));
-
-        //    if (string.IsNullOrWhiteSpace(request.Email))
-        //        throw new ArgumentException(
-        //            "Email is required.");
-
-        //    if (string.IsNullOrWhiteSpace(request.Password))
-        //        throw new ArgumentException(
-        //            "Password is required.");
-
-        //    if (request.Password != request.ConfirmPassword)
-        //        throw new ArgumentException(
-        //            "Password and confirm password do not match.");
-
-        //    // Get Employee
-        //    var employee = _employeeRepository.GetById(id);
-
-        //    if (employee == null)
-        //        return false;
-
-        //    if (!employee.IsDeleted)
-        //        throw new InvalidOperationException(
-        //            "Employee is already active.");
-
-        //    // Check Deleted Date
-        //    if (employee.DeletedAt == null)
-        //        throw new InvalidOperationException(
-        //            "Deleted date is not available.");
-
-        //    if (employee.DeletedAt.Value.AddDays(30) < DateTime.UtcNow)
-        //        throw new InvalidOperationException(
-        //            "Employee cannot be reactivated after 30 days.");
-        //    // Check Email
-        //    if (_accountRepository.EmailExists(request.Email))
-        //        throw new InvalidOperationException(
-        //            "An account with this email already exists.");
-
-        //    // Reactivate Employee
-        //    employee.IsDeleted = false;
-        //    employee.DeletedAt = null;
-
-        //    _employeeRepository.Update(employee);
-
-        //    // Create New Account
-        //    var account = new Account
-        //    {
-        //        Email = request.Email,
-        //        PasswordHash = request.Password,
-        //        EmployeeId = employee.Id
-        //    };
-
-        //    _accountRepository.Add(account);
-
-        //    return true;
-        //}
-
+        // =========================================================
         // ADD
-        public void Add(Employee employee)
+        // =========================================================
+
+        public async Task AddAsync(Employee employee)
         {
             if (employee == null)
                 throw new ArgumentNullException(nameof(employee));
 
-            _employeeRepository.Add(employee);
+            await _employeeRepository.AddAsync(employee);
         }
 
+        // =========================================================
         // VALIDATE PHONE NUMBER
+        // =========================================================
+
         public bool ValidPhoneNumberFormat(string phone)
         {
             return !string.IsNullOrWhiteSpace(phone)
@@ -228,93 +199,35 @@ namespace ApplicationServices.Services
                    && phone.All(char.IsDigit);
         }
 
+        // =========================================================
         // CHECK PHONE
-        public bool ExistsByPhone(string phone)
+        // =========================================================
+
+        public async Task<bool> ExistsByPhoneAsync(string phone)
         {
             if (string.IsNullOrWhiteSpace(phone))
                 return false;
 
-            return _employeeRepository.ExistsByPhone(phone);
+            return await _employeeRepository
+                .ExistsByPhoneAsync(phone);
         }
 
+        // =========================================================
         // MAP EMPLOYEE TO RESPONSE
-        private static EmployeeResponse MapToResponse(Employee employee)
+        // =========================================================
+
+        private static EmployeeResponse MapToResponse(
+            Employee employee)
         {
             return new EmployeeResponse
             {
                 Id = employee.Id,
-
                 FName = employee.FName,
-
                 LName = employee.LName,
-
                 Phone = employee.Phone,
-
                 Gender = employee.Gender,
-
                 IsDeleted = employee.IsDeleted
             };
         }
-        // CREATE
-        //public EmployeeResponse Create(CreateEmployeeRequest request)
-        //{
-        //    if (request == null)
-        //        throw new ArgumentNullException(nameof(request));
-
-        //    if (string.IsNullOrWhiteSpace(request.FName))
-        //        throw new ArgumentException("First name is required.");
-
-        //    if (string.IsNullOrWhiteSpace(request.LName))
-        //        throw new ArgumentException("Last name is required.");
-
-        //    if (string.IsNullOrWhiteSpace(request.Email))
-        //        throw new ArgumentException("Email is required.");
-
-        //    if (string.IsNullOrWhiteSpace(request.Phone))
-        //        throw new ArgumentException("Phone is required.");
-
-        //    if (string.IsNullOrWhiteSpace(request.Password))
-        //        throw new ArgumentException("Password is required.");
-
-        //    if (request.Password != request.ConfirmPassword)
-        //        throw new ArgumentException(
-        //            "Password and confirm password do not match.");
-
-        //    if (!request.AcceptTerms)
-        //        throw new ArgumentException(
-        //            "You must accept the Terms of Service and Privacy Policy.");
-
-        //    // Check Email
-        //    if (_accountRepository.EmailExists(request.Email))
-        //        throw new InvalidOperationException(
-        //            "An account with this email already exists.");
-
-        //    // Check Phone
-        //    if (_employeeRepository.ExistsByPhone(request.Phone))
-        //        throw new InvalidOperationException(
-        //            "An employee with this phone already exists.");
-
-        //    // Create Employee and Account
-        //    var employee = new Employee
-        //    {
-        //        FName = request.FName,
-        //        LName = request.LName,
-        //        Phone = request.Phone,
-        //        Gender = (Enum.Gender)request.Gender
-        //    };
-
-        //    var account = new Account
-        //    {
-        //        Email = request.Email,
-        //        PasswordHash = request.Password,
-        //        Employee = employee
-        //    };
-
-        //    employee.Account = account;
-
-        //    _employeeRepository.Add(employee);
-
-        //    return MapToResponse(employee);
-        //}
     }
 }
