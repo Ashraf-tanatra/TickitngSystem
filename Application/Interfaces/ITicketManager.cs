@@ -9,7 +9,7 @@ namespace ApplicationServices.Interfaces
         TicketResponse Create(CreateTicketRequest request);
         TicketResponse Update(int id, UpdateTicketRequest request);
         bool Delete(int id);
-
+       Task<IEnumerable<TicketResponse>>GetByEmployeeAndProjectAsync(int employeeId,int projectId);
 
         //IEnumerable<TicketResponse> GetAll();
     }

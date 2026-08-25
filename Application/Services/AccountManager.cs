@@ -1,6 +1,7 @@
 ﻿using ApplicationServices.DTOs.Account;
 using ApplicationServices.Interfaces;
 using Domain.Interfaces;
+using Microsoft.AspNetCore.Identity;
 using System.Net.Mail;
 
 namespace ApplicationServices.Services
@@ -186,9 +187,7 @@ namespace ApplicationServices.Services
                     "Current password is required.");
             }
 
-            // Check current password
-            if (account.PasswordHash !=
-                request.CurrentPassword)
+            if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword,account.PasswordHash))
             {
                 throw new UnauthorizedAccessException(
                     "Current password is incorrect.");
@@ -239,8 +238,7 @@ namespace ApplicationServices.Services
                         "New password and confirm password do not match.");
                 }
 
-                account.PasswordHash =
-                    request.NewPassword;
+                account.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
             }
 
             await _accountRepository.UpdateAsync(account);
@@ -328,8 +326,7 @@ namespace ApplicationServices.Services
                 throw new ArgumentException(
                     "Email is required.");
 
-            var account =
-                await _accountRepository.GetByEmailAsync(email);
+            var account = await _accountRepository.GetByEmailAsync(email);
 
             if (account == null)
                 return false;
@@ -352,6 +349,7 @@ namespace ApplicationServices.Services
                 throw new InvalidOperationException(
                     "The 30-day reactivation period has expired.");
             }
+
 
             await _accountRepository
                 .ReactivateAsync(account);

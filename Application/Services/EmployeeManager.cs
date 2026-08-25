@@ -2,6 +2,7 @@
 using ApplicationServices.DTOs.Project;
 using ApplicationServices.Interfaces;
 using Domain.Entities;
+using Domain.Enum;
 using Domain.Interfaces;
 
 namespace ApplicationServices.Services
@@ -10,13 +11,13 @@ namespace ApplicationServices.Services
     {
         private readonly IEmployeeRepository _employeeRepository;
         private readonly IAccountRepository _accountRepository;
+        private readonly ITicketRepository _ticketRepository;
 
-        public EmployeeManager(
-            IEmployeeRepository employeeRepository,
-            IAccountRepository accountRepository)
+        public EmployeeManager(IEmployeeRepository employeeRepository,IAccountRepository accountRepository,ITicketRepository ticketRepository)
         {
             _employeeRepository = employeeRepository;
             _accountRepository = accountRepository;
+            _ticketRepository = ticketRepository;
         }
 
         // =========================================================
@@ -79,19 +80,30 @@ namespace ApplicationServices.Services
                 throw new ArgumentException(
                     "Phone is required.");
 
-            // Validate phone format
+            // =====================================================
+            // VALIDATE PHONE
+            // =====================================================
+
             if (!ValidPhoneNumberFormat(request.Phone))
                 throw new ArgumentException(
                     "Phone number must contain exactly 10 digits.");
 
-            // Check duplicate phone
-            if (await _employeeRepository.ExistsByPhoneExceptAsync(
+            // =====================================================
+            // CHECK DUPLICATE PHONE
+            // =====================================================
+
+            if (await _employeeRepository
+                .ExistsByPhoneExceptAsync(
                     request.Phone,
                     id))
             {
                 throw new InvalidOperationException(
                     "This phone number is already in use.");
             }
+
+            // =====================================================
+            // UPDATE EMPLOYEE
+            // =====================================================
 
             employee.FName = request.FName;
             employee.LName = request.LName;
@@ -102,9 +114,31 @@ namespace ApplicationServices.Services
 
             return MapToResponse(employee);
         }
+        //// =========================================================
+        //// ACTIVE PROJECTS FOR EMPLOYEE
+        //// =========================================================
+        //public async Task<IEnumerable<ProjectResponse>>GetActiveProjectsAsync(int employeeId)
+        //{
+        //    var employee =
+        //        await _employeeRepository.GetByIdAsync(employeeId);
+
+        //    if (employee == null)
+        //        throw new KeyNotFoundException(
+        //            "Employee not found.");
+
+        //    if (employee.IsDeleted)
+        //        throw new InvalidOperationException(
+        //            "Employee is deleted.");
+
+        //    var projects =
+        //        await _employeeRepository
+        //            .GetActiveProjectsAsync(employeeId);
+
+        //    return projects.Select(MapToResponse);
+        //}
 
         // =========================================================
-        // DELETE
+        // SOFT DELETE
         // =========================================================
 
         public async Task<bool> DeleteAsync(int id)
@@ -119,15 +153,56 @@ namespace ApplicationServices.Services
                 throw new InvalidOperationException(
                     "Employee is already deleted.");
 
+            // =====================================================
+            // CHECK PROJECT MANAGER
+            // =====================================================
+
+            var managedProjects = await _employeeRepository.GetActiveProjectsAsync(id);
+
+            if (managedProjects.Any())
+            {
+                throw new InvalidOperationException(
+                    "Cannot delete this employee because they are " +
+                    "a Project Manager of an active project. " +
+                    "Assign another Project Manager first.");
+            }
+
+            var EmployeeTickets = await _employeeRepository.GetEmployeeTickets(id);
+            if (EmployeeTickets.Any())
+            {
+                foreach (var ticket in EmployeeTickets)
+                {
+                    if (ticket.TicketStatus == TicketStatus.InProgress || ticket.TicketStatus == TicketStatus.Reopened)
+                    {
+                        _ticketRepository.ChangeTicketStatus(ticket.TicketId, TicketStatus.Pending);
+                        
+                    }
+                }
+            }
+
+
+            // =====================================================
+            // SOFT DELETE EMPLOYEE
+            // =====================================================
+
             employee.IsDeleted = true;
             employee.DeletedAt = DateTime.UtcNow;
 
+            // =====================================================
+            // SOFT DELETE ACCOUNT
+            // =====================================================
+
             var account = employee.Account;
 
-            if (account != null)
+            if (account != null && !account.IsDeleted)
             {
-                await _accountRepository.DeleteAsync(account);
+                await _accountRepository
+                    .SoftDeleteAsync(account);
             }
+
+            // =====================================================
+            // SAVE EMPLOYEE
+            // =====================================================
 
             await _employeeRepository.UpdateAsync(employee);
 
@@ -148,8 +223,13 @@ namespace ApplicationServices.Services
                 throw new KeyNotFoundException(
                     "Employee not found.");
 
+            if (employee.IsDeleted)
+                throw new InvalidOperationException(
+                    "Cannot get projects for a deleted employee.");
+
             var projects =
-                await _employeeRepository.GetProjectsAsync(employeeId);
+                await _employeeRepository
+                    .GetProjectsAsync(employeeId);
 
             return projects
                 .Where(project =>
@@ -228,6 +308,45 @@ namespace ApplicationServices.Services
                 Gender = employee.Gender,
                 IsDeleted = employee.IsDeleted
             };
+        }
+
+
+        // =========================================================
+        // REACTIVE EMPLOYEE
+        // =========================================================
+
+        public async Task<bool> ReactivateAsync(int id)
+        {
+            var employee = await _employeeRepository.GetByIdAsync(id);
+
+            if (employee == null)
+                return false;
+
+            if (!employee.IsDeleted)
+                throw new InvalidOperationException(
+                    "Employee is already active.");
+
+            if (!employee.DeletedAt.HasValue)
+                throw new InvalidOperationException(
+                    "Employee deletion date is missing.");
+
+            if (employee.DeletedAt.Value.AddDays(30) < DateTime.UtcNow)
+                throw new InvalidOperationException(
+                    "The 30-day reactivation period has expired.");
+
+            employee.IsDeleted = false;
+            employee.DeletedAt = null;
+
+            var account = employee.Account;
+
+            if (account != null && account.IsDeleted)
+            {
+                await _accountRepository.ReactivateAsync(account);
+            }
+
+            await _employeeRepository.UpdateAsync(employee);
+
+            return true;
         }
     }
 }

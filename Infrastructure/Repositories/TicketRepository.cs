@@ -1,6 +1,7 @@
 ﻿using Domain.Entities;
 using Domain.Enum;
 using Domain.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories
 {
@@ -77,17 +78,47 @@ namespace Infrastructure.Repositories
                     t.TicketStatus == TicketStatus.Completed);
         }
 
-        public void ChangeTicketStatus(int ticketId, TicketStatus status)
+        public void ChangeTicketStatus(int ticketId,TicketStatus status)
         {
-            var ticket = _context.Tickets
-                .FirstOrDefault(t => t.TicketId == ticketId);
+            var ticket = _context.Tickets.FirstOrDefault(t => t.TicketId == ticketId);
 
             if (ticket == null)
                 throw new KeyNotFoundException("Ticket not found.");
 
+            var oldStatus = ticket.TicketStatus;
+            var oldEmployeeId = ticket.EmployeeId;
+
             ticket.TicketStatus = status;
 
-            _context.SaveChanges();
+            if (status == TicketStatus.Pending)
+            {
+                ticket.EmployeeId = null;
+            }
+
+            var ManagerId=_context.Projects
+                .Where(p => p.Id == ticket.ProjectId)
+                .Select(p => p.ProjectManagerId)
+                .FirstOrDefault();
+            var ticketHistory = new TicketHistory
+            {
+                TicketId = ticket.TicketId,
+
+                ActionByEmployeeId = ManagerId,
+
+                FromEmployeeId = oldEmployeeId,
+                ToEmployeeId = ticket.EmployeeId,
+
+                Action = "Status Changed",
+
+                OldValue = oldStatus.ToString(),
+                NewValue = status.ToString(),
+
+                ModifiedAt = DateTime.UtcNow
+            };
+
+            _context.TicketHistories.Add(ticketHistory);
+
+             _context.SaveChangesAsync();
         }
 
 
@@ -95,9 +126,7 @@ namespace Infrastructure.Repositories
         // EMPLOYEE BELONGS TO PROJECT
         // =========================================================
 
-        public bool EmployeeBelongsToProject(
-            int employeeId,
-            int projectId)
+        public bool EmployeeBelongsToProject(int employeeId,int projectId)
         {
             return _context.ProjectEmployees
                 .Any(pe =>
@@ -117,9 +146,10 @@ namespace Infrastructure.Repositories
 
 
 
-        //public IEnumerable<Ticket> GetAll()
-        //{
-        //    return _context.Tickets.ToList();
-        //}
+
+        public async Task<IEnumerable<Ticket>> GetByEmployeeAndProjectAsync(   int employeeId,  int projectId)
+        {
+            return await _context.Tickets.Where(t => t.EmployeeId == employeeId && t.ProjectId == projectId).ToListAsync();
+        }
     }
 }

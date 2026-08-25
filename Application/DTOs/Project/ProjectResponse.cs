@@ -9,11 +9,9 @@
         public DateOnly? StartDate { get; set; }
         public DateOnly? EndDate { get; set; }
         public string? EmployeeRole { get; set; }
-
         public int ProjectManagerId { get; set; }
         public string? ProjectManagerName { get; set; }
-
-        //public int EmployeeCount { get; set; } 
-        //public int TicketCount { get; set; } 
+        //public int EmployeeCount { get; set; }
+        //public int TicketCount { get; set; }
     }
 }

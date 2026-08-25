@@ -26,10 +26,17 @@ namespace Controller
             return Ok(ticket);
         }
 
+        [HttpGet("employee/{employeeId}/project/{projectId}")]
+        public async Task<ActionResult<IEnumerable<TicketResponse>>>GetByEmployeeAndProject(int employeeId,int projectId)
+        {
+            var tickets =
+                await _ticketManager.GetByEmployeeAndProjectAsync(employeeId,projectId);
+            return Ok(tickets);
+        }
+
         // POST: api/Ticket
         [HttpPost]
-        public ActionResult<TicketResponse> Create(
-            CreateTicketRequest request)
+        public ActionResult<TicketResponse> Create(CreateTicketRequest request)
         {
             try
             {
@@ -48,9 +55,7 @@ namespace Controller
 
         // PUT: api/Ticket/5
         [HttpPut("{id}")]
-        public ActionResult<TicketResponse> Update(
-            int id,
-            UpdateTicketRequest request)
+        public ActionResult<TicketResponse> Update( int id,UpdateTicketRequest request)
         {
             try
             {
@@ -81,14 +86,5 @@ namespace Controller
 
 
 
-    // GET: api/Ticket
-    //[HttpGet]
-    //public ActionResult<IEnumerable<TicketResponse>> GetAll()
-    //{
-    //    var tickets = _ticketManager.GetAll();
 
-    //    return Ok(tickets);
-    //}
-
-    // GET: api/Ticket/5
 }

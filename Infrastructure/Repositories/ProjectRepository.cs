@@ -59,6 +59,8 @@ namespace Infrastructure.Repositories
                    .Count();
         }
 
+        
+
         public Project? GetById(int id)
         {
             return _context.Projects
@@ -132,6 +134,12 @@ namespace Infrastructure.Repositories
                      .Include(p => p.ProjectEmployees)
                      .Where(p => p.ProjectManagerId == employeeId || p.ProjectEmployees.Any(pe => pe.EmployeeId == employeeId))
                      .ToList();
+        }
+
+        IEnumerable<Ticket> IProjectRepository.GetTicketsAsync(int projectId)
+        {
+            var tickets = _context.Tickets.Where(t => t.ProjectId == projectId).ToList();
+            return tickets;
         }
 
 

@@ -2,7 +2,6 @@
 using ApplicationServices.DTOs.ApplicationServices.DTOs;
 using ApplicationServices.Interfaces;
 using Domain.Entities;
-using Domain.Interfaces;
 
 namespace ApplicationServices.Services
 {
@@ -82,9 +81,6 @@ namespace ApplicationServices.Services
                 throw new InvalidOperationException(
                     "An account with this email already exists.");
 
-            // NOTE:
-            // ExistsByPhone is still synchronous in your current
-            // IEmployeeManager, so it remains synchronous here.
             if (await _employeeManager.ExistsByPhoneAsync(request.Phone))
                 throw new InvalidOperationException(
                     "An employee with this phone already exists.");
@@ -109,7 +105,7 @@ namespace ApplicationServices.Services
             var account = new Account
             {
                 Email = request.Email,
-                PasswordHash = request.Password,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
                 Employee = employee
             };
 
@@ -119,9 +115,7 @@ namespace ApplicationServices.Services
             // SAVE EMPLOYEE + ACCOUNT
             // =====================================================
 
-            // This remains synchronous until EmployeeManager/Add
-            // is also converted to async.
-            _employeeManager.AddAsync(employee);
+            await _employeeManager.AddAsync(employee);
 
             // =====================================================
             // RESPONSE
@@ -166,7 +160,15 @@ namespace ApplicationServices.Services
                     "Invalid email or password.");
 
             // =====================================================
-            // CHECK EMPLOYEE / ACCOUNT STATUS
+            // CHECK ACCOUNT STATUS
+            // =====================================================
+
+            if (account.IsDeleted)
+                throw new UnauthorizedAccessException(
+                    "This account is deactivated.");
+
+            // =====================================================
+            // CHECK EMPLOYEE STATUS
             // =====================================================
 
             if (account.Employee == null ||
@@ -180,11 +182,13 @@ namespace ApplicationServices.Services
             // CHECK PASSWORD
             // =====================================================
 
-            // TEMPORARY
+            // TEMPORARY:
             // Replace with password hashing later.
-            if (account.PasswordHash != request.Password)
+            if (!BCrypt.Net.BCrypt.Verify(request.Password, account.PasswordHash))
+            {
                 throw new UnauthorizedAccessException(
                     "Invalid email or password.");
+            }
 
             // =====================================================
             // LOGIN RESPONSE

@@ -16,5 +16,6 @@ namespace Domain.Interfaces
         Task DeleteAsync(Account account);
         Task SoftDeleteAsync(Account account);
         Task ReactivateAsync(Account account);
+        
     }
 }

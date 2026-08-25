@@ -144,9 +144,8 @@ namespace Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Role")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("ProjectId", "EmployeeId");
 
@@ -173,7 +172,7 @@ namespace Infrastructure.Migrations
                     b.Property<DateOnly?>("DueTo")
                         .HasColumnType("DATE");
 
-                    b.Property<int>("EmployeeId")
+                    b.Property<int?>("EmployeeId")
                         .HasColumnType("int");
 
                     b.Property<string>("Priority")
@@ -321,8 +320,7 @@ namespace Infrastructure.Migrations
                     b.HasOne("Domain.Entities.Employee", "Employee")
                         .WithMany("Tickets")
                         .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Domain.Entities.Project", "Project")
                         .WithMany("ProjectTickets")
