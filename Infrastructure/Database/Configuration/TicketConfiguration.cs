@@ -19,7 +19,7 @@ namespace Infrastructure.Database.Configuration
             // Title
             builder.Property(x => x.TicketTitle)
                    .HasColumnType("varchar")
-                   .HasMaxLength(20)
+                   .HasMaxLength(255)
                    .IsRequired();
 
 

@@ -105,7 +105,7 @@ namespace Infrastructure.Migrations
                 {
                     TicketId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    TicketTitle = table.Column<string>(type: "varchar(20)", maxLength: 20, nullable: false),
+                    TicketTitle = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false),
                     DueTo = table.Column<DateOnly>(type: "DATE", nullable: true),
                     CreatedAt = table.Column<DateOnly>(type: "DATE", nullable: false),
                     TicketStatus = table.Column<string>(type: "nvarchar(max)", nullable: false),

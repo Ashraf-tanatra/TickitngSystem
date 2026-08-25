@@ -183,7 +183,7 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("TicketTitle")
                         .IsRequired()
-                        .HasMaxLength(20)
+                        .HasMaxLength(255)
                         .HasColumnType("varchar");
 
                     b.HasKey("TicketId");

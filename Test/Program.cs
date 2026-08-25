@@ -5,8 +5,8 @@ using Infrastructure;
 //using Microsoft.EntityFrameworkCore;
 //using Microsoft.Extensions.Configuration;
 
-DataSeeder.RecreateCleanDatabase();
-DataSeeder.PopulateDatabase();
+await DataSeeder.RecreateCleanDatabase();
+await DataSeeder.PopulateDatabase();
 
 //using (var context = new AppDbContext())
 //{

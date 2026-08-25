@@ -14,139 +14,192 @@ namespace Infrastructure.Repositories
             _context = context;
         }
 
-        // Get all the projects that the employee works on
-        public IEnumerable<Project>? GetAllProjectWorkedByEmployee(int employeeId)
+        public async Task<Project?> GetByIdAsync(int id)
         {
-            return _context.Projects
-                    .Where(p => p.ProjectStatus != ProjectStatus.Cancelled)
-                    .Include(p => p.ProjectEmployees)
-                    .Where(p => p.ProjectManagerId == employeeId || p.ProjectEmployees.Any(pe => pe.EmployeeId == employeeId))
-                    .ToList();
-        }
-        // last three projects that the employee added to works on
-        public IEnumerable<String[]>? GetAllProjectWorkedByEmployeeTopThree(int employeeId)
-        {
-            return _context.Projects
-                   .Where(p => p.ProjectStatus == ProjectStatus.Active || p.ProjectStatus == ProjectStatus.OnHold)
-                   .Include(p => p.ProjectEmployees)
-                   .Where(p => p.ProjectManagerId == employeeId || p.ProjectEmployees.Any(pe => pe.EmployeeId == employeeId))
-                   .OrderByDescending(d => d.StartedAt)
-                   .Take(3)
-                   .Select(p => new string[2]
-                   {
-                        p.ProjectName,
-                        p.ProjectEmployees!.FirstOrDefault(pe=>pe.EmployeeId==employeeId).Role
-                   })
-                   .ToList();
-        }
-        // All employees that work on the project
-        public IEnumerable<Employee>? GetEmployees(int projectId)
-        {
-            return _context.ProjectEmployees
-                .Where(pe => pe.ProjectId == projectId)
-                .Select(pe => pe.Employee)
-                .Where(e => !e.IsDeleted)
-                .ToList();
-        }
-        //Number of projects that the employee works on
-        public int GetProjectCount(int employeeId)
-        {
-            return _context.Projects
-                   .Where(p => p.ProjectStatus == ProjectStatus.Active)
-                   .Include(p => p.ProjectEmployees)
-                   .Where(p => p.ProjectManagerId == employeeId || p.ProjectEmployees.Any(pe => pe.EmployeeId == employeeId))
-                   .Count();
-        }
-        public Project GetById(int id)
-        {
-            if (!ProjectExits(id))
-                return null;
+            if (!await ProjectExistsAsync(id))
+                throw new NullReferenceException("The project does not exists!!!");
 
-            return _context.Projects
-                .Include(p => p.ProjectEmployees)!
+            return await _context.Projects
+                .Include(p => p.ProjectEmployees)
                 .ThenInclude(pe => pe.Employee)
-                .FirstOrDefault(p => p.Id == id)!;
-        }
-
-        // Create
-        public void Create(Project project)
-        {
-            _context.Projects.Add(project);
-            _context.SaveChanges();
+                .FirstOrDefaultAsync(p => p.Id == id);
         }
         // Update
-        public void Update(Project project)
+        public async Task<bool> UpdateAsync(Project project)
         {
+            if (!await ProjectExistsAsync(project.Id))
+                throw new ArgumentException("Project does not exist.");
+
             _context.Projects.Update(project);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
+            return await Task.FromResult(true);
         }
-
-        // Delete
-        public void Delete(int projectId, int employeeId)
+        // Create
+        public async Task<bool> CreateAsync(Project project)
         {
-            if (!ProjectExits(projectId))
-                throw new ArgumentException($"Project does not exist.");
-            if (!IsManager(projectId, employeeId))
-                throw new ArgumentException($"Project cannot delete by you.");
+            if (!await EmployeeExistsAsync(project.ProjectManagerId))
+                throw new ArgumentException("Employee does not exist.");
+            if (await ProjectExistsAsync(project.Id))
+                throw new ArgumentException("Project already exists.");
 
-            if (TicketExists(projectId))
-                _context.Projects.Where(p => p.Id == projectId)
-                    .ExecuteUpdate(setter => setter.SetProperty(p => p.ProjectStatus, ProjectStatus.Cancelled));
+            await _context.Projects.AddAsync(project);
+            await _context.SaveChangesAsync();
+            return await Task.FromResult(true);
+        }
+        //Number of projects that the employee works on
+        public async Task<int> GetProjectCountAsync(int employeeId)
+        {
+            if (!await EmployeeExistsAsync(employeeId))
+                throw new ArgumentException("Employee does not exist.");
 
+            return await _context.Projects
+                        .Where(p => p.ProjectStatus == ProjectStatus.Active || p.ProjectStatus == ProjectStatus.OnHold)
+                        .Where(p => p.ProjectManagerId == employeeId
+                        || (p.ProjectEmployees != null && p.ProjectEmployees.Any(pe => pe.EmployeeId == employeeId)))
+                        .CountAsync();
+        }
+        // Delete
+        public async Task<bool> DeleteAsync(int projectId, int employeeId)
+        {
+            if (!await ProjectExistsAsync(projectId))
+                throw new ArgumentException("Project does not exist.");
+            if (!await EmployeeExistsAsync(employeeId))
+                throw new ArgumentException("Employee does not exist.");
+            if (!await IsManagerAsync(projectId, employeeId))
+                throw new UnauthorizedAccessException("Project cannot delete by you.");
+
+            // If the project has tickets, make it cancelled and do not delete it from the database
+            if (await TicketExistsAsync(projectId))
+            {
+                await _context.Projects.Where(p => p.Id == projectId)
+                     .ExecuteUpdateAsync(setter => setter.SetProperty(p => p.ProjectStatus, ProjectStatus.Cancelled));
+                return await Task.FromResult(true);
+            }
             else
             {
-                var project = GetById(projectId);
-                if (project.ProjectStatus == ProjectStatus.Cancelled)
-                    throw new ArgumentException($"Project is already cancelled.");
-
-                _context.Projects.Remove(project);
-                _context.SaveChanges();
+                var project = await GetByIdAsync(projectId);
+                // If the project has no tickets, delete it from the database
+                _context.Projects.Remove(project!);
+                await _context.SaveChangesAsync();
+                return await Task.FromResult(true);
             }
         }
-
-        public void AddEmployeeToProject(ProjectEmployee projectEmployee)
+        // All employees that work on the project
+        public async Task<IEnumerable<Employee>?> GetEmployeesAsync(int projectId)
         {
-            if (!EmployeeExists(projectEmployee.EmployeeId))
-                throw new ArgumentException($"Employee does not exist.");
-
-            if (!ProjectExits(projectEmployee.ProjectId))
+            if (!await ProjectExistsAsync(projectId))
                 throw new ArgumentException($"Project does not exist.");
 
-            var empIsAlreadyInProject = _context.ProjectEmployees
-                .Any(pe => pe.ProjectId == projectEmployee.ProjectId && pe.EmployeeId == projectEmployee.EmployeeId);
+            // return all employees that work on the project
+            return await _context.ProjectEmployees
+                            .Where(pe => pe.ProjectId == projectId)
+                            .Select(pe => pe.Employee)
+                            //.Where(e => !e.IsDeleted)
+                            .ToListAsync();
+        }
+        // Add employee to project
+        public async Task<bool> AddEmployeeToProjectAsync(ProjectEmployee projectEmployee)
+        {
+            if (!await EmployeeExistsAsync(projectEmployee.EmployeeId))
+                throw new ArgumentException($"Employee does not exist.");
+            if (!await ProjectExistsAsync(projectEmployee.ProjectId))
+                throw new ArgumentException($"Project does not exist.");
+
+            var empIsAlreadyInProject = await _context.ProjectEmployees
+                .AnyAsync(pe => pe.ProjectId == projectEmployee.ProjectId && pe.EmployeeId == projectEmployee.EmployeeId);
 
             if (empIsAlreadyInProject)
                 throw new ArgumentException($"Employee is already in the project.");
 
-            _context.ProjectEmployees.Add(projectEmployee);
-            _context.SaveChanges();
-        }
+            if (await IsEmpDeleted(projectEmployee.EmployeeId))
+                throw new ArgumentException($"Employee is deleted.");
 
-        public void SetProjectStatus(int projectId, ProjectStatus status)
-        {
-            _context.Projects
-              .Where(p => p.Id == projectId)
-              .ExecuteUpdate(setter => setter.SetProperty(p => p.ProjectStatus, status));
+            await _context.ProjectEmployees.AddAsync(projectEmployee);
+            await _context.SaveChangesAsync();
+            return await Task.FromResult(true);
         }
-
-        public bool EmployeeExists(int employeeId) => _context.Employees.Any(e => e.Id == employeeId);
-        public bool ProjectExits(int projectId) => _context.Projects.Any(p => p.Id == projectId);
-        public bool TicketExists(int projectId) => _context.Tickets.Any(t => t.ProjectId == projectId);
-        public bool IsManager(int projectId, int employeeId)
-        {
-            return _context.Projects
-                .Where(p => p.Id == projectId)
-                .Any(e => e.ProjectManagerId == employeeId);
-        }
-        public IEnumerable<Project>? GetAllProjectWorkedByEmployeeWithFilter(int employeeId, ProjectStatus FilterByStatus)
+        // Change the status of the project
+        public async Task<bool> SetProjectStatusAsync(int projectId, ProjectStatus status)
         {
 
-            return _context.Projects
-                     .Where(p => p.ProjectStatus == FilterByStatus)
-                     .Include(p => p.ProjectEmployees)
-                     .Where(p => p.ProjectManagerId == employeeId || p.ProjectEmployees.Any(pe => pe.EmployeeId == employeeId))
-                     .ToList();
+            if (!await ProjectExistsAsync(projectId))
+                throw new ArgumentException($"Project does not exist.");
+            if ((int)status < 0 || (int)status > 4)
+                throw new ArgumentException("Invalid project status.");
+
+            await _context.Projects
+                      .Where(p => p.Id == projectId)
+                      .ExecuteUpdateAsync(setter => setter.SetProperty(p => p.ProjectStatus, status));
+            return await Task.FromResult(true);
+        }
+        // Get all the projects that the employee works on
+        public async Task<IEnumerable<Project>?> GetAllProjectWorkedByEmployeeAsync(int employeeId)
+        {
+            if (!await EmployeeExistsAsync(employeeId))
+                throw new ArgumentException($"Employee does not exist.");
+            //problem if the manager is exits 
+            //if (await _context.ProjectEmployees.FirstOrDefaultAsync(pe => pe.EmployeeId == employeeId) == null)
+            //    throw new ArgumentException("Employee does not work on any project.");
+
+            return await _context.Projects
+                        .Where(p => p.ProjectStatus != ProjectStatus.Cancelled)
+                        .Include(p => p.ProjectEmployees)
+                       .Where(p => p.ProjectManagerId == employeeId ||
+                        (p.ProjectEmployees != null && p.ProjectEmployees.Any(pe => pe.EmployeeId == employeeId)))
+                        .ToListAsync();
+        }
+        // last three projects that the employee added to works on
+        public async Task<IEnumerable<String[]>?> GetAllProjectWorkedByEmployeeTopThreeAsync(int employeeId)
+        {
+            return await _context.Projects
+                   .Where(p => p.ProjectStatus == ProjectStatus.Active || p.ProjectStatus == ProjectStatus.OnHold)
+                   .Include(p => p.ProjectEmployees)
+                   .Where(p => p.ProjectManagerId == employeeId ||
+                   (p.ProjectEmployees != null && p.ProjectEmployees.Any(pe => pe.EmployeeId == employeeId)))
+                   .OrderByDescending(d => d.StartedAt)
+                   .Take(3)
+                   .Select(p => new string[2]
+                  {
+                        p.ProjectName ?? string.Empty,
+                        p.ProjectEmployees == null
+                            ? "Manager/No Role"
+                            : (p.ProjectEmployees
+                                .Where(pe => pe.EmployeeId == employeeId)
+                                .Select(pe => pe.Role)
+                                .FirstOrDefault() ?? "Manager/No Role")
+                    })
+                   .ToListAsync();
+        }
+        // Filter the projects that the employee works on by status
+        public async Task<IEnumerable<Project>?> GetAllProjectWorkedByEmployeeWithFilterAsync(int employeeId,
+            ProjectStatus FilterByStatus)
+        {
+            if (!await EmployeeExistsAsync(employeeId))
+                throw new ArgumentException($"Employee does not exist.");
+
+            return await _context.Projects
+                         .Where(p => p.ProjectStatus == FilterByStatus)
+                         .Include(p => p.ProjectEmployees)
+                         .Where(p => p.ProjectManagerId == employeeId
+                         || p.ProjectEmployees.Any(pe => pe.EmployeeId == employeeId))
+                         .ToListAsync();
         }
 
+
+        public async Task<bool> IsManagerAsync(int projectId, int employeeId)
+            => await _context.Projects.Where(p => p.Id == projectId).AnyAsync(e => e.ProjectManagerId == employeeId);
+        public async Task<bool> EmployeeExistsAsync(int employeeId)
+            => await _context.Employees.AnyAsync(e => e.Id == employeeId);
+        public async Task<bool> ProjectExistsAsync(int projectId)
+            => await _context.Projects.AnyAsync(p => p.Id == projectId);
+        public async Task<bool> TicketExistsAsync(int projectId)
+            => await _context.Tickets.AnyAsync(t => t.ProjectId == projectId);
+        public async Task<bool> IsEmpDeleted(int employeeId)
+        {
+            return await _context.Employees
+                 .Where(e => e.Id == employeeId && e.IsDeleted == true)
+                 .Select(e => e.IsDeleted)
+                 .FirstOrDefaultAsync();
+        }
     }
 }

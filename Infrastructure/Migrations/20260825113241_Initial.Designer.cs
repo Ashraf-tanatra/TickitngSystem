@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260824140150_Initial")]
+    [Migration("20260825113241_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -186,7 +186,7 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("TicketTitle")
                         .IsRequired()
-                        .HasMaxLength(20)
+                        .HasMaxLength(255)
                         .HasColumnType("varchar");
 
                     b.HasKey("TicketId");
