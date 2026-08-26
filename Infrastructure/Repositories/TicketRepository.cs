@@ -13,105 +13,109 @@ namespace Infrastructure.Repositories
         {
             _context = context;
         }
-        public IEnumerable<Ticket>? GetAllTicketsForAProject(int projectId)
-        {
-            return _context.Tickets
-                .Where(t => t.ProjectId == projectId)
-                .Include(e => e.Employee)
-                .Include(p => p.Project)
-                .ToList();
-        }
-        public IEnumerable<Ticket>? GetAllTicketsForAnEmployee(int employeeId)
-        {
-            return _context.Tickets
-                .Where(t => t.EmployeeId == employeeId
-                && t.TicketStatus != TicketStatus.Done
-                && t.TicketStatus != TicketStatus.Cancelled)
-                .Include(e => e.Employee)
-                .Include(p => p.Project)
-                .ToList();
-        }
-        public Ticket? GetById(int id)
-        {
-            return _context.Tickets
-                .Include(e => e.Employee)
-                .Include(p => p.Project)
-                .FirstOrDefault(t => t.TicketId == id);
-        }
 
-        public void Create(Ticket ticket)
+        public async Task<Ticket?> GetById(int id)
         {
-            _context.Tickets.Add(ticket);
-            _context.SaveChanges();
+            return await _context.Tickets
+                .Include(e => e.Employee)
+                .Include(p => p.Project)
+                .FirstOrDefaultAsync(t => t.TicketId == id);
         }
-        public void Update(Ticket ticket)
+        public async Task<bool> Create(Ticket ticket)
+        {
+            await _context.Tickets.AddAsync(ticket);
+            await _context.SaveChangesAsync();
+            return await Task.FromResult(true);
+        }
+        public async Task<bool> Update(Ticket ticket)
         {
             _context.Tickets.Update(ticket);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
+            return await Task.FromResult(true);
         }
-        public void Delete(Ticket ticket)
+        public async Task<bool> Delete(Ticket ticket)
         {
             _context.Tickets.Remove(ticket);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
+            return await Task.FromResult(true);
         }
-
-        public int GetTicketTotalCountForAnEmployee(int employeeId)
+        public async Task<int> GetTicketTotalCountForAnEmployee(int employeeId)
         {
-            return _context.Tickets
-                .Count(t => t.EmployeeId == employeeId
+            return await _context.Tickets
+                .CountAsync(t => t.EmployeeId == employeeId
                 && t.TicketStatus != TicketStatus.Done
                 && t.TicketStatus != TicketStatus.Cancelled);
         }
-        public int GetTicketInProgressCountForAnEmployee(int employeeId)
+        public async Task<int> GetTicketCompletedCountForAnEmployee(int employeeId)
         {
-            return _context.Tickets.Count(t => t.EmployeeId == employeeId && t.TicketStatus == TicketStatus.InProgress);
+            return await _context.Tickets.CountAsync(t => t.EmployeeId == employeeId && t.TicketStatus == TicketStatus.Completed);
         }
-        public int GetTicketCompletedCountForAnEmployee(int employeeId)
+        public async Task<int> GetTicketInProgressCountForAnEmployee(int employeeId)
         {
-            return _context.Tickets.Count(t => t.EmployeeId == employeeId && t.TicketStatus == TicketStatus.Completed);
+            return await _context.Tickets.CountAsync(t => t.EmployeeId == employeeId && t.TicketStatus == TicketStatus.InProgress);
         }
-
-        public void ChangeTicketStatus(int ticketId, TicketStatus status)
-        {
-            _context.Tickets.Where(t => t.TicketId == ticketId)
-                .ExecuteUpdate(s => s.SetProperty(t => t.TicketStatus, status));
-            _context.SaveChangesAsync();
-        }
-        public void ChangeTicketPriority(int ticketId, TicketPriority priority)
-        {
-            _context.Tickets.Where(t => t.TicketId == ticketId)
-                .ExecuteUpdate(s => s.SetProperty(t => t.Priority, priority));
-            _context.SaveChangesAsync();
-        }
-
-        public void AddAttachmentToTicket(int ticketId, string filePath)
+        public async Task<bool> AddAttachmentToTicket(int ticketId, string filePath)
         {
             var attachment = new TicketAttachments
             {
                 URL = filePath,
                 TicketId = ticketId
             };
-            _context.Attachments.Add(attachment);
-            _context.SaveChanges();
+            await _context.Attachments.AddAsync(attachment);
+            await _context.SaveChangesAsync();
+            return await Task.FromResult(true);
+        }
+        public async Task<bool> ChangeTicketStatus(int ticketId, TicketStatus status)
+        {
+            await _context.Tickets.Where(t => t.TicketId == ticketId)
+                 .ExecuteUpdateAsync(s => s.SetProperty(t => t.TicketStatus, status));
+            await _context.SaveChangesAsync();
+            return await Task.FromResult(true);
+        }
+        public async Task<IEnumerable<Ticket>?> GetAllTicketsForAProject(int projectId)
+        {
+            return await _context.Tickets
+                .Where(t => t.ProjectId == projectId)
+                .Include(e => e.Employee)
+                .Include(p => p.Project)
+                .ToListAsync();
+        }
+        public async Task<IEnumerable<Ticket>?> GetAllTicketsForAnEmployee(int employeeId)
+        {
+            return await _context.Tickets
+                .Where(t => t.EmployeeId == employeeId
+                && t.TicketStatus != TicketStatus.Done
+                && t.TicketStatus != TicketStatus.Cancelled)
+                .Include(e => e.Employee)
+                .Include(p => p.Project)
+                .ToListAsync();
+        }
+        public async Task<bool> ChangeTicketPriority(int ticketId, TicketPriority priority)
+        {
+            await _context.Tickets.Where(t => t.TicketId == ticketId)
+                .ExecuteUpdateAsync(s => s.SetProperty(t => t.Priority, priority));
+            await _context.SaveChangesAsync();
+            return await Task.FromResult(true);
         }
 
-        public bool TicketExists(int ticketId)
+
+        public async Task<bool> TicketExists(int ticketId)
         {
-            return _context.Tickets.Any(t => t.TicketId == ticketId);
+            return await _context.Tickets.AnyAsync(t => t.TicketId == ticketId);
         }
-        public bool EmployeeExists(int employeeId)
+        public async Task<bool> EmployeeExists(int employeeId)
         {
-            return _context.Employees.Any(e => e.Id == employeeId);
+            return await _context.Employees.AnyAsync(e => e.Id == employeeId);
         }
-        public bool ProjectExists(int projectId)
+        public async Task<bool> ProjectExists(int projectId)
         {
-            return _context.Projects.Any(p => p.Id == projectId);
+            return await _context.Projects.AnyAsync(p => p.Id == projectId);
         }
-        public bool IsManager(int employeeId, int projectId)
+        public async Task<bool> IsManager(int employeeId, int projectId)
         {
-            return _context.Projects
+            return await _context.Projects
                 .Where(p => p.Id == projectId)
-                .Any(x => x.ProjectManagerId == employeeId);
+                .AnyAsync(x => x.ProjectManagerId == employeeId);
         }
     }
 }
