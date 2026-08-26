@@ -11,17 +11,14 @@ namespace Infrastructure.Database.Configuration
         {
             // Primary Key
             builder.HasKey(x => x.TicketId);
-
             builder.Property(x => x.TicketId)
                    .ValueGeneratedOnAdd();
-
 
             // Title
             builder.Property(x => x.TicketTitle)
                    .HasColumnType("varchar")
                    .HasMaxLength(255)
                    .IsRequired();
-
 
             // Priority
             builder.Property(x => x.Priority)
@@ -30,7 +27,6 @@ namespace Infrastructure.Database.Configuration
                        x => (TicketPriority)Enum.Parse(
                            typeof(TicketPriority), x));
 
-
             // Status
             builder.Property(x => x.TicketStatus)
                    .HasConversion(
@@ -38,11 +34,9 @@ namespace Infrastructure.Database.Configuration
                        x => (TicketStatus)Enum.Parse(
                            typeof(TicketStatus), x));
 
-
             // Due Date
             builder.Property(x => x.DueTo)
                    .HasColumnType("DATE");
-
 
             // Created Time
             builder.Property(x => x.CreatedAt)
@@ -54,13 +48,11 @@ namespace Infrastructure.Database.Configuration
                    .HasColumnType("varchar")
                    .HasMaxLength(2500);
 
-
             // Assigned Employee
             builder.HasOne(x => x.Employee)
                    .WithMany(e => e.Tickets)
                    .HasForeignKey(x => x.EmployeeId)
                    .OnDelete(DeleteBehavior.Restrict);
-
 
             // Ticket Created By
             builder.HasOne(x => x.TicketCreatedBy)
@@ -68,14 +60,12 @@ namespace Infrastructure.Database.Configuration
                    .HasForeignKey(x => x.TicketCreatedById)
                    .OnDelete(DeleteBehavior.Restrict);
 
-
             // Project
             builder.HasOne(x => x.Project)
                    .WithMany(p => p.ProjectTickets)
                    .HasForeignKey(x => x.ProjectId)
                    .IsRequired()
                    .OnDelete(DeleteBehavior.Restrict);
-
 
             builder.ToTable("Tickets");
         }

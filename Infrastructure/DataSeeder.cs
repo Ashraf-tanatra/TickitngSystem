@@ -57,7 +57,7 @@ namespace Infrastructure
             new Employee { FName = "Sarah", LName = "Davis", Gender = Gender.F, Phone = "555-0104", IsDeleted = false },
             new Employee { FName = "David", LName = "Wilson", Gender = Gender.M, Phone = "555-0105", IsDeleted = false },
             new Employee { FName = "Jessica", LName = "Taylor", Gender = Gender.F, Phone = "555-0106",
-                IsDeleted = true, DeletedAt = new DateTime(2026, 8, 1) }
+                IsDeleted = true, DeletedAt = new DateOnly(2026, 8, 1) }
         };
         public static List<Account> loadAccounts() => new()
         {

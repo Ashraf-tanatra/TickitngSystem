@@ -1,4 +1,5 @@
 ﻿using Domain.Entities;
+using Domain.Enum;
 using Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,61 +14,66 @@ namespace Infrastructure.Repositories
             _context = context;
         }
 
-        public IEnumerable<Employee> GetAll()
+        public async Task<IEnumerable<Employee>> GetAllAsync()
         {
-            return _context.Employees.ToList();
+            return await _context.Employees
+                .Where(e => !e.IsDeleted)
+                .ToListAsync();
         }
 
-        public Employee? GetById(int id)
+        public async Task<Employee?> GetByIdAsync(int id)
         {
-            return _context.Employees.FirstOrDefault(e => e.Id == id);
+            return await _context.Employees
+                .Include(e => e.Account)
+                .FirstOrDefaultAsync(e => e.Id == id);
         }
 
-        public void Add(Employee employee)
+        public async Task AddAsync(Employee employee)
         {
             _context.Employees.Add(employee);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
 
-        public void Update(Employee employee)
+        public async Task UpdateAsync(Employee employee)
         {
             _context.Employees.Update(employee);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
+        }
+        public async Task<bool> ExistsByPhoneAsync(string phone)
+        {
+            return await _context.Employees.AnyAsync(e => e.Phone == phone && !e.IsDeleted);
+        }
+        public async Task<bool> ExistsByPhoneExceptAsync(string phone, int employeeId)
+        {
+            return await _context.Employees
+                .AnyAsync(e => e.Phone == phone && e.Id != employeeId && !e.IsDeleted);
         }
 
-        public void Delete(Employee employee)
+        public async Task<IEnumerable<Project>> GetProjectsAsync(int employeeId)
         {
-            _context.Employees.Remove(employee);
-            _context.SaveChanges();
+            return await _context.Projects
+                            .Where(p => p.ProjectEmployees
+                            .Any(pe => pe.EmployeeId == employeeId && !pe.Employee.IsDeleted))
+                            .Include(p => p.ProjectEmployees)
+                            .Include(p => p.ProjectTickets)
+                            .ToListAsync();
         }
 
-        public bool ExistsByEmail(string email)
+        public async Task<IEnumerable<Project>> GetActiveProjectsAsync(int employeeId)
         {
-            return _context.Employees
-                .Any(e => e.Account.Email == email);
+            return await _context.Projects
+                                .Where(p => p.ProjectStatus == ProjectStatus.Active
+                                && p.ProjectManager.Id == employeeId && p.ProjectEmployees
+                                .Any(pe => pe.EmployeeId == employeeId && !pe.Employee.IsDeleted))
+                                .Include(p => p.ProjectEmployees)
+                                .Include(p => p.ProjectTickets)
+                                .ToListAsync();
         }
 
-        public bool ExistsByPhone(string phone)
+        public async Task<IEnumerable<Ticket>> GetEmployeeTickets(int employeeId)
         {
-            return _context.Employees
-                .Any(e => e.Phone == phone);
-        }
+            return await _context.Tickets.Where(t => t.EmployeeId == employeeId).ToListAsync();
 
-        public bool ExistsByPhoneExcept(string phone, int employeeId)
-        {
-            return _context.Employees
-                .Any(e => e.Phone == phone && e.Id != employeeId);
-        }
-        public IEnumerable<Project> GetProjects(int employeeId)
-        {
-            return _context.Projects
-                .Where(p => p.ProjectEmployees
-                    .Any(pe => pe.EmployeeId == employeeId))
-                .Include(p => p.ProjectManager)
-                .Include(p => p.ProjectEmployees)
-                    .ThenInclude(pe => pe.Employee)
-                .Include(p => p.ProjectTickets)
-                .ToList();
         }
     }
 }

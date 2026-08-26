@@ -2,6 +2,7 @@
   <Project Path="Application/ApplicationServices.csproj" />
   <Project Path="Controller/Controller.csproj" />
   <Project Path="Domain/Domain.csproj" />
+  <Project Path="DomainShared/DomainShared.csproj" Id="0793e0c0-f76b-4a26-9e00-eb6376265ba9" />
   <Project Path="Infrastructure/Infrastructure.csproj" />
   <Project Path="Test/Test.csproj" Id="8a380441-d6da-481f-be4e-1a702f0609c2" />
   <Project Path="TickitngSystem/TickitngSystem.csproj">

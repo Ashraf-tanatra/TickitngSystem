@@ -5,11 +5,11 @@ namespace Domain.Entities
     public class Project
     {
         public int Id { get; set; }
-        public string ProjectName { get; set; } = null!;
-        public string? ProjectDescription { get; set; }
-        public ProjectStatus ProjectStatus { get; set; } = ProjectStatus.Active;
-        public DateOnly? StartedAt { get; set; }
         public DateOnly? EndAt { get; set; }
+        public DateOnly? StartedAt { get; set; }
+        public string? ProjectDescription { get; set; }
+        public string ProjectName { get; set; } = null!;
+        public ProjectStatus ProjectStatus { get; set; } = ProjectStatus.Active;
 
 
         // Foreign Key
@@ -20,8 +20,7 @@ namespace Domain.Entities
 
         public override string ToString()
         {
-            return $"Project Id: {Id}\n" +
-                   $"Project Name: {ProjectName}\n" +
+            return $"Project Id: {Id}\nProject Name: {ProjectName}\n" +
                    $"Details: {ProjectDescription}";
         }
     }

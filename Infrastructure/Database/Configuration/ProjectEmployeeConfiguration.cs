@@ -16,6 +16,10 @@ namespace Infrastructure.Database.Configuration
                 pe.EmployeeId
             });
 
+            // Role
+            builder.Property(pe => pe.Role)
+                   .HasMaxLength(50);
+
             // Project -> ProjectEmployees
             builder.HasOne(pe => pe.Project)
                    .WithMany(p => p.ProjectEmployees)

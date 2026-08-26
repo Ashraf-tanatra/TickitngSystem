@@ -2,14 +2,15 @@
 {
     public interface IAccountRepository
     {
-        Account? GetByEmail(string email);
+        Task AddAsync(Account account);
+        Task UpdateAsync(Account account);
+        Task DeleteAsync(Account account);
+        Task<Account?> GetByIdAsync(int id);
+        Task ReactivateAsync(Account account);
+        Task SoftDeleteAsync(Account account);
+        Task<bool> EmailExistsAsync(string email);
+        Task<Account?> GetByEmailAsync(string email);
+        Task<bool> EmployeeExistsAsync(int employeeId);
 
-        bool EmailExists(string email);
-
-        bool EmployeeExists(int employeeId); //?
-
-        void Add(Account account);
-
-        void Delete(Account account);
     }
 }

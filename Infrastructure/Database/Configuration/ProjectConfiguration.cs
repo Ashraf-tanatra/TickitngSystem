@@ -27,8 +27,7 @@ namespace Infrastructure.Database.Configuration
             builder.Property(x => x.ProjectStatus)
                    .HasConversion(
                        x => x.ToString(),
-                       x => (ProjectStatus)Enum.Parse(
-                           typeof(ProjectStatus), x));
+                       x => (ProjectStatus)Enum.Parse(typeof(ProjectStatus), x));
 
             builder.HasOne(x => x.ProjectManager)
                    .WithMany()

@@ -15,14 +15,13 @@ namespace Controller
             _authManager = authManager;
         }
 
-        // POST: api/Auth/signup
         [HttpPost("signup")]
-        public ActionResult<AccountResponse> SignUp(
-            SignUpRequest request)
+        public async Task<ActionResult<AccountResponse>> SignUp([FromBody] SignUpRequest request)
         {
             try
             {
-                var account = _authManager.SignUp(request);
+                var account =
+                    await _authManager.SignUp(request);
 
                 return StatusCode(201, account);
             }
@@ -30,15 +29,54 @@ namespace Controller
             {
                 return BadRequest(ex.Message);
             }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ex.Message);
+            }
         }
 
-        [HttpPost("login")]
-        public ActionResult<LoginResponse> Login(
-     LoginRequest request)
+        [HttpPost("verify-email")]
+        public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailRequest request)
         {
             try
             {
-                var response = _authManager.Login(request);
+                await _authManager.VerifyEmail(request);
+
+                return Ok(new
+                {
+                    message = "Email verified successfully."
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new
+                {
+                    message = ex.Message
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
+        }
+
+        [HttpPost("login")]
+        public async Task<ActionResult<LoginResponse>> Login([FromBody] LoginRequest request)
+        {
+            try
+            {
+                var response =
+                    await _authManager.Login(request);
 
                 return Ok(response);
             }
@@ -54,5 +92,78 @@ namespace Controller
                 });
             }
         }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+        {
+            try
+            {
+                await _authManager.ResetPassword(request);
+
+                return Ok(new
+                {
+                    message =
+                        "Password reset successfully."
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new
+                {
+                    message = ex.Message
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
+        }
+
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+        {
+            try
+            {
+                await _authManager.ForgotPassword(request);
+
+                return Ok(new
+                {
+                    message =
+                        "Password reset code sent successfully."
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new
+                {
+                    message = ex.Message
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
+        }
+
     }
 }

@@ -9,7 +9,6 @@ namespace Infrastructure
             : base(options)
         {
         }
-
         public AppDbContext() { }
 
         public DbSet<Ticket> Tickets { get; set; }
@@ -24,8 +23,7 @@ namespace Infrastructure
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.ApplyConfigurationsFromAssembly(
-                typeof(AppDbContext).Assembly);
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
         }
 
         //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -34,7 +32,7 @@ namespace Infrastructure
         //    var config = new ConfigurationBuilder().AddJsonFile("appsettings.json")
         //       .Build();
 
-        //    var connectionString = config.GetSection("constr").Value;
+        //    var connectionString = config.GetSection("ConnectionStrings:constr").Value;
         //    optionsBuilder.UseSqlServer(connectionString);
         //}
     }

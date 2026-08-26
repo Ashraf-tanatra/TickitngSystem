@@ -11,14 +11,31 @@ namespace Infrastructure.Database.Configuration
             builder.HasKey(p => p.Id);
             builder.Property(p => p.Id).ValueGeneratedOnAdd();
 
-            //RelationshipBuilderBase between ticket and ticketHistory 1 --- *
-            builder.HasOne(t => t.Ticket).WithMany(t => t.TicketHistories).HasForeignKey(t => t.TicketId).OnDelete(DeleteBehavior.NoAction);
+            // Ticket 1----* > TicketHistory
+            builder.HasOne(h => h.Ticket)
+                   .WithMany(t => t.TicketHistories)
+                   .HasForeignKey(h => h.TicketId)
+                   .OnDelete(DeleteBehavior.NoAction);
 
-            //RelationshipBuilderBase between ticket and employee 1 --- * 
-            builder.HasOne(e => e.ToEmployee).WithMany(e => e.TicketHistories).HasForeignKey(k => k.ToEmployeeId).OnDelete(DeleteBehavior.NoAction);
-            builder.HasOne(e => e.FromEmployee).WithMany().HasForeignKey(k => k.FromEmployeeId).OnDelete(DeleteBehavior.NoAction);
-            builder.HasOne(e => e.ActionByEmployee).WithMany().HasForeignKey(k => k.ActionByEmployeeId).OnDelete(DeleteBehavior.NoAction);
+            // Employee 1----* > TicketHistory who did the action
+            builder.HasOne(h => h.ActionByEmployee)
+                   .WithMany()
+                   .HasForeignKey(h => h.ActionByEmployeeId)
+                   .OnDelete(DeleteBehavior.NoAction);
 
+            // Employee 1----* > TicketHistory who is assigned to
+            builder.HasOne(h => h.FromEmployee)
+                   .WithMany()
+                   .HasForeignKey(h => h.FromEmployeeId)
+                   .OnDelete(DeleteBehavior.NoAction);
+
+            // Employee 1----* > TicketHistory who is assigned to
+            builder.HasOne(h => h.ToEmployee)
+                   .WithMany()
+                   .HasForeignKey(h => h.ToEmployeeId)
+                   .OnDelete(DeleteBehavior.NoAction);
+
+            builder.ToTable("TicketHistories");
         }
     }
 }
