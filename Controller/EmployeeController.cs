@@ -173,5 +173,38 @@ namespace Controller
                 });
             }
         }
+
+        // =========================================================
+        // REACTIVE EMPLOYEE
+        // =========================================================
+        [HttpPost("reactivate/{id}")]
+        public async Task<IActionResult> Reactivate(int id)
+        {
+            try
+            {
+                var result =
+                    await _employeeManager.ReactivateAsync(id);
+
+                if (!result)
+                {
+                    return NotFound(new
+                    {
+                        message = "Employee not found."
+                    });
+                }
+
+                return Ok(new
+                {
+                    message = "Employee reactivated successfully."
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
+        }
     }
 }

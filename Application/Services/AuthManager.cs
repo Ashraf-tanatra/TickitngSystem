@@ -207,6 +207,14 @@ namespace ApplicationServices.Services
                     Constants.Account.AccountDeactivated);
 
             // =====================================================
+            // CHECK ACCOUNT STATUS
+            // =====================================================
+
+            if (account.IsDeleted)
+                throw new UnauthorizedAccessException(
+                    "This account is deactivated.");
+
+            // =====================================================
             // CHECK EMPLOYEE STATUS
             // =====================================================
 
