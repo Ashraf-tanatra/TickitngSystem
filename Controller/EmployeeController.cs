@@ -88,7 +88,7 @@ namespace Controller
                 {
                     return NotFound(new
                     {
-                        message = Constants.Employee.EmployeeNotFound
+                        message = ErrorShared.Employee.EmployeeNotFound
                     });
                 }
 
@@ -120,14 +120,14 @@ namespace Controller
                 {
                     return NotFound(new
                     {
-                        message = Constants.Employee.EmployeeNotFound
+                        message = ErrorShared.Employee.EmployeeNotFound
                     });
                 }
 
                 return Ok(new
                 {
                     message =
-                        Constants.Employee.EmployeeDeletedSuccessfully
+                        ErrorShared.Employee.EmployeeDeletedSuccessfully
                 });
             }
             catch (InvalidOperationException ex)
@@ -155,14 +155,14 @@ namespace Controller
                 {
                     return NotFound(new
                     {
-                        message = Constants.Employee.EmployeeNotFound
+                        message = ErrorShared.Employee.EmployeeNotFound
                     });
                 }
 
                 return Ok(new
                 {
                     message =
-                        Constants.Employee.EmployeeReactivatedSuccessfully
+                        ErrorShared.Employee.EmployeeReactivatedSuccessfully
                 });
             }
             catch (InvalidOperationException ex)
@@ -174,37 +174,7 @@ namespace Controller
             }
         }
 
-        // =========================================================
-        // REACTIVE EMPLOYEE
-        // =========================================================
-        [HttpPost("reactivate/{id}")]
-        public async Task<IActionResult> Reactivate(int id)
-        {
-            try
-            {
-                var result =
-                    await _employeeManager.ReactivateAsync(id);
-
-                if (!result)
-                {
-                    return NotFound(new
-                    {
-                        message = "Employee not found."
-                    });
-                }
-
-                return Ok(new
-                {
-                    message = "Employee reactivated successfully."
-                });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new
-                {
-                    message = ex.Message
-                });
-            }
-        }
+        
+        
     }
 }

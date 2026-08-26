@@ -1,4 +1,4 @@
-﻿namespace ApplicationServices.Constants
+﻿namespace ApplicationServices.Errors
 {
     public static class Constants
     {

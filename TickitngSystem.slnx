@@ -1,9 +1,8 @@
 <Solution>
-  <Folder Name="/Solution Items/" />
   <Project Path="Application/ApplicationServices.csproj" />
-  <Project Path="Constants/DomainShared.csproj" Id="3d28e26b-084c-4b3c-9666-b38f55b0ad92" />
   <Project Path="Controller/Controller.csproj" />
   <Project Path="Domain/Domain.csproj" />
+  <Project Path="DomainShared/DomainShared.csproj" />
   <Project Path="Infrastructure/Infrastructure.csproj" />
   <Project Path="Test/Test.csproj" Id="8a380441-d6da-481f-be4e-1a702f0609c2" />
   <Project Path="TickitngSystem/TickitngSystem.csproj">

@@ -3,6 +3,7 @@ using ApplicationServices.DTOs.ApplicationServices.DTOs;
 using ApplicationServices.Interfaces;
 using Domain.Entities;
 
+
 namespace ApplicationServices.Services
 {
     public class AuthManager : IAuthManager
@@ -36,31 +37,31 @@ namespace ApplicationServices.Services
 
             if (string.IsNullOrWhiteSpace(request.FName))
                 throw new ArgumentException(
-                    Constants.Employee.FirstNameRequired);
+                    ErrorShared.Employee.FirstNameRequired);
 
             if (string.IsNullOrWhiteSpace(request.LName))
                 throw new ArgumentException(
-                    Constants.Employee.LastNameRequired);
+                    ErrorShared.Employee.LastNameRequired);
 
             if (string.IsNullOrWhiteSpace(request.Email))
                 throw new ArgumentException(
-                    Constants.Account.EmailRequired);
+                    ErrorShared.Account.EmailRequired);
 
             if (string.IsNullOrWhiteSpace(request.Phone))
                 throw new ArgumentException(
-                    Constants.Employee.PhoneRequired);
+                    ErrorShared.Employee.PhoneRequired);
 
             if (string.IsNullOrWhiteSpace(request.Password))
                 throw new ArgumentException(
-                    Constants.Account.PasswordRequired);
+                    ErrorShared.Account.PasswordRequired);
 
             if (request.Password != request.ConfirmPassword)
                 throw new ArgumentException(
-                    Constants.Account.PasswordsDoNotMatch);
+                    ErrorShared.Account.PasswordsDoNotMatch);
 
             if (!request.AcceptTerms)
                 throw new ArgumentException(
-                    Constants.Account.TermsNotAccepted);
+                    ErrorShared.Account.TermsNotAccepted);
 
             // =====================================================
             // FORMAT VALIDATION
@@ -68,15 +69,15 @@ namespace ApplicationServices.Services
 
             if (!_accountManager.ValidEmailFormat(request.Email))
                 throw new ArgumentException(
-                    Constants.Account.InvalidEmail);
+                    ErrorShared.Account.InvalidEmail);
 
             if (!_accountManager.PasswordFormat(request.Password))
                 throw new ArgumentException(
-                    Constants.Account.InvalidPassword);
+                    ErrorShared.Account.InvalidPassword);
 
             if (!_employeeManager.ValidPhoneNumberFormat(request.Phone))
                 throw new ArgumentException(
-                    Constants.Employee.InvalidPhoneNumber);
+                    ErrorShared.Employee.InvalidPhoneNumber);
 
             // =====================================================
             // CHECK DUPLICATES
@@ -84,11 +85,11 @@ namespace ApplicationServices.Services
 
             if (await _accountManager.ExistsAsync(request.Email))
                 throw new InvalidOperationException(
-                    Constants.Account.EmailAlreadyExists);
+                    ErrorShared.Account.EmailAlreadyExists);
 
             if (await _employeeManager.ExistsByPhoneAsync(request.Phone))
                 throw new InvalidOperationException(
-                    Constants.Employee.PhoneAlreadyExists);
+                    ErrorShared.Employee.PhoneAlreadyExists);
 
             // =====================================================
             // CREATE EMPLOYEE
@@ -176,11 +177,11 @@ namespace ApplicationServices.Services
 
             if (string.IsNullOrWhiteSpace(request.Email))
                 throw new ArgumentException(
-                    Constants.Account.EmailRequired);
+                    ErrorShared.Account.EmailRequired);
 
             if (string.IsNullOrWhiteSpace(request.Password))
                 throw new ArgumentException(
-                    Constants.Account.PasswordRequired);
+                    ErrorShared.Account.PasswordRequired);
 
             // =====================================================
             // GET ACCOUNT
@@ -196,7 +197,7 @@ namespace ApplicationServices.Services
 
             if (account == null)
                 throw new UnauthorizedAccessException(
-                    Constants.Account.InvalidCredentials);
+                    ErrorShared .Account.InvalidCredentials);
 
             // =====================================================
             // CHECK ACCOUNT STATUS
@@ -204,7 +205,7 @@ namespace ApplicationServices.Services
 
             if (account.IsDeleted)
                 throw new UnauthorizedAccessException(
-                    Constants.Account.AccountDeactivated);
+                    ErrorShared.Account.AccountDeactivated);
 
             // =====================================================
             // CHECK ACCOUNT STATUS
@@ -212,7 +213,7 @@ namespace ApplicationServices.Services
 
             if (account.IsDeleted)
                 throw new UnauthorizedAccessException(
-                    "This account is deactivated.");
+                    ErrorShared.Account.AccountDeactivated);
 
             // =====================================================
             // CHECK EMPLOYEE STATUS
@@ -222,7 +223,7 @@ namespace ApplicationServices.Services
                 account.Employee.IsDeleted)
             {
                 throw new UnauthorizedAccessException(
-                    Constants.Account.AccountDeactivated);
+                    ErrorShared.Account.AccountDeactivated);
             }
 
             // =====================================================
@@ -231,7 +232,7 @@ namespace ApplicationServices.Services
 
             if (!account.IsEmailVerified)
                 throw new UnauthorizedAccessException(
-                    Constants.Account.EmailNotVerified);
+                    ErrorShared.Account.EmailNotVerified);
 
             // =====================================================
             // CHECK PASSWORD
@@ -242,7 +243,7 @@ namespace ApplicationServices.Services
                     account.PasswordHash))
             {
                 throw new UnauthorizedAccessException(
-                    Constants.Account.InvalidCredentials);
+                    ErrorShared.Account.InvalidCredentials);
             }
 
             // =====================================================
@@ -269,7 +270,7 @@ namespace ApplicationServices.Services
 
             if (string.IsNullOrWhiteSpace(request.Email))
                 throw new ArgumentException(
-                    Constants.Account.EmailRequired);
+                    ErrorShared.Account.EmailRequired);
 
             // =====================================================
             // VALIDATE EMAIL FORMAT
@@ -277,7 +278,7 @@ namespace ApplicationServices.Services
 
             if (!_accountManager.ValidEmailFormat(request.Email))
                 throw new ArgumentException(
-                    Constants.Account.InvalidEmail);
+                    ErrorShared.Account.InvalidEmail);
 
             // =====================================================
             // GET ACCOUNT
@@ -289,7 +290,7 @@ namespace ApplicationServices.Services
 
             if (account == null)
                 throw new KeyNotFoundException(
-                    Constants.Account.AccountNotFound);
+                    ErrorShared.Account.AccountNotFound);
 
             // =====================================================
             // CHECK ACCOUNT STATUS
@@ -297,7 +298,7 @@ namespace ApplicationServices.Services
 
             if (account.IsDeleted)
                 throw new InvalidOperationException(
-                    Constants.Account.AccountDeactivated);
+                    ErrorShared.Account.AccountDeactivated);
 
             // =====================================================
             // GENERATE RESET CODE
@@ -342,15 +343,15 @@ namespace ApplicationServices.Services
 
             if (string.IsNullOrWhiteSpace(request.Email))
                 throw new ArgumentException(
-                    Constants.Account.EmailRequired);
+                    ErrorShared.Account.EmailRequired);
 
             if (string.IsNullOrWhiteSpace(request.Code))
                 throw new ArgumentException(
-                    Constants.Account.ResetCodeRequired);
+                    ErrorShared.Account.ResetCodeRequired);
 
             if (string.IsNullOrWhiteSpace(request.NewPassword))
                 throw new ArgumentException(
-                    Constants.Account.PasswordRequired);
+                    ErrorShared.Account.PasswordRequired);
 
             // =====================================================
             // VALIDATE EMAIL
@@ -358,7 +359,7 @@ namespace ApplicationServices.Services
 
             if (!_accountManager.ValidEmailFormat(request.Email))
                 throw new ArgumentException(
-                    Constants.Account.InvalidEmail);
+                    ErrorShared.Account.InvalidEmail);
 
             // =====================================================
             // VALIDATE PASSWORD
@@ -366,7 +367,7 @@ namespace ApplicationServices.Services
 
             if (!_accountManager.PasswordFormat(request.NewPassword))
                 throw new ArgumentException(
-                    Constants.Account.InvalidPassword);
+                    ErrorShared.Account.InvalidPassword);
 
             // =====================================================
             // CHECK PASSWORD CONFIRMATION
@@ -374,7 +375,7 @@ namespace ApplicationServices.Services
 
             if (request.NewPassword != request.ConfirmPassword)
                 throw new ArgumentException(
-                    Constants.Account.PasswordsDoNotMatch);
+                    ErrorShared.Account.PasswordsDoNotMatch);
 
             // =====================================================
             // GET ACCOUNT
@@ -386,7 +387,7 @@ namespace ApplicationServices.Services
 
             if (account == null)
                 throw new KeyNotFoundException(
-                    Constants.Account.AccountNotFound);
+                    ErrorShared.Account.AccountNotFound);
 
             // =====================================================
             // CHECK ACCOUNT STATUS
@@ -394,7 +395,7 @@ namespace ApplicationServices.Services
 
             if (account.IsDeleted)
                 throw new InvalidOperationException(
-                    Constants.Account.AccountDeactivated);
+                    ErrorShared.Account.AccountDeactivated);
 
             // =====================================================
             // CHECK RESET CODE
@@ -404,13 +405,13 @@ namespace ApplicationServices.Services
                 account.PasswordResetCode))
             {
                 throw new InvalidOperationException(
-                    Constants.Account.InvalidResetCode);
+                    ErrorShared.Account.InvalidResetCode);
             }
 
             if (account.PasswordResetCode != request.Code)
             {
                 throw new InvalidOperationException(
-                    Constants.Account.InvalidResetCode);
+                    ErrorShared.Account.InvalidResetCode);
             }
 
             // =====================================================
@@ -420,13 +421,13 @@ namespace ApplicationServices.Services
             if (!account.PasswordResetCodeExpiresAt.HasValue)
             {
                 throw new InvalidOperationException(
-                    Constants.Account.ResetCodeExpired);
+                    ErrorShared.Account.ResetCodeExpired);
             }
 
             if (account.PasswordResetCodeExpiresAt.Value < DateTime.Now)
             {
                 throw new InvalidOperationException(
-                    Constants.Account.ResetCodeExpired);
+                    ErrorShared.Account.ResetCodeExpired);
             }
 
             // =====================================================
@@ -445,11 +446,11 @@ namespace ApplicationServices.Services
 
             if (string.IsNullOrWhiteSpace(request.Email))
                 throw new ArgumentException(
-                    Constants.Account.EmailRequired);
+                    ErrorShared.Account.EmailRequired);
 
             if (string.IsNullOrWhiteSpace(request.Code))
                 throw new ArgumentException(
-                    Constants.Account.VerificationCodeRequired);
+                    ErrorShared.Account.VerificationCodeRequired);
 
             var account =
                 await _accountManager
@@ -457,27 +458,27 @@ namespace ApplicationServices.Services
 
             if (account == null)
                 throw new KeyNotFoundException(
-                    Constants.Account.AccountNotFound);
+                    ErrorShared.Account.AccountNotFound);
 
             if (account.IsEmailVerified)
                 throw new InvalidOperationException(
-                    Constants.Account.EmailAlreadyVerified);
+                    ErrorShared.Account.EmailAlreadyVerified);
 
             if (string.IsNullOrWhiteSpace(account.VerificationCode))
                 throw new InvalidOperationException(
-                    Constants.Account.InvalidVerificationCode);
+                    ErrorShared.Account.InvalidVerificationCode);
 
             if (account.VerificationCode != request.Code)
                 throw new InvalidOperationException(
-                    Constants.Account.InvalidVerificationCode);
+                    ErrorShared.Account.InvalidVerificationCode);
 
             if (!account.VerificationCodeExpiresAt.HasValue)
                 throw new InvalidOperationException(
-                    Constants.Account.VerificationCodeExpired);
+                    ErrorShared.Account.VerificationCodeExpired);
 
             if (account.VerificationCodeExpiresAt.Value < DateTime.Now)
                 throw new InvalidOperationException(
-                    Constants.Account.VerificationCodeExpired);
+                    ErrorShared.Account.VerificationCodeExpired);
 
             await _accountManager.VerifyEmailAsync(account);
         }

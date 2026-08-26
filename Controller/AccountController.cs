@@ -33,7 +33,7 @@ namespace Controller
                 {
                     return NotFound(new
                     {
-                        message = Constants.Account.AccountNotFound
+                        message = ErrorShared.Account.AccountNotFound
                     });
                 }
 
@@ -62,7 +62,7 @@ namespace Controller
                 {
                     return BadRequest(new
                     {
-                        message = Constants.Account.EmailRequired
+                        message = ErrorShared.Account.EmailRequired
                     });
                 }
 
@@ -74,13 +74,13 @@ namespace Controller
                 {
                     return NotFound(new
                     {
-                        message = Constants.Account.AccountNotFound
+                        message = ErrorShared.Account.AccountNotFound
                     });
                 }
 
                 return Ok(new
                 {
-                    message = Constants.Account.AccountReactivatedSuccessfully
+                    message = ErrorShared.Account.AccountReactivatedSuccessfully
                 });
             }
             catch (ArgumentException ex)
@@ -118,7 +118,7 @@ namespace Controller
                 {
                     return NotFound(new
                     {
-                        message = Constants.Account.AccountNotFound
+                        message = ErrorShared.Account.AccountNotFound
                     });
                 }
 
@@ -165,13 +165,13 @@ namespace Controller
                 {
                     return NotFound(new
                     {
-                        message = Constants.Account.AccountNotFound
+                        message = ErrorShared.Account.AccountNotFound
                     });
                 }
 
                 return Ok(new
                 {
-                    message =Constants.Account.AccountDeletedSuccessfully
+                    message = ErrorShared.Account.AccountDeletedSuccessfully
                 });
             }
             catch (ArgumentException ex)

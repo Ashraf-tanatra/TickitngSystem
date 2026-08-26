@@ -1,6 +1,6 @@
 ﻿
-    public static class Constants
-    {
+public static class ErrorShared
+{
 
               public static void Main(string[] args)
                  {
