@@ -6,27 +6,16 @@ namespace ApplicationServices.Interfaces
 {
     public interface IProjectManager
     {
-        IEnumerable<ProjectResponse>? GetAllProjectWorkedByEmployee(int employeeId);
-        IEnumerable<string[]>? GetAllProjectWorkedByEmployeeTopThree(int employeeId);
-        IEnumerable<EmployeeResponse>? GetEmployeesWorkOnProject(int projectId);
-        int GetProjectCount(int employeeId);
-
-        int Create(CreateProjectRequest request);
-        ProjectResponse? GetById(int id);
-        ProjectResponse Update(int id, UpdateProjectRequest request);
-        bool Delete(int id);
-
-        void ProjectAddEmployee(ProjectEmployeeRequest request);
-
-        void SetProjectAsActive(int projectId);
-        void SetProjectAsCancelled(int projectId);
-        void SetProjectAsCompleted(int projectId);
-        void SetProjectAsOnHold(int projectId);
-
-
-        IEnumerable<ProjectResponse>? GetAllProjectWorkedByEmployeeWithFilter(int employeeId, ProjectStatus FilterByStatus);
-
-
-        IEnumerable<TicketResponse> GetTicketsAsync(int projectId);
+        Task<bool> DeleteAsync(int id, int empId);
+        Task<ProjectResponse?> GetByIdAsync(int id);
+        Task<int> GetProjectCountAsync(int employeeId);
+        Task<int> CreateAsync(CreateProjectRequest request);
+        Task<bool> ProjectAddEmployeeAsync(ProjectEmployeeRequest request);
+        Task<bool> SetProjectStatusAsync(int projectId, ProjectStatus status);
+        Task<bool> UpdateAsync(int projectId, int empId, UpdateProjectRequest request);
+        Task<IEnumerable<EmployeeResponse>>? GetEmployeesWorkOnProjectAsync(int projectId);
+        Task<IEnumerable<ProjectResponse>>? GetAllProjectWorkedByEmployeeAsync(int employeeId);
+        Task<IEnumerable<string[]>>? GetAllProjectWorkedByEmployeeTopThreeAsync(int employeeId);
+        Task<IEnumerable<ProjectResponse>>? GetAllProjectWorkedByEmployeeWithFilterAsync(int employeeId, ProjectStatus FilterByStatus);
     }
 }

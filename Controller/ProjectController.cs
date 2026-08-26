@@ -16,82 +16,67 @@ namespace Controller
         {
             _projectManager = projectManager;
         }
-        //Tested
-        //GET api/project/employee = 1
-        [HttpGet("employeeId = {employeeId:int}")]
-        public ActionResult<ProjectResponse> GetProjectsWorkedByEmployee(int employeeId)
+
+        // DELETE: api/Project/5
+        [HttpDelete("Delete/{id}/{empId}")]
+        public async Task<IActionResult> Delete(int id, int empId)
         {
             try
             {
-                var projects = _projectManager.GetAllProjectWorkedByEmployee(employeeId);
-                if (projects == null)
-                    return NotFound();
-                return Ok(projects);
+                //if (!_projectManager.ProjectExits(id))
+                //    return NotFound();
+
+                await _projectManager.DeleteAsync(id, empId);
+                return NoContent();
             }
-            catch (NullReferenceException)
+            catch (Exception ex)
             {
-                return NotFound();
+                return BadRequest(ex.Message);
             }
         }
 
-
-        //Tested
-        //GET api/project/TopThree/1
-        [HttpGet("Dashboard/{employeeId:int}")]
-        public ActionResult<ProjectResponse> GetProjectsWorkedByEmployeeTopThree(int employeeId)
-        {
-            //var emp = EmployeeController.GetById(employeeId);
-            var projects = _projectManager.GetAllProjectWorkedByEmployeeTopThree(employeeId);
-            if (projects == null || projects.Count() == 0)
-                return NotFound();
-
-            return Ok(projects);
-        }
-
-        //Get api/project/Employees/1
-        [HttpGet("Employees/{projectId:int}")]
-        public ActionResult<IEnumerable<EmployeeResponse>> GetEmployees(int projectId)
-        {
-            var project = _projectManager.GetById(projectId);
-            if (project == null)
-                return NotFound();
-
-            var employees = _projectManager.GetEmployeesWorkOnProject(projectId);
-            return Ok(employees);
-        }
-
-        //Tested
-        //GET api/ProjectCount/1        // include the projects that he manage
+        //GET api/ProjectCount/1 
         [HttpGet("ProjectCount/{employeeId:int}")]
-        public ActionResult<int> ProjectCount(int employeeId)
+        public async Task<ActionResult<int>> ProjectCount(int employeeId)
         {
-            return Ok(_projectManager.GetProjectCount(employeeId));
+            try
+            {
+                return Ok(await _projectManager.GetProjectCountAsync(employeeId));
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
-        //Tested
-        // GET: api/Project/1
-        [HttpGet("{id:int}")]
-        public ActionResult<ProjectResponse> GetById(int id)
-        {
-            var project = _projectManager.GetById(id);
-
-            if (project == null)
-                return NotFound();
-
-            return Ok(project);
-        }
-
-        //Tested
         // POST: api/Project
         [HttpPost]
-        public ActionResult<ProjectResponse> Create(CreateProjectRequest request)
+        public async Task<ActionResult<int>> Create(CreateProjectRequest request)
         {
             try
             {
-                var projectId = _projectManager.Create(request);
-
+                var projectId = await _projectManager.CreateAsync(request);
                 return Ok(projectId);
-                //CreatedAtAction(nameof(GetById),new { id = project.Id },project);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        // need edit: that only manager can update the status to Done or Cancelled or reopen for the project.
+        // PUT: api/Project/1/1
+        [HttpPut("UpdateStatus/{id:int}/{status:int}")]
+        public async Task<IActionResult> UpdateStatus(int id, ProjectStatus status)
+        {
+
+            //if (!_projectManager.ProjectExits(id))
+            //{
+            //    return NotFound();
+            //}
+            try
+            {
+                await _projectManager.SetProjectStatusAsync(id, status);
+                return Ok();
             }
             catch (ArgumentException ex)
             {
@@ -100,15 +85,44 @@ namespace Controller
         }
 
         //Tested
+        // GET: api/Project/1
+        [HttpGet("{id:int}")]
+        public async Task<ActionResult<ProjectResponse>> GetByIdAsync(int id)
+        {
+            if (id.GetType() != typeof(int))
+                return NotFound("The project id must be an integer");
+            try
+            {
+                var project = await _projectManager.GetByIdAsync(id);
+                return Ok(project);
+            }
+            catch (NullReferenceException ex)
+            {
+                return NotFound(ex.Message);
+            }
+
+        }
+
+        //Get api/project/Employees/1
+        [HttpGet("Employees/{projectId:int}")]
+        public async Task<ActionResult<IEnumerable<EmployeeResponse>>> GetEmployees(int projectId)
+        {
+            //if (!_projectManager.ProjectExits(projectId))
+            //    return NotFound();
+
+            var employees = await _projectManager.GetEmployeesWorkOnProjectAsync(projectId)!;
+            return Ok(employees);
+        }
+
+        //Tested
         // PUT: api/Project/5
-        [HttpPut("{id}")]
-        public ActionResult<ProjectResponse> Update(int id, UpdateProjectRequest request)
+        [HttpPut("Update/{id}/{empId}")]
+        public async Task<IActionResult> Update(int id, int empId, UpdateProjectRequest request)
         {
             try
             {
-                var project = _projectManager.Update(id, request);
-
-                return Ok(project);
+                await _projectManager.UpdateAsync(id, empId, request);
+                return NoContent();
             }
             catch (KeyNotFoundException)
             {
@@ -118,12 +132,15 @@ namespace Controller
             {
                 return BadRequest(ex.Message);
             }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
-        //Tested
-        // PUT: api/Project/1/1
-        [HttpPut("{id:int}/{status:int}")]
-        public IActionResult UpdateStatus(int id, ProjectStatus status)
+        //GET api/project/employee = 1
+        [HttpGet("employeeId = {employeeId:int}")]
+        public async Task<ActionResult<ProjectResponse>> GetProjectsWorkedByEmployee(int employeeId)
         {
             var projcet = _projectManager.GetById(id);
             if (projcet == null)
@@ -132,46 +149,23 @@ namespace Controller
             }
             try
             {
-                switch (status)
-                {
-                    case ProjectStatus.Active:
-                        _projectManager.SetProjectAsActive(id);
-                        break;
-                    case ProjectStatus.Completed:
-                        _projectManager.SetProjectAsCompleted(id);
-                        break;
-                    case ProjectStatus.OnHold:
-                        _projectManager.SetProjectAsOnHold(id);
-                        break;
-                    case ProjectStatus.Cancelled:
-                        _projectManager.SetProjectAsCancelled(id);
-                        break;
-                    default:
-                        return BadRequest("Invalid status number.");
-                }
-                return Ok();
+                var projects = await _projectManager.GetAllProjectWorkedByEmployeeAsync(employeeId)!;
+                return Ok(projects);
             }
-            catch (KeyNotFoundException)
+            catch (NullReferenceException)
             {
                 return NotFound();
             }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
         }
 
-
-        // Can't delete if there is an employee or an tickets
-        // DELETE: api/Project/5
-        [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        [Route("AddEmployee")]
+        [HttpPost]
+        public async Task<ActionResult<ProjectEmployeeRequest>> AddEmployeeToProject(ProjectEmployeeRequest request)
         {
             try
             {
-                if (!_projectManager.Delete(id))
-                    return NotFound();
-                return NoContent();
+                await _projectManager.ProjectAddEmployeeAsync(request);
+                return Ok(request);
             }
             catch (Exception ex)
             {
@@ -180,34 +174,38 @@ namespace Controller
 
         }
 
-        [Route("AddEmployee")]
-        [HttpPost]
-        public ActionResult<ProjectEmployeeRequest> AddEmployeeToProject(ProjectEmployeeRequest request)
+        //GET api/project/TopThree/1
+        [HttpGet("Dashboard/{employeeId:int}")]
+        public async Task<ActionResult<ProjectResponse>> GetProjectsWorkedByEmployeeTopThree(int employeeId)
         {
             try
             {
-                _projectManager.ProjectAddEmployee(request);
-
-                return Ok(request);
+                var projects = await _projectManager.GetAllProjectWorkedByEmployeeTopThreeAsync(employeeId)!;
+                return Ok(projects);
             }
-            catch (ArgumentException ex)
+            catch (NullReferenceException)
             {
-                return BadRequest(ex.Message);
+                return NotFound();
             }
         }
 
         [HttpGet("employeeId = {employeeId:int}/[controller]")]
-        public ActionResult<ProjectResponse> GetProjectsWorkedByEmployeeWithFilter(int employeeId, [FromQuery] ProjectStatus filterStatus)
+        public async Task<ActionResult<ProjectResponse>> GetProjectsWorkedByEmployeeWithFilter(int employeeId,
+            [FromQuery] ProjectStatus filterStatus)
         {
             try
             {
-                var projects = _projectManager.GetAllProjectWorkedByEmployeeWithFilter(employeeId, filterStatus);
+                var projects = await _projectManager.GetAllProjectWorkedByEmployeeWithFilterAsync(employeeId, filterStatus)!;
 
                 if (projects == null)
                     return NotFound();
                 return Ok(projects);
             }
             catch (NullReferenceException)
+            {
+                return NotFound();
+            }
+            catch (ArgumentException)
             {
                 return NotFound();
             }

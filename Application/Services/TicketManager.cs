@@ -34,8 +34,52 @@ namespace ApplicationServices.Services
             };
         }
 
-        public TicketResponse Create(CreateTicketRequest request)
+            var tickets = _ticketRepository.GetAllTicketsForAProject(projectId);
+            if (tickets == null || tickets.Count() == 0)
+                throw new ArgumentException("There is no ticket available for the specified project.");
+
+            return tickets.Select(ticket => new TicketResponse
+            {
+                TicketId = ticket.TicketId,
+                TicketTitle = ticket.TicketTitle,
+                DueTo = ticket.DueTo,
+                TicketStatus = ticket.TicketStatus.ToString(),
+                Priority = ticket.Priority.ToString(),
+                Description = ticket.Description,
+                EmployeeId = ticket.EmployeeId,
+                EmployeeName = ticket.Employee?.FName + " " + ticket.Employee?.LName,
+                ProjectId = ticket.ProjectId,
+                ProjectName = ticket.Project?.ProjectName
+            });
+        }
+        public IEnumerable<TicketResponse>? GetAllTicketsForAnEmployee(int employeeId)
         {
+            if (!_ticketRepository.EmployeeExists(employeeId))
+                throw new ArgumentException("The specified Employee does not exist.");
+
+            var tickets = _ticketRepository.GetAllTicketsForAnEmployee(employeeId);
+            if (tickets == null || tickets.Count() == 0)
+                throw new ArgumentException("There is no ticket available for the specified employee.");
+
+            return tickets.Select(ticket => new TicketResponse
+            {
+                TicketId = ticket.TicketId,
+                TicketTitle = ticket.TicketTitle,
+                DueTo = ticket.DueTo,
+                TicketStatus = ticket.TicketStatus.ToString(),
+                Priority = ticket.Priority.ToString(),
+                Description = ticket.Description,
+                EmployeeId = ticket.EmployeeId,
+                EmployeeName = ticket.Employee?.FName + " " + ticket.Employee?.LName,
+                ProjectId = ticket.ProjectId,
+                ProjectName = ticket.Project?.ProjectName
+            });
+        }
+
+        public int Create(CreateTicketRequest request)
+        {
+            Exception exception = new ArgumentException("Invalid ticket request.");
+
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
@@ -60,6 +104,10 @@ namespace ApplicationServices.Services
                 EmployeeId = request.EmployeeId,
                 ProjectId = request.ProjectId
             };
+            if (!_ticketRepository.IsManager(ticket.TicketCreatedById, ticket.ProjectId)) //need fixes
+                throw new UnauthorizedAccessException();
+            if ((int)ticket.Priority < 0 || (int)ticket.Priority > 2)
+                throw new ArgumentException("Priority must be between 0 and 2.");
 
             _ticketRepository.Add(ticket);
 

@@ -5,27 +5,22 @@ namespace Domain.Interfaces
 {
     public interface IProjectRepository
     {
-        IEnumerable<Project>? GetAllProjectWorkedByEmployee(int employeeId);
-        IEnumerable<String[]>? GetAllProjectWorkedByEmployeeTopThree(int employeeId);
-        IEnumerable<Employee>? GetEmployees(int projectId);
-        int GetProjectCount(int employeeId);
-        Project? GetById(int id);
+        Task<Project?> GetByIdAsync(int id);
+        Task<bool> CreateAsync(Project project);
+        Task<int> GetProjectCountAsync(int employeeId);
+        Task<bool> UpdateAsync(Project project);
+        Task<bool> DeleteAsync(int projectId, int employeeId);
+        Task<IEnumerable<Employee>?> GetEmployeesAsync(int employeeId);
+        Task<bool> AddEmployeeToProjectAsync(ProjectEmployee projectEmployee);
+        Task<bool> SetProjectStatusAsync(int projectId, ProjectStatus status);
+        Task<IEnumerable<Project>?> GetAllProjectWorkedByEmployeeAsync(int employeeId);
+        Task<IEnumerable<String[]>?> GetAllProjectWorkedByEmployeeTopThreeAsync(int employeeId);
+        Task<IEnumerable<Project>?> GetAllProjectWorkedByEmployeeWithFilterAsync(int employeeId, ProjectStatus FilterByStatus);
 
-        void Create(Project project);
-        void Update(Project project);
-        void Delete(Project project);
-
-        void AddEmployeeToProject(ProjectEmployee projectEmployee);
-
-        void SetProjectAsActive(int projectId);
-        void SetProjectAsCancelled(int projectId);
-        void SetProjectAsCompleted(int projectId);
-        void SetProjectAsOnHold(int projectId);
-
-        bool EmployeeExists(int employeeId);
-
-        IEnumerable<Project>? GetAllProjectWorkedByEmployeeWithFilter(int employeeId, ProjectStatus FilterByStatus);
-        IEnumerable<Ticket> GetTicketsAsync(int projectId);
+        Task<bool> TicketExistsAsync(int ticketId);
+        Task<bool> ProjectExistsAsync(int projectId);
+        Task<bool> EmployeeExistsAsync(int employeeId);
+        Task<bool> IsManagerAsync(int projectId, int employeeId);
 
     }
 }

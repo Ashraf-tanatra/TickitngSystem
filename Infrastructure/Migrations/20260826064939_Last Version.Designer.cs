@@ -12,8 +12,13 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
+<<<<<<<< HEAD:Infrastructure/Migrations/20260826064939_Last Version.Designer.cs
     [Migration("20260826064939_Last Version")]
     partial class LastVersion
+========
+    [Migration("20260825113241_Initial")]
+    partial class Initial
+>>>>>>>> origin/FixBugs-InPrjectController:Infrastructure/Migrations/20260825113241_Initial.Designer.cs
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -204,8 +209,13 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("TicketTitle")
                         .IsRequired()
+<<<<<<<< HEAD:Infrastructure/Migrations/20260826064939_Last Version.Designer.cs
                         .HasMaxLength(100)
                         .HasColumnType("VARCHAR");
+========
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar");
+>>>>>>>> origin/FixBugs-InPrjectController:Infrastructure/Migrations/20260825113241_Initial.Designer.cs
 
                     b.HasKey("TicketId");
 

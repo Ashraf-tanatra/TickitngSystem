@@ -15,46 +15,121 @@ namespace ApplicationServices.Services
         {
             _projectRepository = projectRepository;
         }
-
-        public IEnumerable<ProjectResponse>? GetAllProjectWorkedByEmployee(int employeeId)
+        // Make send the manager name
+        public async Task<ProjectResponse?> GetByIdAsync(int id)
         {
+            //if (!await _projectRepository.ProjectExistsAsync(id))
+            //    throw new NullReferenceException("Project does not exist.");
 
-            var Emp = _projectRepository.EmployeeExists(employeeId);
-            if (!Emp)
-                return null;
+            var project = await _projectRepository.GetByIdAsync(id);
 
-            var project = _projectRepository.GetAllProjectWorkedByEmployee(employeeId);
-            if (project == null)
-                return null;
-
-            return project.Select(project => new ProjectResponse
+            return await Task.FromResult(new ProjectResponse
             {
-                Id = project.Id,
+                Id = project!.Id,
                 ProjectName = project.ProjectName,
                 ProjectDescription = project.ProjectDescription,
                 ProjectStatus = project.ProjectStatus.ToString(),
                 ProjectManagerId = project.ProjectManagerId,
                 StartDate = project.StartedAt,
                 EndDate = project.EndAt,
-                EmployeeRole = (project.ProjectManagerId == employeeId ? "Manager" : null)
-                ?? project.ProjectEmployees?.FirstOrDefault(pe => pe.EmployeeId == employeeId)?.Role
 
+                // hard coded
+                EmployeeRole = (project.ProjectManagerId == id ? "Manager" : null)
+                ?? project.ProjectEmployees?.FirstOrDefault(pe => pe.EmployeeId == id)?.Role,
 
                 //ProjectManagerName = project.ProjectManager == null ? null
                 //    : $"{project.ProjectManager.FName} {project.ProjectManager.LName}"
 
-                //EmployeeCount = project.ProjectEmployees.Count,
-                //TicketCount = project.ProjectTickets.Count
+                //ProjectManagerName = project.ProjectManager!.FName.Aggregate(project.ProjectManager.LName, (f, l) => $"{f} {l}") == null
+                //    ? null : $"{project.ProjectManager.FName} {project.ProjectManager.LName}",
             });
         }
-
-        public IEnumerable<string[]>? GetAllProjectWorkedByEmployeeTopThree(int employeeId)
-            => _projectRepository.GetAllProjectWorkedByEmployeeTopThree(employeeId);
-
-        public IEnumerable<EmployeeResponse>? GetEmployeesWorkOnProject(int projectId)
+        public async Task<int> GetProjectCountAsync(int employeeId)
         {
-            var employees = _projectRepository.GetEmployees(projectId);
-            return employees?.Select(employee => new EmployeeResponse
+            return await _projectRepository.GetProjectCountAsync(employeeId);
+        }
+        public async Task<int> CreateAsync(CreateProjectRequest request)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+            if (string.IsNullOrWhiteSpace(request.ProjectName))
+                throw new ArgumentException("Project name is required.");
+            //if (!await _projectRepository.EmployeeExistsAsync(request.ProjectManagerId))
+            //    throw new ArgumentException("The specified Project Manager does not exist.");
+
+            var project = new Project
+            {
+                ProjectName = request.ProjectName,
+                ProjectDescription = request.ProjectDescription,
+                ProjectManagerId = request.ProjectManagerId, // send by the URL
+                StartedAt = request.StartTime,
+                EndAt = request.EndTime
+            };
+
+            await _projectRepository.CreateAsync(project);
+            return project.Id;
+        }
+        // Need to add is deleted if it's yes then can't add him
+        public async Task<bool> ProjectAddEmployeeAsync(ProjectEmployeeRequest request)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+            //if (!await _projectRepository.EmployeeExistsAsync(request.EmployeeId))
+            //    throw new ArgumentException(
+            //        "The specified employee does not exist.");
+
+            var projectEmployee = new ProjectEmployee
+            {
+                EmployeeId = request.EmployeeId,
+                ProjectId = request.ProjectId,
+                Role = request.Role
+            };
+            await _projectRepository.AddEmployeeToProjectAsync(projectEmployee);
+            return await Task.FromResult(true);
+        }
+        // need edit for testing for project manager only can edit,
+        // Enhancement: to throw exeptions
+        public async Task<bool> SetProjectStatusAsync(int projectId, ProjectStatus status)
+        {
+            //if ((int)status < 0 || (int)status > 4)
+            //    throw new ArgumentException("Invalid project status.");
+
+            await _projectRepository.SetProjectStatusAsync(projectId, status);
+            return await Task.FromResult(true);
+        }
+        public async Task<bool> UpdateAsync(int projectId, int empId, UpdateProjectRequest request)
+        {
+            ArgumentException exception = new ArgumentException();
+
+            if (request == null)
+                throw exception;
+            if (string.IsNullOrWhiteSpace(request.ProjectName))
+                throw exception;
+            if (!await _projectRepository.ProjectExistsAsync(projectId))
+                throw exception;
+            if (!await _projectRepository.EmployeeExistsAsync(empId))
+                throw exception;
+            if (!await _projectRepository.IsManagerAsync(projectId, empId))
+                throw exception;
+
+            var project = await _projectRepository.GetByIdAsync(projectId);
+
+            project!.ProjectName = request.ProjectName;
+            project.ProjectDescription = request.ProjectDescription;
+            project.ProjectManagerId = request.ProjectManagerId;
+            project.StartedAt = request.StartDate;
+            project.EndAt = request.EndDate;
+
+            await _projectRepository.UpdateAsync(project);
+            return await Task.FromResult(true);
+        }
+        public async Task<IEnumerable<EmployeeResponse>>? GetEmployeesWorkOnProjectAsync(int projectId)
+        {
+            var employees = await _projectRepository.GetEmployeesAsync(projectId);
+            if (employees == null || employees.Count() == 0)
+                throw new NullReferenceException("No employees found for the specified project.");
+
+            return employees.Select(employee => new EmployeeResponse
             {
                 Id = employee.Id,
                 FName = employee.FName,
@@ -63,21 +138,15 @@ namespace ApplicationServices.Services
                 Gender = employee.Gender
             });
         }
-
-        public int GetProjectCount(int employeeId)
+        public async Task<IEnumerable<ProjectResponse>>? GetAllProjectWorkedByEmployeeAsync(int employeeId)
         {
-            return _projectRepository.GetProjectCount(employeeId);
-        }
+            //if (!await _projectRepository.EmployeeExistsAsync(employeeId))
+            //    throw new NullReferenceException("Employee not found.");
+            var project = await _projectRepository.GetAllProjectWorkedByEmployeeAsync(employeeId);
+            if (project == null || project.Count() == 0)
+                throw new NullReferenceException("No projects found for the specified employee.");
 
-        // GET By ID
-        public ProjectResponse? GetById(int id)
-        {
-            var project = _projectRepository.GetById(id);
-
-            if (project == null)
-                return null;
-
-            return new ProjectResponse
+            return project.Select(project => new ProjectResponse
             {
                 Id = project.Id,
                 ProjectName = project.ProjectName,
@@ -87,184 +156,34 @@ namespace ApplicationServices.Services
                 StartDate = project.StartedAt,
                 EndDate = project.EndAt,
 
-                EmployeeRole = (project.ProjectManagerId == id ? "Manager" : null)
-                ?? project.ProjectEmployees?.FirstOrDefault(pe => pe.EmployeeId == id)?.Role,
+                // hard coded
+                EmployeeRole = (project.ProjectManagerId == employeeId ? "Manager" : null)
+                ?? project.ProjectEmployees?.FirstOrDefault(pe => pe.EmployeeId == employeeId)?.Role,
 
-                ProjectManagerName = project.ProjectManager == null
-                    ? null : $"{project.ProjectManager.FName} {project.ProjectManager.LName}",
-
-                //EmployeeCount = project.ProjectEmployees.Count,   // ?
-                //TicketCount = project.ProjectTickets.Count        // ?
-            };
-        }
-        // CREATE
-        public int Create(CreateProjectRequest request)
-        {
-            if (request == null)
-                throw new ArgumentNullException(nameof(request));
-
-            if (string.IsNullOrWhiteSpace(request.ProjectName))
-                throw new ArgumentException(
-                    "Project name is required.");
-
-            if (!_projectRepository.EmployeeExists(
-                    request.ProjectManagerId))
-            {
-                throw new ArgumentException(
-                    "The specified Project Manager does not exist.");
-            }
-
-            var project = new Project
-            {
-                ProjectName = request.ProjectName,
-                ProjectDescription = request.ProjectDescription,
-                ProjectManagerId = request.ProjectManagerId,
-                StartedAt = request.StartTime,
-                EndAt = request.EndTime
-            };
-
-            _projectRepository.Create(project);
-
-            return project.Id;
-            // return GetById(project.Id); // may need edit
-
-            //if (!_projectRepository.IsManager(
-            //        request.ProjectManagerId))
-            //{
-            //    throw new ArgumentException(
-            //        "The specified employee is not a Project Manager.");
-            //}
-        }
-
-        // need edit for testing for project managet only can edit
-        // UPDATE
-        public ProjectResponse Update(int id, UpdateProjectRequest request)
-        {
-            if (request == null)
-                throw new ArgumentNullException(nameof(request));
-
-            var project = _projectRepository.GetById(id);
-
-            if (project == null)
-                throw new KeyNotFoundException(
-                    "Project not found.");
-
-            if (string.IsNullOrWhiteSpace(request.ProjectName))
-                throw new ArgumentException(
-                    "Project name is required.");
-
-            if (!_projectRepository.EmployeeExists(
-                    request.ProjectManagerId))
-            {
-                throw new ArgumentException(
-                    "The specified Project Manager does not exist.");
-            }
-
-            //if (!_projectRepository.IsManager(
-            //        request.ProjectManagerId))
-            //{
-            //    throw new ArgumentException(
-            //        "The specified employee is not a Project Manager.");
-            //}
-
-            project.ProjectName = request.ProjectName;
-            project.ProjectDescription = request.ProjectDescription;
-            project.ProjectManagerId = request.ProjectManagerId;
-            project.StartedAt = request.StartDate;
-            project.EndAt = request.EndDate;
-
-            _projectRepository.Update(project);
-
-            return GetById(project.Id)!;
-        }
-        // Delete
-        public bool Delete(int id)
-        {
-            var project = _projectRepository.GetById(id);
-
-            if (project == null)
-                return false;
-
-            _projectRepository.Delete(project);
-
-            return true;
-        }
-        private IEnumerable<TicketResponse> MapTicketsToResponse(IEnumerable<Ticket> tickets)
-        {
-            return tickets.Select(ticket => new TicketResponse
-            {
-                TicketId = ticket.TicketId,
-                TicketTitle = ticket.TicketTitle,
-                DueTo = ticket.DueTo,
-                TicketStatus = ticket.TicketStatus.ToString(),
-                Priority = ticket.Priority.ToString(),
-                Description = ticket.Description,
-                EmployeeId = (int)ticket.EmployeeId,
-                ProjectId = ticket.ProjectId
+                ProjectManagerName = project.ProjectManager == null ? null
+                    : $"{project.ProjectManager.FName} {project.ProjectManager.LName}"
             });
         }
-        public  IEnumerable<TicketResponse> GetTicketsAsync(int projectId)
+        public async Task<IEnumerable<string[]>>? GetAllProjectWorkedByEmployeeTopThreeAsync(int employeeId)
         {
-            var project =  _projectRepository.GetById(projectId);
+            //if (!await _projectRepository.EmployeeExistsAsync(employeeId))
+            //    throw new NullReferenceException("Employee not found.");
+            var emp = await _projectRepository.GetAllProjectWorkedByEmployeeTopThreeAsync(employeeId);
+            if (emp == null || emp.Count() == 0)
+                throw new NullReferenceException("No projects found for the specified employee.");
+            return emp;
+        }
+        public async Task<bool> DeleteAsync(int projectId, int empId) => await _projectRepository.DeleteAsync(projectId, empId);
+        public async Task<bool> ProjectExistsAsync(int projectId) => await _projectRepository.ProjectExistsAsync(projectId);
+        public async Task<IEnumerable<ProjectResponse>>? GetAllProjectWorkedByEmployeeWithFilterAsync(int employeeId,
+            ProjectStatus FilterByStatus)
+        {
+            //if (!await _projectRepository.EmployeeExistsAsync(employeeId))
+            //    throw new NullReferenceException("Employee not found.");
 
+            var project = await _projectRepository.GetAllProjectWorkedByEmployeeWithFilterAsync(employeeId, FilterByStatus);
             if (project == null)
-                throw new KeyNotFoundException(
-                    "Project not found.");
-
-            var tickets = _projectRepository.GetTicketsAsync(projectId);
-
-            return MapTicketsToResponse(tickets);
-        }
-
-
-        public void ProjectAddEmployee(ProjectEmployeeRequest request)
-        {
-            if (request == null)
-                throw new ArgumentNullException(nameof(request));
-            if (!_projectRepository.EmployeeExists(request.EmployeeId))
-                throw new ArgumentException(
-                    "The specified employee does not exist.");
-
-            var projectEmployee = new ProjectEmployee
-            {
-                EmployeeId = request.EmployeeId,
-                ProjectId = request.ProjectId,
-                Role = request.Role
-            };
-            _projectRepository.AddEmployeeToProject(projectEmployee);
-        }
-
-        void IProjectManager.SetProjectAsActive(int projectId)
-        {
-            _projectRepository.SetProjectAsActive(projectId);
-
-        }
-        void IProjectManager.SetProjectAsCancelled(int projectId)
-        {
-            _projectRepository.SetProjectAsCancelled(projectId);
-
-        }
-        void IProjectManager.SetProjectAsCompleted(int projectId)
-        {
-            _projectRepository.SetProjectAsCompleted(projectId);
-        }
-        void IProjectManager.SetProjectAsOnHold(int projectId)
-        {
-            _projectRepository.SetProjectAsOnHold(projectId);
-        }
-
-
-
-        public IEnumerable<ProjectResponse>? GetAllProjectWorkedByEmployeeWithFilter(int employeeId, ProjectStatus FilterByStatus)
-        {
-            var Emp = _projectRepository.EmployeeExists(employeeId);
-            if (!Emp)
-                return null;
-
-            var project = _projectRepository.GetAllProjectWorkedByEmployeeWithFilter(employeeId, FilterByStatus);
-
-            if (project == null)
-                return null;
+                throw new NullReferenceException("No projects found for the specified employee.");
 
             return project.Select(project => new ProjectResponse
             {
@@ -280,73 +199,5 @@ namespace ApplicationServices.Services
                 ?? project.ProjectEmployees?.FirstOrDefault(pe => pe.EmployeeId == employeeId)?.Role
             });
         }
-
-        
-
-
-
-
-
-        // GET EMPLOYEES OF PROJECT
-        //public IEnumerable<EmployeeResponse> GetEmployees(int projectId) // get emp that works in this project? 
-        //{
-        //    var employees = _projectRepository.GetEmployees(projectId);
-
-        //    return employees.Select(employee => new EmployeeResponse
-        //    {
-        //        Id = employee.Id,
-        //        FName = employee.FName,
-        //        LName = employee.LName,
-        //        Phone = employee.Phone,
-        //        Gender = employee.Gender,
-        //        IsDeleted = employee.IsDeleted
-        //    });
-        //}
-
-        //public IEnumerable<ProjectResponse> GetAll() // ?
-        //{
-        //    var projects = _projectRepository.GetAll();
-
-        //    return projects.Select(project => new ProjectResponse
-        //    {
-        //        Id = project.Id,
-        //        ProjectName = project.ProjectName,
-        //        ProjectDescription = project.ProjectDescription,
-        //        ProjectManagerId = project.ProjectManagerId,
-
-        //        ProjectManagerName = project.ProjectManager == null
-        //            ? null
-        //            : $"{project.ProjectManager.FName} {project.ProjectManager.LName}",
-
-        //        EmployeeCount = project.ProjectEmployees.Count,
-        //        TicketCount = project.ProjectTickets.Count
-        //    });
-        //}
-
-
-
-        // GET TICKET BY ID
-        //public TicketResponse? GetTicket(int projectId, int ticketId)
-        //{
-        //    var tickets = _projectRepository.GetTickets(projectId);
-
-        //    var ticket = tickets.FirstOrDefault(t => t.TicketId == ticketId); // ?
-
-        //    if (ticket == null)
-        //        return null;
-
-        //    return new TicketResponse
-        //    {
-        //        TicketId = ticket.TicketId,
-        //        TicketTitle = ticket.TicketTitle,
-        //        DueTo = ticket.DueTo,
-        //        TicketStatus = ticket.TicketStatus.ToString(),
-        //        Priority = ticket.Priority.ToString(),
-        //        Description = ticket.Description,
-        //        EmployeeId = ticket.EmployeeId,
-        //        ProjectId = ticket.ProjectId
-        //    };
-        //}
-
     }
 }

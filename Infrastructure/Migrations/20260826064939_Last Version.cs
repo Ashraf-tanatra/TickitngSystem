@@ -108,6 +108,10 @@ namespace Infrastructure.Migrations
                 {
                     TicketId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+<<<<<<<< HEAD:Infrastructure/Migrations/20260826064939_Last Version.cs
+========
+                    TicketTitle = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false),
+>>>>>>>> origin/FixBugs-InPrjectController:Infrastructure/Migrations/20260825113241_Initial.cs
                     DueTo = table.Column<DateOnly>(type: "DATE", nullable: true),
                     Description = table.Column<string>(type: "VARCHAR(2500)", maxLength: 2500, nullable: true),
                     Priority = table.Column<string>(type: "nvarchar(max)", nullable: false),

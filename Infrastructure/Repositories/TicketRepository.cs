@@ -150,6 +150,13 @@ namespace Infrastructure.Repositories
         public async Task<IEnumerable<Ticket>> GetByEmployeeAndProjectAsync(   int employeeId,  int projectId)
         {
             return await _context.Tickets.Where(t => t.EmployeeId == employeeId && t.ProjectId == projectId).ToListAsync();
+            
+        }
+        public bool IsManager(int employeeId, int projectId)
+        {
+            return _context.Projects
+                .Where(p => p.Id == projectId)
+                .Any(x => x.ProjectManagerId == employeeId);
         }
     }
 }

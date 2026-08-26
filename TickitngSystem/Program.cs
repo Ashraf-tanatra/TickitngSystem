@@ -109,6 +109,8 @@ builder.Services.AddTransient<IResend, ResendClient>();
 
 builder.Services.AddScoped<IEmailService, EmailService>();
 
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("constr")));
 
 // ==============================
 // OpenAPI / Scalar
@@ -122,8 +124,8 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
-    app.MapScalarApiReference();
+    app.MapOpenApi(); // /openapi/v1.json
+    app.MapScalarApiReference(); // /scalar
 }
 
 
