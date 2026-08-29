@@ -13,7 +13,6 @@ namespace Infrastructure.Repositories
         {
             _context = context;
         }
-
         public async Task<Ticket?> GetById(int id)
         {
             return await _context.Tickets
