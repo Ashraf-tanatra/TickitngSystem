@@ -25,6 +25,8 @@ namespace Controller
             try
             {
                 var ticket = await _ticketManager.GetById(id);
+                if (ticket == null)
+                    return NotFound();
                 return Ok(ticket);
             }
             catch (Exception ex)
@@ -34,7 +36,7 @@ namespace Controller
         }
 
         // GET: api/ticket/projectId = 5
-        [HttpGet("/projectId = {projectId}")]
+        [HttpGet("projectId = {projectId}")]
         public async Task<ActionResult<IEnumerable<TicketResponse>>> GetAllTicketsForAProject(int projectId)
         {
             try
@@ -42,14 +44,14 @@ namespace Controller
                 var tickets = await _ticketManager.GetAllTicketsForAProject(projectId);
                 return Ok(tickets);
             }
-            catch (Exception ex)
+            catch (ArgumentException ex)
             {
                 return NotFound(ex.Message);
             }
         }
 
         // GET: api/ticket/employee/5
-        [HttpGet("/employee/{employeeId}")]
+        [HttpGet("employee/{employeeId}")]
         public async Task<ActionResult<IEnumerable<TicketResponse>>> GetAllTicketsForAnEmployee(int employeeId)
         {
             try
@@ -64,7 +66,7 @@ namespace Controller
         }
 
         // GET: api/ticket/employee/5/ticketCount
-        [HttpGet("/employee/{employeeId}/ticketCount")]
+        [HttpGet("employee/{employeeId}/ticketCount")]
         public async Task<ActionResult<int>> GetTicketTotalCountForAnEmployee(int employeeId)
         {
             try
@@ -79,93 +81,97 @@ namespace Controller
         }
 
         // POST: api/ticket/createTicket
-        [HttpPost("createTicket")]
-        public async Task<ActionResult> Create(CreateTicketRequest request)
+        [HttpPost("createTicket/{empId}")]
+        public async Task<ActionResult> Create(CreateTicketRequest request, int empId)
         {
             try
             {
-                var ticketId = await _ticketManager.Create(request);
+                var ticketId = await _ticketManager.Create(request, empId);
+                if (ticketId == 0)
+                    return BadRequest();
                 return Ok(ticketId);
             }
             catch (ArgumentException ex)
             {
                 return BadRequest(ex.Message);
             }
-            catch (UnauthorizedAccessException)
+            catch (UnauthorizedAccessException uEx)
             {
-                return Unauthorized();
+                return Unauthorized(uEx.Message);
             }
         }
 
         // PUT: api/ticket/5/updateTicket
-        [HttpPut("{id}/updateTicket")]
-        public async Task<IActionResult> Update(int id, UpdateTicketRequest request)
+        [HttpPut("{ticketId}/updateTicket/employeeId = {empCreatedById}")]
+        //[Authorize("manager")]
+        public async Task<IActionResult> Update(int ticketId, int empCreatedById, UpdateTicketRequest request)
         {
             try
             {
-                await _ticketManager.Update(id, request);
-                return NoContent();
-            }
-            catch (KeyNotFoundException)
-            {
+                if (await _ticketManager.Update(ticketId, empCreatedById, request))
+                    return NoContent();
                 return NotFound();
             }
             catch (ArgumentException ex)
             {
                 return BadRequest(ex.Message);
             }
-            catch (Exception ex)
+            catch (UnauthorizedAccessException ex)
             {
                 return BadRequest(ex.Message);
             }
         }
 
         // DELETE: api/ticket/5/deleteTicket
-        [HttpDelete("{id}/deleteTicket")]
-        public async Task<IActionResult> Delete(int id)
+        [HttpDelete("{ticketId}/deleteTicket/employeeId = {empId}")]
+        public async Task<IActionResult> Delete(int empId, int ticketId)
         {
             try
             {
-                if (!await _ticketManager.Delete(id))
+                if (!await _ticketManager.Delete(empId, ticketId))
                     return NotFound();
 
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
-        }
-
-        // PUT: api/ticket/changeStatus/5/1
-        [HttpPut("/changeStatus/{ticketId}/{status}")]
-        public async Task<IActionResult> ChangeTicketStatus(int ticketId, TicketStatus status)
-        {
-            try
-            {
-                if (!await _ticketManager.TicketExists(ticketId))
-                    return NotFound();
-
-                await _ticketManager.ChangeTicketStatus(ticketId, status);
                 return NoContent();
             }
             catch (ArgumentException ex)
             {
                 return BadRequest(ex.Message);
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
-        // PUT: api/ticket/priority/5/0
-        [HttpPut("/priority/{ticketId}/{priority}")]
-        public async Task<IActionResult> ChangeTicketPriority(int ticketId, TicketPriority priority)
+        // PUT: api/ticket/changeStatus/5/1
+        [HttpPut("changeStatus/{ticketId}/{status}/{empId}")]
+        public async Task<IActionResult> ChangeTicketStatus(int ticketId, int empId, TicketStatus status)
         {
             try
             {
-                if (!await _ticketManager.TicketExists(ticketId))
-                    return NotFound();
+                if (await _ticketManager.ChangeTicketStatus(ticketId, empId, status))
+                    return NoContent();
+                return NotFound();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
 
-                await _ticketManager.ChangeTicketPriority(ticketId, priority);
-                return NoContent();
+        // PUT: api/ticket/priority/5/0
+        [HttpPut("priority/{ticketId}/{priority}/{empCreatedById}")]
+        public async Task<IActionResult> ChangeTicketPriority(int ticketId, int empCreatedById, TicketPriority priority)
+        {
+            try
+            {
+                if (await _ticketManager.ChangeTicketPriority(ticketId, empCreatedById, priority))
+                    return NoContent();
+                return BadRequest();
             }
             catch (ArgumentException ex)
             {
@@ -174,13 +180,13 @@ namespace Controller
         }
 
         // GET: api/ticket/employee/5/completedCount
-        [HttpGet("/employee/{employeeId}/completedCount")]
+        [HttpGet("employee/{employeeId}/completedCount")]
         public async Task<ActionResult<int>> GetCompletedTicketCountForAnEmployee(int employeeId)
         {
             try
             {
-                if (!await _ticketManager.EmployeeExists(employeeId))
-                    return NotFound();
+                //if (!await _ticketManager.EmployeeExists(employeeId))
+                //    return NotFound();
 
                 var count = await _ticketManager.GetTicketCompletedCountForAnEmployee(employeeId);
                 return Ok(count);
@@ -192,13 +198,13 @@ namespace Controller
         }
 
         // GET: api/ticket/employee/5/inProgressCount
-        [HttpGet("/employee/{employeeId}/inProgressCount")]
+        [HttpGet("employee/{employeeId}/inProgressCount")]
         public async Task<ActionResult<int>> GetInProgressTicketCountForAnEmployee(int employeeId)
         {
             try
             {
-                if (!await _ticketManager.EmployeeExists(employeeId))
-                    return NotFound();
+                //if (!await _ticketManager.EmployeeExists(employeeId))
+                //    return NotFound();
 
                 var count = await _ticketManager.GetTicketInProgressCountForAnEmployee(employeeId);
                 return Ok(count);
@@ -211,6 +217,7 @@ namespace Controller
 
 
         //Need Enhancement for directory structure.
+        //Need verify the extension of the file and if it's allowed and the file size
         //api/ticket/attachments/upload/ticket/{1}
         [HttpPost("attachments/upload/ticket/{ticketId}")]
         public async Task<IActionResult> UploadFile(int ticketId, IFormFile file)
@@ -234,7 +241,7 @@ namespace Controller
             return Ok(new { fileName = uniqueName, massage = $"Upload successful!{filePath}" });
         }
 
-        [HttpGet("Attachments/download/{URL}")]
+        [HttpGet("attachments/download/{URL}")]
         public async Task<IActionResult> GetFile(string URL)
         {
             if (!System.IO.File.Exists(URL))
@@ -267,6 +274,5 @@ namespace Controller
                 _ => "application/octet-stream",
             };
         }
-
     }
 }
