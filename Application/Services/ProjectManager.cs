@@ -1,5 +1,4 @@
 ﻿using ApplicationServices.DTOs.Project;
-using ApplicationServices.DTOs.Ticket;
 using ApplicationServices.Interfaces;
 using Domain.Entities;
 using Domain.Enum;
@@ -116,7 +115,7 @@ namespace ApplicationServices.Services
 
             project!.ProjectName = request.ProjectName;
             project.ProjectDescription = request.ProjectDescription;
-            project.ProjectManagerId = request.ProjectManagerId;
+            //project.ProjectManagerId = request.ProjectManagerId;
             project.StartedAt = request.StartDate;
             project.EndAt = request.EndDate;
 

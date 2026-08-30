@@ -185,12 +185,6 @@ namespace Infrastructure.Repositories
                          .ToListAsync();
         }
 
-        IEnumerable<Ticket> IProjectRepository.GetTicketsAsync(int projectId)
-        {
-            var tickets = _context.Tickets.Where(t => t.ProjectId == projectId).ToList();
-            return tickets;
-        }
-
 
         public async Task<bool> IsManagerAsync(int projectId, int employeeId)
             => await _context.Projects.Where(p => p.Id == projectId).AnyAsync(e => e.ProjectManagerId == employeeId);

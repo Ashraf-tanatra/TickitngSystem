@@ -1,4 +1,5 @@
 ﻿using ApplicationServices.DTOs.Ticket;
+using Domain.Enum;
 
 namespace ApplicationServices.Interfaces
 {
@@ -6,11 +7,25 @@ namespace ApplicationServices.Interfaces
     {
         TicketResponse? GetById(int id);
 
-        TicketResponse Create(CreateTicketRequest request);
-        TicketResponse Update(int id, UpdateTicketRequest request);
-        bool Delete(int id);
-       Task<IEnumerable<TicketResponse>>GetByEmployeeAndProjectAsync(int employeeId,int projectId);
+        IEnumerable<TicketResponse>? GetAllTicketsForAProject(int projectId);
+        IEnumerable<TicketResponse>? GetAllTicketsForAnEmployee(int employeeId);
 
-        //IEnumerable<TicketResponse> GetAll();
+        int Create(CreateTicketRequest request);
+        void Update(int id, UpdateTicketRequest request);
+        bool Delete(int id);
+
+
+        int GetTicketTotalCountForAnEmployee(int employeeId);
+        int GetTicketInProgressCountForAnEmployee(int employeeId);
+        int GetTicketCompletedCountForAnEmployee(int employeeId);
+
+        void ChangeTicketStatus(int ticketId, TicketStatus status);
+        void ChangeTicketPriority(int ticketId, TicketPriority priority);
+
+        void AddAttachmentToTicket(int ticketId, string filePath);
+
+        bool TicketExists(int ticketId);
+        bool EmployeeExists(int employeeId);
+        bool ProjectExists(int projectId);
     }
 }

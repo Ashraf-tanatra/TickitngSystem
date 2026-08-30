@@ -19,7 +19,7 @@ namespace Domain.Entities
         public Project Project { get; set; } = null!;
 
         // Current assigned Employee
-        public int? EmployeeId { get; set; }
+        public int EmployeeId { get; set; }
         public Employee? Employee { get; set; } = null!;
 
         // Employee who created the ticket

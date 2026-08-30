@@ -12,6 +12,7 @@ public class CreateTicketRequest
     public string? AttachmentURL { get; set; }
 
     public int EmployeeId { get; set; }
+    public int TicketCreatedById { get; set; }  
 
     public int ProjectId { get; set; }
 }

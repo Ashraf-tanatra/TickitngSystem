@@ -1,5 +1,4 @@
 ﻿using ApplicationServices.DTOs.Project;
-using ApplicationServices.DTOs.Ticket;
 using ApplicationServices.Interfaces;
 using Domain.Enum;
 using Microsoft.AspNetCore.Mvc;
@@ -84,7 +83,6 @@ namespace Controller
             }
         }
 
-        //Tested
         // GET: api/Project/1
         [HttpGet("{id:int}")]
         public async Task<ActionResult<ProjectResponse>> GetByIdAsync(int id)
@@ -114,7 +112,6 @@ namespace Controller
             return Ok(employees);
         }
 
-        //Tested
         // PUT: api/Project/5
         [HttpPut("Update/{id}/{empId}")]
         public async Task<IActionResult> Update(int id, int empId, UpdateProjectRequest request)
@@ -142,11 +139,6 @@ namespace Controller
         [HttpGet("employeeId = {employeeId:int}")]
         public async Task<ActionResult<ProjectResponse>> GetProjectsWorkedByEmployee(int employeeId)
         {
-            var projcet = _projectManager.GetById(id);
-            if (projcet == null)
-            {
-                return NotFound(projcet);
-            }
             try
             {
                 var projects = await _projectManager.GetAllProjectWorkedByEmployeeAsync(employeeId)!;
@@ -167,11 +159,10 @@ namespace Controller
                 await _projectManager.ProjectAddEmployeeAsync(request);
                 return Ok(request);
             }
-            catch (Exception ex)
+            catch (ArgumentException ex)
             {
                 return BadRequest(ex.Message);
             }
-
         }
 
         //GET api/project/TopThree/1
@@ -210,48 +201,5 @@ namespace Controller
                 return NotFound();
             }
         }
-
-
-        // GET: api/Project/5/tickets
-        [HttpGet("{id}/tickets")]
-        public ActionResult<IEnumerable<TicketResponse>> GetTickets(int id)
-        {
-            try
-            {
-                var tickets =_projectManager.GetTicketsAsync(id);
-
-                return Ok(tickets);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new
-                {
-                    message = ex.Message
-                });
-            }
-        }
-
-        //GET: api/Project/5/tickets/10
-        //[HttpGet("{projectId}/tickets/{ticketId}")]
-        //public ActionResult<TicketResponse> GetTicket(int projectId, int ticketId)
-        //{
-        //    var ticket = _projectManager.GetTicket(projectId, ticketId);
-
-        //    if (ticket == null)
-        //        return NotFound();
-
-        //    return Ok(ticket);
-        //}
-
-
-
-        // GET: api/Project/5/employees
-        //[HttpGet("{id}/employees")]
-        //public ActionResult<IEnumerable<EmployeeResponse>> GetEmployees(int id)
-        //{
-        //    var employees = _projectManager.GetEmployees(id);
-
-        //    return Ok(employees);
-        //}
     }
 }

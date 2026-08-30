@@ -4,6 +4,8 @@
     {
         public int TicketId { get; set; }
 
+
+
         public string TicketTitle { get; set; } = string.Empty;
 
         public DateOnly? DueTo { get; set; }
@@ -17,5 +19,8 @@
         public int EmployeeId { get; set; }
 
         public int ProjectId { get; set; }
+
+        public string? ProjectName { get; set; } 
+        public string? EmployeeName { get; set; }
     }
 }

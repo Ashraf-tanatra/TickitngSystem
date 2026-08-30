@@ -6,8 +6,8 @@ namespace Domain.Interfaces
     public interface ITicketRepository
     {
         Ticket? GetById(int id);
-        IEnumerable<Ticket> GetAllTicketsForAProject(int projectId);
-        IEnumerable<Ticket> GetAllTicketsForAnEmployee(int employeeId);
+        IEnumerable<Ticket>? GetAllTicketsForAProject(int projectId);
+        IEnumerable<Ticket>? GetAllTicketsForAnEmployee(int employeeId);
 
         int GetTicketTotalCountForAnEmployee(int employeeId);
         int GetTicketInProgressCountForAnEmployee(int employeeId);
@@ -16,28 +16,15 @@ namespace Domain.Interfaces
         void ChangeTicketStatus(int ticketId, TicketStatus status);
         void ChangeTicketPriority(int ticketId, TicketPriority priority);
 
-        void Add(Ticket ticket);
+        void Create(Ticket ticket);
         void Update(Ticket ticket);
         void Delete(Ticket ticket);
 
+        void AddAttachmentToTicket(int ticketId, string filePath);
+
+        bool TicketExists(int ticketId);
         bool EmployeeExists(int employeeId);
         bool ProjectExists(int projectId);
-        Task<IEnumerable<Ticket>> GetByEmployeeAndProjectAsync(int employeeId, int projectId);
-
-
-        //void SetStatusToInProgress(int ticketId);
-        //void SetStatusToPending(int ticketId);
-        //void SetStatusToCompleted(int ticketId);
-        //void SetStatusToReOpen(int ticketId);
-        //void SetStatusToDone(int ticketId);
-        //void SetStatusToCancelled(int ticketId);
-
-        //void SetPriorityToLow(int ticketId);
-        //void SetPriorityToMedium(int ticketId);
-        //void SetPriorityToHigh(int ticketId);
-
-
-
-        //IEnumerable<Ticket> GetAll();
+        bool IsManager(int employeeId, int projectId);
     }
 }

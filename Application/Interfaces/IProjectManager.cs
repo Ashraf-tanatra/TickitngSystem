@@ -1,5 +1,4 @@
 ﻿using ApplicationServices.DTOs.Project;
-using ApplicationServices.DTOs.Ticket;
 using Domain.Enum;
 
 namespace ApplicationServices.Interfaces
