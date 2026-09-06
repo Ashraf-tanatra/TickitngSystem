@@ -1,6 +1,5 @@
 ﻿using Domain.Entities;
 using Domain.Interfaces;
-using Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories
@@ -14,35 +13,109 @@ namespace Infrastructure.Repositories
             _context = context;
         }
 
-        public Account? GetByEmail(string email)
+        // =========================================================
+        // GET ACCOUNT BY EMAIL
+        // =========================================================
+
+        public async Task<Account?> GetByEmailAsync(string email)
         {
-            return _context.Accounts
+            return await _context.Accounts
                 .Include(a => a.Employee)
-                .FirstOrDefault(a => a.Email == email);
+                .FirstOrDefaultAsync(a => a.Email == email);
         }
 
-        public bool EmailExists(string email)
+        // =========================================================
+        // GET ACCOUNT BY ID
+        // =========================================================
+
+        public async Task<Account?> GetByIdAsync(int id)
         {
-            return _context.Accounts
-                .Any(a => a.Email == email);
+            return await _context.Accounts
+                .Include(a => a.Employee)
+                .FirstOrDefaultAsync(a => a.Id == id);
         }
 
-        public bool EmployeeExists(int employeeId)
+        // =========================================================
+        // CHECK EMAIL
+        // =========================================================
+
+        public async Task<bool> EmailExistsAsync(string email)
         {
-            return _context.Employees
-                .Any(e => e.Id == employeeId);
+            // Deleted accounts are still considered existing
+            // because they can be reactivated within 30 days.
+            return await _context.Accounts
+                .AnyAsync(a => a.Email == email);
         }
 
-        public void Add(Account account)
+        // =========================================================
+        // CHECK EMPLOYEE
+        // =========================================================
+
+        public async Task<bool> EmployeeExistsAsync(int employeeId)
+        {
+            return await _context.Employees
+                .AnyAsync(e => e.Id == employeeId);
+        }
+
+        // =========================================================
+        // ADD ACCOUNT
+        // =========================================================
+
+        public async Task AddAsync(Account account)
         {
             _context.Accounts.Add(account);
-            _context.SaveChanges();
+
+            await _context.SaveChangesAsync();
         }
 
-        public void Delete(Account account)
+        // =========================================================
+        // UPDATE ACCOUNT
+        // =========================================================
+
+        public async Task UpdateAsync(Account account)
+        {
+            _context.Accounts.Update(account);
+
+            await _context.SaveChangesAsync();
+        }
+
+        // =========================================================
+        // HARD DELETE
+        // =========================================================
+
+        public async Task DeleteAsync(Account account)
         {
             _context.Accounts.Remove(account);
-            _context.SaveChanges();
+
+            await _context.SaveChangesAsync();
+        }
+
+        // =========================================================
+        // SOFT DELETE
+        // =========================================================
+
+        public async Task SoftDeleteAsync(Account account)
+        {
+            account.IsDeleted = true;
+            account.DeletedAt = DateTime.UtcNow;
+
+            _context.Accounts.Update(account);
+
+            await _context.SaveChangesAsync();
+        }
+
+        // =========================================================
+        // REACTIVATE
+        // =========================================================
+
+        public async Task ReactivateAsync(Account account)
+        {
+            account.IsDeleted = false;
+            account.DeletedAt = null;
+
+            _context.Accounts.Update(account);
+
+            await _context.SaveChangesAsync();
         }
     }
 }

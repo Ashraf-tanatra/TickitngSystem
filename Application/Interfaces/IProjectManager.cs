@@ -1,25 +1,20 @@
-﻿using ApplicationServices.DTOs;
+﻿using ApplicationServices.DTOs.Project;
+using Domain.Enum;
 
-namespace Domain.EntityManager
+namespace ApplicationServices.Interfaces
 {
     public interface IProjectManager
     {
-        ProjectResponse Create(CreateProjectRequest request);
-
-        IEnumerable<ProjectResponse> GetAll();
-
-        ProjectResponse? GetById(int id);
-
-        ProjectResponse Update(
-            int id,
-            UpdateProjectRequest request);
-
-        bool Delete(int id);
-
-        IEnumerable<EmployeeResponse> GetEmployees(int projectId);
-
-        IEnumerable<TicketResponse> GetTickets(int projectId);
-
-        TicketResponse? GetTicket(int projectId , int TicketId);
+        Task<bool> DeleteAsync(int id, int empId);
+        Task<ProjectResponse?> GetByIdAsync(int id);
+        Task<int> GetProjectCountAsync(int employeeId);
+        Task<int> CreateAsync(CreateProjectRequest request);
+        Task<bool> ProjectAddEmployeeAsync(ProjectEmployeeRequest request);
+        Task<bool> SetProjectStatusAsync(int projectId, ProjectStatus status);
+        Task<bool> UpdateAsync(int projectId, int empId, UpdateProjectRequest request);
+        Task<IEnumerable<EmployeeResponse>>? GetEmployeesWorkOnProjectAsync(int projectId);
+        Task<IEnumerable<ProjectResponse>>? GetAllProjectWorkedByEmployeeAsync(int employeeId);
+        Task<IEnumerable<string[]>>? GetAllProjectWorkedByEmployeeTopThreeAsync(int employeeId);
+        Task<IEnumerable<ProjectResponse>>? GetAllProjectWorkedByEmployeeWithFilterAsync(int employeeId, ProjectStatus FilterByStatus);
     }
 }

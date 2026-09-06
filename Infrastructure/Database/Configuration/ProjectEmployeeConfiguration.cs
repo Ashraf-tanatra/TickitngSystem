@@ -20,13 +20,17 @@ namespace Infrastructure.Database.Configuration
             builder.HasOne(pe => pe.Project)
                    .WithMany(p => p.ProjectEmployees)
                    .HasForeignKey(pe => pe.ProjectId)
-                   .OnDelete(DeleteBehavior.Cascade);
+                   .OnDelete(DeleteBehavior.NoAction);
 
             // Employee -> ProjectEmployees
             builder.HasOne(pe => pe.Employee)
                    .WithMany(e => e.ProjectEmployees)
                    .HasForeignKey(pe => pe.EmployeeId)
-                   .OnDelete(DeleteBehavior.Cascade);
+                   .OnDelete(DeleteBehavior.NoAction);
+
+            // Role
+            builder.Property(pe => pe.Role)
+                   .HasMaxLength(50);
 
             builder.ToTable("ProjectEmployees");
         }

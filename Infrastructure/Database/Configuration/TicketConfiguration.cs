@@ -11,49 +11,39 @@ namespace Infrastructure.Database.Configuration
         {
             // Primary Key
             builder.HasKey(x => x.TicketId);
-
             builder.Property(x => x.TicketId)
-                   .ValueGeneratedOnAdd();
-
+                        .ValueGeneratedOnAdd();
 
             // Title
             builder.Property(x => x.TicketTitle)
                    .HasColumnType("varchar")
-                   .HasMaxLength(20)
+                   .HasMaxLength(255)
                    .IsRequired();
-
 
             // Priority
             builder.Property(x => x.Priority)
                    .HasConversion(
                        x => x.ToString(),
-                       x => (TicketPriority)Enum.Parse(
-                           typeof(TicketPriority), x));
-
+                       x => (TicketPriority)Enum.Parse(typeof(TicketPriority), x));
 
             // Status
             builder.Property(x => x.TicketStatus)
                    .HasConversion(
                        x => x.ToString(),
-                       x => (TicketStatus)Enum.Parse(
-                           typeof(TicketStatus), x));
-
+                       x => (TicketStatus)Enum.Parse(typeof(TicketStatus), x));
 
             // Due Date
             builder.Property(x => x.DueTo)
-                   .HasColumnType("date");
+                   .HasColumnType("DATE");
 
-
-            // Created Time
-            builder.Property(x => x.CreatedTime)
-                   .HasColumnType("datetime");
-
+            // Created Date
+            builder.Property(x => x.CreatedAt)
+                   .HasColumnType("DATE");
 
             // Description
             builder.Property(x => x.Description)
-                   .HasColumnType("varchar")
-                   .HasMaxLength(255);
-
+                   .HasColumnType("VARCHAR")
+                   .HasMaxLength(2500);
 
             // Assigned Employee
             builder.HasOne(x => x.Employee)
@@ -61,13 +51,11 @@ namespace Infrastructure.Database.Configuration
                    .HasForeignKey(x => x.EmployeeId)
                    .OnDelete(DeleteBehavior.Restrict);
 
-
             // Ticket Created By
             builder.HasOne(x => x.TicketCreatedBy)
                    .WithMany()
                    .HasForeignKey(x => x.TicketCreatedById)
                    .OnDelete(DeleteBehavior.Restrict);
-
 
             // Project
             builder.HasOne(x => x.Project)
@@ -75,7 +63,6 @@ namespace Infrastructure.Database.Configuration
                    .HasForeignKey(x => x.ProjectId)
                    .IsRequired()
                    .OnDelete(DeleteBehavior.Restrict);
-
 
             builder.ToTable("Tickets");
         }

@@ -4,21 +4,24 @@ namespace Domain.Interfaces
 {
     public interface IEmployeeRepository
     {
-        IEnumerable<Employee> GetAll();
+        Task<IEnumerable<Employee>> GetAllAsync();
 
-        Employee? GetById(int id);
+        Task<Employee?> GetByIdAsync(int id);
 
-        void Add(Employee employee);
+        Task AddAsync(Employee employee);
 
-        void Update(Employee employee);
+        Task UpdateAsync(Employee employee);
 
-        void Delete(Employee employee);
+        Task<bool> ExistsByPhoneAsync(string phone);
 
-        bool ExistsByEmail(string email);
+        Task<bool> ExistsByPhoneExceptAsync(
+            string phone,
+            int employeeId);
 
-        bool ExistsByPhone(string phone);
-        bool ExistsByPhoneExcept(string phone, int employeeId);
-        IEnumerable<Project> GetProjects(int employeeId);
+        Task<IEnumerable<Project>> GetProjectsAsync(
+            int employeeId);
 
+        Task<IEnumerable<Project>> GetActiveProjectsAsync(int employeeId);
+        Task<IEnumerable<Ticket>> GetEmployeeTickets(int employeeId);
     }
 }

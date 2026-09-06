@@ -1,24 +1,30 @@
-﻿using ApplicationServices.DTOs;
+﻿using ApplicationServices.DTOs.Employee;
+using ApplicationServices.DTOs.Project;
 using Domain.Entities;
 
 namespace ApplicationServices.Interfaces
 {
     public interface IEmployeeManager
     {
-        EmployeeResponse Create(CreateEmployeeRequest request);
+        Task<EmployeeResponse?> GetByIdAsync(int id);
 
-        EmployeeResponse? GetById(int id);
+        Task<IEnumerable<EmployeeResponse>> GetAllAsync();
 
-        IEnumerable<EmployeeResponse> GetAll();
-
-        EmployeeResponse? Update(
+        Task<EmployeeResponse?> UpdateAsync(
             int id,
             UpdateEmployeeRequest request);
 
-        bool Delete(int id);
-        IEnumerable<ProjectResponse> GetProjects(int employeeId);
+        Task<bool> DeleteAsync(int id);
 
+        Task<IEnumerable<EmployeeProjectResponse>> GetProjectsAsync(
+            int employeeId);
 
+        Task AddAsync(Employee employee);
 
+        bool ValidPhoneNumberFormat(string phone);
+
+        Task<bool> ReactivateAsync(int id);
+        Task<bool> ExistsByPhoneAsync(string phone);
+        //Task<IEnumerable<ProjectResponse>>GetActiveProjectsAsync(int employeeId);
     }
 }

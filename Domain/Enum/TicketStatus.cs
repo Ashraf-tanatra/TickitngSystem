@@ -6,6 +6,7 @@
         InProgress,
         Completed,
         Cancelled,
+        Reopened,
         Done
     }
 }

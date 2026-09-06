@@ -1,186 +1,304 @@
-﻿using ApplicationServices.DTOs;
+﻿using ApplicationServices.DTOs.Employee;
+using ApplicationServices.DTOs.Project;
 using ApplicationServices.Interfaces;
 using Domain.Entities;
 using Domain.Enum;
 using Domain.Interfaces;
 
-namespace Domain.EntityManager
+namespace ApplicationServices.Services
 {
     public class EmployeeManager : IEmployeeManager
     {
-        private readonly IEmployeeRepository _EmployeeRepository;
+        private readonly IEmployeeRepository _employeeRepository;
+        private readonly IAccountRepository _accountRepository;
+        private readonly ITicketRepository _ticketRepository;
 
-        public EmployeeManager(IEmployeeRepository repository)
+        public EmployeeManager(IEmployeeRepository employeeRepository,IAccountRepository accountRepository,ITicketRepository ticketRepository)
         {
-            _EmployeeRepository = repository;
+            _employeeRepository = employeeRepository;
+            _accountRepository = accountRepository;
+            _ticketRepository = ticketRepository;
         }
 
-        public EmployeeResponse Create(CreateEmployeeRequest request)
+        // =========================================================
+        // GET ALL
+        // =========================================================
+
+        public async Task<IEnumerable<EmployeeResponse>> GetAllAsync()
         {
-            // 1. Validate request
-            if (request == null)
-                throw new ArgumentNullException(nameof(request));
+            var employees =
+                await _employeeRepository.GetAllAsync();
 
-            if (string.IsNullOrWhiteSpace(request.FName))
-                throw new ArgumentException("First name is required.");
-
-            if (string.IsNullOrWhiteSpace(request.LName))
-                throw new ArgumentException("Last name is required.");
-
-            if (string.IsNullOrWhiteSpace(request.Phone))
-                throw new ArgumentException("Phone is required.");
-
-            if (string.IsNullOrWhiteSpace(request.Email))
-                throw new ArgumentException("Email is required.");
-
-            if (string.IsNullOrWhiteSpace(request.Password))
-                throw new ArgumentException("Password is required.");
-
-
-            // 2. Check existing employees
-            if (_EmployeeRepository.ExistsByEmail(request.Email))
-            {
-                throw new InvalidOperationException(
-                    "An account with this email already exists.");
-            }
-
-            if (_EmployeeRepository.ExistsByPhone(request.Phone))
-            {
-                throw new InvalidOperationException(
-                    "An employee with this phone already exists.");
-            }
-
-
-            // 3. Create Account
-            var account = new Account
-            {
-                Email = request.Email,
-                PasswordHash = request.Password
-            };
-
-
-            // 4. Create Employee
-            var employee = new Employee
-            {
-                FName = request.FName,
-                LName = request.LName,
-                Phone = request.Phone,
-                Gender = request.Gender,
-                Role = EmployeeRole.Employee,
-                Account = account
-            };
-
-
-            // 5. Save Employee
-            _EmployeeRepository.Add(employee);
-
-
-            // 6. Return Response
-            return new EmployeeResponse
-            {
-                Id = employee.Id,
-                FName = employee.FName,
-                LName = employee.LName,
-                Phone = employee.Phone,
-                Gender = employee.Gender,
-                Role = employee.Role.ToString(),
-                IsDeleted = employee.IsDeleted
-            };
+            return employees.Select(MapToResponse);
         }
 
-        public bool Delete(int id)
+        // =========================================================
+        // GET BY ID
+        // =========================================================
+
+        public async Task<EmployeeResponse?> GetByIdAsync(int id)
         {
-            // 1. Get employee
-            var employee = _EmployeeRepository.GetById(id);
-
-            // 2. Employee doesn't exist
-            if (employee == null)
-                return false;
-
-            // 3. Delete employee
-            _EmployeeRepository.Delete(employee);
-
-            // 4. Successfully deleted
-            return true;
-        }
-
-        public IEnumerable<EmployeeResponse> GetAll()
-        {
-            var employees = _EmployeeRepository.GetAll();
-
-            return employees.Select(employee => new EmployeeResponse
-            {
-                Id = employee.Id,
-                FName = employee.FName,
-                LName = employee.LName,
-                Phone = employee.Phone,
-                Gender = employee.Gender,
-                Role = employee.Role.ToString(),
-                IsDeleted = employee.IsDeleted
-            });
-        }
-
-        public EmployeeResponse? GetById(int id)
-        {
-            var employee = _EmployeeRepository.GetById(id);
+            var employee =
+                await _employeeRepository.GetByIdAsync(id);
 
             if (employee == null)
                 return null;
 
-            return new EmployeeResponse
-            {
-                Id = employee.Id,
-                FName = employee.FName,
-                LName = employee.LName,
-                Phone = employee.Phone,
-                Gender = employee.Gender,
-                Role = employee.Role.ToString(),
-                IsDeleted = employee.IsDeleted
-            };
+            return MapToResponse(employee);
         }
 
-        public EmployeeResponse? Update(int id , UpdateEmployeeRequest request)
+        // =========================================================
+        // UPDATE
+        // =========================================================
+
+        public async Task<EmployeeResponse?> UpdateAsync(
+            int id,
+            UpdateEmployeeRequest request)
         {
-            // 1. Validate request
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
-            // 2. Get employee
-            var employee = _EmployeeRepository.GetById(id);
+            var employee =
+                await _employeeRepository.GetByIdAsync(id);
 
             if (employee == null)
                 return null;
 
-            // 3. Validate fields
+            if (employee.IsDeleted)
+                throw new InvalidOperationException(
+                    "Cannot update a deleted employee.");
+
             if (string.IsNullOrWhiteSpace(request.FName))
-                throw new ArgumentException("First name is required.");
+                throw new ArgumentException(
+                    "First name is required.");
 
             if (string.IsNullOrWhiteSpace(request.LName))
-                throw new ArgumentException("Last name is required.");
+                throw new ArgumentException(
+                    "Last name is required.");
 
             if (string.IsNullOrWhiteSpace(request.Phone))
-                throw new ArgumentException("Phone is required.");
+                throw new ArgumentException(
+                    "Phone is required.");
 
+            // =====================================================
+            // VALIDATE PHONE
+            // =====================================================
 
-            // 4. Check if phone belongs to another employee
-            if (_EmployeeRepository.ExistsByPhoneExcept(request.Phone, id))
-            {  
-                throw new InvalidOperationException( "This phone number is already in use.");
+            if (!ValidPhoneNumberFormat(request.Phone))
+                throw new ArgumentException(
+                    "Phone number must contain exactly 10 digits.");
+
+            // =====================================================
+            // CHECK DUPLICATE PHONE
+            // =====================================================
+
+            if (await _employeeRepository
+                .ExistsByPhoneExceptAsync(
+                    request.Phone,
+                    id))
+            {
+                throw new InvalidOperationException(
+                    "This phone number is already in use.");
             }
 
+            // =====================================================
+            // UPDATE EMPLOYEE
+            // =====================================================
 
-            // 5. Update employee
             employee.FName = request.FName;
             employee.LName = request.LName;
             employee.Phone = request.Phone;
             employee.Gender = request.Gender;
 
+            await _employeeRepository.UpdateAsync(employee);
 
-            // 6. Save changes
-            _EmployeeRepository.Update(employee);
+            return MapToResponse(employee);
+        }
+        //// =========================================================
+        //// ACTIVE PROJECTS FOR EMPLOYEE
+        //// =========================================================
+        //public async Task<IEnumerable<ProjectResponse>>GetActiveProjectsAsync(int employeeId)
+        //{
+        //    var employee =
+        //        await _employeeRepository.GetByIdAsync(employeeId);
+
+        //    if (employee == null)
+        //        throw new KeyNotFoundException(
+        //            "Employee not found.");
+
+        //    if (employee.IsDeleted)
+        //        throw new InvalidOperationException(
+        //            "Employee is deleted.");
+
+        //    var projects =
+        //        await _employeeRepository
+        //            .GetActiveProjectsAsync(employeeId);
+
+        //    return projects.Select(MapToResponse);
+        //}
+
+        // =========================================================
+        // SOFT DELETE
+        // =========================================================
+
+        public async Task<bool> DeleteAsync(int id)
+        {
+            var employee =
+                await _employeeRepository.GetByIdAsync(id);
+
+            if (employee == null)
+                return false;
+
+            if (employee.IsDeleted)
+                throw new InvalidOperationException(
+                    "Employee is already deleted.");
+
+            // =====================================================
+            // CHECK PROJECT MANAGER
+            // =====================================================
+
+            var managedProjects = await _employeeRepository.GetActiveProjectsAsync(id);
+
+            if (managedProjects.Any())
+            {
+                throw new InvalidOperationException(
+                    "Cannot delete this employee because they are " +
+                    "a Project Manager of an active project. " +
+                    "Assign another Project Manager first.");
+            }
+
+            var EmployeeTickets = await _employeeRepository.GetEmployeeTickets(id);
+            if (EmployeeTickets.Any())
+            {
+                foreach (var ticket in EmployeeTickets)
+                {
+                    if (ticket.TicketStatus == TicketStatus.InProgress || ticket.TicketStatus == TicketStatus.Reopened)
+                    {
+                        _ticketRepository.ChangeTicketStatus(ticket.TicketId, TicketStatus.Pending);
+                        
+                    }
+                }
+            }
 
 
-            // 7. Return response
+            // =====================================================
+            // SOFT DELETE EMPLOYEE
+            // =====================================================
+
+            employee.IsDeleted = true;
+            employee.DeletedAt = DateOnly.FromDateTime(DateTime.UtcNow);
+
+            // =====================================================
+            // SOFT DELETE ACCOUNT
+            // =====================================================
+
+            var account = employee.Account;
+
+            if (account != null && !account.IsDeleted)
+            {
+                await _accountRepository
+                    .SoftDeleteAsync(account);
+            }
+
+            // =====================================================
+            // SAVE EMPLOYEE
+            // =====================================================
+
+            await _employeeRepository.UpdateAsync(employee);
+
+            return true;
+        }
+
+        // =========================================================
+        // GET EMPLOYEE PROJECTS
+        // =========================================================
+
+        public async Task<IEnumerable<EmployeeProjectResponse>>
+            GetProjectsAsync(int employeeId)
+        {
+            var employee =
+                await _employeeRepository.GetByIdAsync(employeeId);
+
+            if (employee == null)
+                throw new KeyNotFoundException(
+                    "Employee not found.");
+
+            if (employee.IsDeleted)
+                throw new InvalidOperationException(
+                    "Cannot get projects for a deleted employee.");
+
+            var projects =
+                await _employeeRepository
+                    .GetProjectsAsync(employeeId);
+
+            return projects
+                .Where(project =>
+                    project.ProjectEmployees
+                        .Any(pe => pe.EmployeeId == employeeId))
+                .Select(project =>
+                {
+                    var projectEmployee =
+                        project.ProjectEmployees
+                            .First(pe => pe.EmployeeId == employeeId);
+
+                    return new EmployeeProjectResponse
+                    {
+                        Id = project.Id,
+                        ProjectName = project.ProjectName,
+                        ProjectDescription =
+                            project.ProjectDescription,
+                        Role = projectEmployee.Role.ToString(),
+                        EmployeeCount =
+                            project.ProjectEmployees.Count,
+                        TicketCount =
+                            project.ProjectTickets.Count
+                    };
+                });
+        }
+
+        // =========================================================
+        // ADD
+        // =========================================================
+
+        public async Task AddAsync(Employee employee)
+        {
+            if (employee == null)
+                throw new ArgumentNullException(nameof(employee));
+
+            await _employeeRepository.AddAsync(employee);
+        }
+
+        // =========================================================
+        // VALIDATE PHONE NUMBER
+        // =========================================================
+
+        public bool ValidPhoneNumberFormat(string phone)
+        {
+            return !string.IsNullOrWhiteSpace(phone)
+                   && phone.Length == 10
+                   && phone.All(char.IsDigit);
+        }
+
+        // =========================================================
+        // CHECK PHONE
+        // =========================================================
+
+        public async Task<bool> ExistsByPhoneAsync(string phone)
+        {
+            if (string.IsNullOrWhiteSpace(phone))
+                return false;
+
+            return await _employeeRepository
+                .ExistsByPhoneAsync(phone);
+        }
+
+        // =========================================================
+        // MAP EMPLOYEE TO RESPONSE
+        // =========================================================
+
+        private static EmployeeResponse MapToResponse(
+            Employee employee)
+        {
             return new EmployeeResponse
             {
                 Id = employee.Id,
@@ -188,31 +306,47 @@ namespace Domain.EntityManager
                 LName = employee.LName,
                 Phone = employee.Phone,
                 Gender = employee.Gender,
-                Role = employee.Role.ToString(),
                 IsDeleted = employee.IsDeleted
             };
         }
 
-        public IEnumerable<ProjectResponse> GetProjects(int employeeId)
+
+        // =========================================================
+        // REACTIVE EMPLOYEE
+        // =========================================================
+
+        public async Task<bool> ReactivateAsync(int id)
         {
-            var projects = _EmployeeRepository.GetProjects(employeeId);
+            var employee = await _employeeRepository.GetByIdAsync(id);
 
-            return projects.Select(project => new ProjectResponse
+            if (employee == null)
+                return false;
+
+            if (!employee.IsDeleted)
+                throw new InvalidOperationException(
+                    "Employee is already active.");
+
+            if (!employee.DeletedAt.HasValue)
+                throw new InvalidOperationException(
+                    "Employee deletion date is missing.");
+
+            if (employee.DeletedAt.Value.AddDays(30) < DateOnly.FromDateTime(DateTime.UtcNow))
+                throw new InvalidOperationException(
+                    "The 30-day reactivation period has expired.");
+
+            employee.IsDeleted = false;
+            employee.DeletedAt = null;
+
+            var account = employee.Account;
+
+            if (account != null && account.IsDeleted)
             {
-                Id = project.Id,
-                ProjectName = project.ProjectName,
-                ProjectDescription = project.ProjectDescription,
-                ProjectManagerId = project.ProjectManagerId,
+                await _accountRepository.ReactivateAsync(account);
+            }
 
-                ProjectManagerName = project.ProjectManager == null
-                    ? null
-                    : $"{project.ProjectManager.FName} {project.ProjectManager.LName}",
+            await _employeeRepository.UpdateAsync(employee);
 
-                EmployeeCount = project.ProjectEmployees.Count,
-                TicketCount = project.ProjectTickets.Count
-            });
+            return true;
         }
-
-       
     }
 }

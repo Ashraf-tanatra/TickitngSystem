@@ -1,0 +1,18 @@
+{
+  "ConnectionStrings": {
+    "constr": "Server=localhost;Database=TicketSystemDB;Integrated Security=SSPI;TrustServerCertificate=True;MultipleActiveResultSets=True"
+  },
+
+  "Resend": {
+    "FromEmail": "onboarding@resend.dev"
+  },
+
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+
+  "AllowedHosts": "*"
+}

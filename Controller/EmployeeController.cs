@@ -1,6 +1,6 @@
-﻿using ApplicationServices.DTOs;
+﻿using ApplicationServices.DTOs.Employee;
+using ApplicationServices.DTOs.Project;
 using ApplicationServices.Interfaces;
-using Domain.EntityManager;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Controller
@@ -10,78 +10,171 @@ namespace Controller
     public class EmployeeController : ControllerBase
     {
         private readonly IEmployeeManager _employeeManager;
-
-        public EmployeeController(IEmployeeManager employeeManager )
+        public EmployeeController(IEmployeeManager employeeManager)
         {
             _employeeManager = employeeManager;
-
         }
 
-        // GET: api/Employee
+        // =========================================================
+        // GET ALL
+        // =========================================================
+
         [HttpGet]
-        public ActionResult<IEnumerable<EmployeeResponse>> GetAll()
+        public async Task<ActionResult<IEnumerable<EmployeeResponse>>>
+            GetAll()
         {
-            var employees = _employeeManager.GetAll();
+            var employees =
+                await _employeeManager.GetAllAsync();
 
             return Ok(employees);
         }
 
-        // GET: api/Employee/5
+        // =========================================================
+        // GET BY ID
+        // =========================================================
+
         [HttpGet("{id}")]
-        public ActionResult<EmployeeResponse> GetById(int id)
+        public async Task<ActionResult<EmployeeResponse>>
+            GetById(int id)
         {
-            var employee = _employeeManager.GetById(id);
+            var employee =
+                await _employeeManager.GetByIdAsync(id);
 
             if (employee == null)
                 return NotFound();
 
             return Ok(employee);
         }
+
+        // =========================================================
+        // GET PROJECTS
+        // =========================================================
 
         [HttpGet("{id}/projects")]
-        public ActionResult<IEnumerable<ProjectResponse>> GetProjects(int id)
+        public async Task<
+            ActionResult<IEnumerable<EmployeeProjectResponse>>>
+            GetProjects(int id)
         {
-            var projects = _employeeManager.GetProjects(id);
+            try
+            {
+                var projects =
+                    await _employeeManager.GetProjectsAsync(id);
 
-            return Ok(projects);
-        
+                return Ok(projects);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
         }
 
-        // POST: api/Employee
-        [HttpPost]
-        public ActionResult<EmployeeResponse> Create( CreateEmployeeRequest request)
-        {
-            var employee = _employeeManager.Create(request);
+        // =========================================================
+        // UPDATE
+        // =========================================================
 
-            return CreatedAtAction(
-                nameof(GetById),
-                new { id = employee.Id },
-                employee);
-        }
-
-        // PUT: api/Employee/5
         [HttpPut("{id}")]
-        public ActionResult<EmployeeResponse> Update(int id,UpdateEmployeeRequest request)
+        public async Task<ActionResult<EmployeeResponse>>
+            Update(
+                int id,
+                UpdateEmployeeRequest request)
         {
-            var employee = _employeeManager.Update(id, request);
+            try
+            {
+                var employee =
+                    await _employeeManager
+                        .UpdateAsync(id, request);
 
-            if (employee == null)
-                return NotFound();
+                if (employee == null)
+                {
+                    return NotFound(new
+                    {
+                        message = ErrorShared.Employee.EmployeeNotFound
+                    });
+                }
 
-            return Ok(employee);
+                return Ok(employee);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ex.Message);
+            }
         }
 
-        // DELETE: api/Employee/5
+        // =========================================================
+        // DELETE
+        // =========================================================
+
         [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var deleted = _employeeManager.Delete(id);
+            try
+            {
+                var deleted =
+                    await _employeeManager.DeleteAsync(id);
 
-            if (!deleted)
-                return NotFound();
+                if (!deleted)
+                {
+                    return NotFound(new
+                    {
+                        message = ErrorShared.Employee.EmployeeNotFound
+                    });
+                }
 
-            return NoContent();
+                return Ok(new
+                {
+                    message =
+                        ErrorShared.Employee.EmployeeDeletedSuccessfully
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
         }
 
+        // =========================================================
+        // REACTIVATE EMPLOYEE
+        // =========================================================
+
+        [HttpPost("reactivate/{id}")]
+        public async Task<IActionResult> Reactivate(int id)
+        {
+            try
+            {
+                var result =
+                    await _employeeManager.ReactivateAsync(id);
+
+                if (!result)
+                {
+                    return NotFound(new
+                    {
+                        message = ErrorShared.Employee.EmployeeNotFound
+                    });
+                }
+
+                return Ok(new
+                {
+                    message =
+                        ErrorShared.Employee.EmployeeReactivatedSuccessfully
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
+        }
+
+        
+        
     }
 }

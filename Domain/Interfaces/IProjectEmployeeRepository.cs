@@ -2,12 +2,11 @@
 
 namespace Domain.Interfaces
 {
+    
     public interface IProjectEmployeeRepository
     {
         IEnumerable<ProjectEmployee> GetAll();
-
         IEnumerable<ProjectEmployee> GetByProjectId(int projectId);
-
         IEnumerable<ProjectEmployee> GetByEmployeeId(int employeeId);
 
         ProjectEmployee? Get(int projectId, int employeeId);

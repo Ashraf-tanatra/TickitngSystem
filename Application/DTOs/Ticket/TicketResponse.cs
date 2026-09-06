@@ -1,0 +1,26 @@
+﻿namespace ApplicationServices.DTOs.Ticket
+{
+    public class TicketResponse
+    {
+        public int TicketId { get; set; }
+
+
+
+        public string TicketTitle { get; set; } = string.Empty;
+
+        public DateOnly? DueTo { get; set; }
+
+        public string TicketStatus { get; set; } = string.Empty;
+
+        public string Priority { get; set; } = string.Empty;
+
+        public string? Description { get; set; }
+
+        public int EmployeeId { get; set; }
+
+        public int ProjectId { get; set; }
+
+        public string? ProjectName { get; set; } 
+        public string? EmployeeName { get; set; }
+    }
+}

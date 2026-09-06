@@ -4,46 +4,33 @@ namespace Domain.Entities
 {
     public class Ticket
     {
-        // Used by Employee
-        public  int TicketId { get;  } //Auto Generated 
-        public required string TicketTitle { get; set; }
-
-        public DateTime? DueTo { get; set; }
-        public DateTime CreatedTime { get; set; } = DateTime.Now;
-
-        public TicketStatus TicketStatus { get;  set; } = TicketStatus.Pending;
-        public TicketPriority Priority { get;  set; } = TicketPriority.Low;
-
+        public int TicketId { get; } // Primary Key
+        public DateOnly? DueTo { get; set; }
         public string? Description { get; set; }
+        public TicketPriority Priority { get; set; }
+        public required string TicketTitle { get; set; }
+        public TicketStatus TicketStatus { get; set; } = TicketStatus.Pending;
+        public DateOnly CreatedAt { get; set; } = DateOnly.FromDateTime(DateTime.Now);
 
-        public Employee? Employee { get; set; }
+
+        // RelationShips for EF_Core 
+        // Project
+        public int ProjectId { get; set; }
+        public Project Project { get; set; } = null!;
+
+        // Current assigned Employee
         public int EmployeeId { get; set; }
+        public Employee? Employee { get; set; } = null!;
+
+        // Employee who created the ticket
         public int TicketCreatedById { get; set; }
-        public Employee TicketCreatedBy { get; set; }
+        public Employee TicketCreatedBy { get; set; } = null!;
+        // Ticket History
+        public ICollection<TicketHistory> TicketHistories { get; set; } = new List<TicketHistory>();
+        // Ticket Attachments
+        public ICollection<TicketAttachments> AttachmentURL { get; set; } = new List<TicketAttachments>();
 
-        
-        public required int ProjectId { get; set; }
+        public override string ToString() => $"{TicketId} Ticket Title: {TicketTitle} " +$"Created On: {CreatedAt}\nTicket Status: {TicketStatus}";
 
-        //public Employee TicketCreatedBy { get; set; }
-        public Project Project { get; set; }
-
-
-        // Used by Employee and project manager
-        public void SetAsOnProgress() => TicketStatus = TicketStatus.InProgress;
-        public void TicketCompleted() => TicketStatus = TicketStatus.Completed;
-        public void TicketCancelled() => TicketStatus = TicketStatus.Cancelled;
-        public void TicketDone() => TicketStatus = TicketStatus.Done;
-
-        // Used by Project Manager only
-        public void SetPriorityToHigh() => Priority = TicketPriority.High;
-        public void SetPriorityToLow() => Priority = TicketPriority.Low;
-        public void SetPriorityToMedium() => Priority = TicketPriority.Medium;
-
-
-        public override string ToString()
-        {
-            return $"{TicketId} Ticket Title: {TicketTitle} Created On:{CreatedTime}\n" +
-                $"Ticket Status: {TicketStatus}";
-        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Domain.Entities;
+using Domain.Enum;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -22,6 +23,12 @@ namespace Infrastructure.Database.Configuration
             builder.Property(x => x.ProjectDescription)
                    .HasColumnType("varchar")
                    .HasMaxLength(255);
+
+            builder.Property(x => x.ProjectStatus)
+                   .HasConversion(
+                       x => x.ToString(),
+                       x => (ProjectStatus)Enum.Parse(
+                           typeof(ProjectStatus), x));
 
             builder.HasOne(x => x.ProjectManager)
                    .WithMany()
