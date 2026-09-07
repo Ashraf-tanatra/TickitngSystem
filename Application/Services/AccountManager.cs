@@ -1,7 +1,7 @@
 ﻿using ApplicationServices.DTOs.Account;
 using ApplicationServices.Interfaces;
+using Domain.Entities;
 using Domain.Interfaces;
-using Microsoft.AspNetCore.Identity;
 using System.Net.Mail;
 
 namespace ApplicationServices.Services
@@ -28,43 +28,30 @@ namespace ApplicationServices.Services
 
             if (string.IsNullOrWhiteSpace(request.Email))
                 throw new ArgumentException(
-                    "Email is required.");
+                    ErrorShared.Account.EmailRequired);
 
             if (!ValidEmailFormat(request.Email))
                 throw new ArgumentException(
-                    "Invalid email format.");
+                    ErrorShared.Account.InvalidEmail);
 
             if (string.IsNullOrWhiteSpace(request.Password))
                 throw new ArgumentException(
-                    "Password is required.");
+                    ErrorShared.Account.PasswordRequired);
 
             if (!PasswordFormat(request.Password))
                 throw new ArgumentException(
-                    "Password must be at least 8 characters and contain " +
-                    "uppercase, lowercase, number, and special character.");
+                    ErrorShared.Account.InvalidPassword);
 
             // Check duplicate email
             if (await _accountRepository
                 .GetByEmailAsync(request.Email) != null)
             {
                 throw new InvalidOperationException(
-                    "An account with this email already exists.");
+                    ErrorShared.Account.EmailAlreadyExists);
             }
 
-            var account = new Account
-            {
-                Email = request.Email,
-                PasswordHash = request.Password
-            };
-
-            await _accountRepository.AddAsync(account);
-
-            return new AccountResponse
-            {
-                Id = account.Id,
-                Email = account.Email,
-                EmployeeId = account.EmployeeId
-            };
+            throw new InvalidOperationException(
+                "Create account through signup so the account is connected to an employee.");
         }
 
         // =========================================================
@@ -124,7 +111,7 @@ namespace ApplicationServices.Services
         {
             if (string.IsNullOrWhiteSpace(email))
                 throw new ArgumentException(
-                    "Email is required.");
+                    ErrorShared.Account.EmailRequired);
 
             var account =
                 await _accountRepository.GetByEmailAsync(email);
@@ -132,12 +119,7 @@ namespace ApplicationServices.Services
             if (account == null)
                 return null;
 
-            return new AccountResponse
-            {
-                Id = account.Id,
-                Email = account.Email,
-                EmployeeId = account.EmployeeId
-            };
+            return MapToResponse(account);
         }
 
         // =========================================================
@@ -149,7 +131,7 @@ namespace ApplicationServices.Services
         {
             if (string.IsNullOrWhiteSpace(email))
                 throw new ArgumentException(
-                    "Email is required.");
+                    ErrorShared.Account.EmailRequired);
 
             return await _accountRepository
                 .GetByEmailAsync(email);
@@ -176,7 +158,7 @@ namespace ApplicationServices.Services
             if (account.IsDeleted)
             {
                 throw new InvalidOperationException(
-                    "Cannot update a deleted account.");
+                    ErrorShared.Account.CannotUpdateDeletedAccount);
             }
 
             // Current password is required
@@ -184,13 +166,13 @@ namespace ApplicationServices.Services
                 request.CurrentPassword))
             {
                 throw new ArgumentException(
-                    "Current password is required.");
+                    ErrorShared.Account.CurrentPasswordRequired);
             }
 
-            if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword,account.PasswordHash))
+            if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, account.PasswordHash))
             {
                 throw new UnauthorizedAccessException(
-                    "Current password is incorrect.");
+                    ErrorShared.Account.CurrentPasswordIncorrect);
             }
 
             // =====================================================
@@ -202,7 +184,7 @@ namespace ApplicationServices.Services
                 if (!ValidEmailFormat(request.Email))
                 {
                     throw new ArgumentException(
-                        "Invalid email format.");
+                        ErrorShared.Account.InvalidEmail);
                 }
 
                 if (request.Email != account.Email &&
@@ -210,10 +192,10 @@ namespace ApplicationServices.Services
                         .EmailExistsAsync(request.Email))
                 {
                     throw new InvalidOperationException(
-                        "An account with this email already exists.");
+                        ErrorShared.Account.EmailAlreadyExists);
                 }
 
-                account.Email = request.Email;
+                account.ChangeEmail(request.Email);
             }
 
             // =====================================================
@@ -227,28 +209,22 @@ namespace ApplicationServices.Services
                     request.NewPassword))
                 {
                     throw new ArgumentException(
-                        "Password must be at least 8 characters and contain " +
-                        "uppercase, lowercase, number, and special character.");
+                        ErrorShared.Account.InvalidPassword);
                 }
 
                 if (request.NewPassword !=
                     request.ConfirmNewPassword)
                 {
                     throw new ArgumentException(
-                        "New password and confirm password do not match.");
+                        ErrorShared.Account.PasswordsDoNotMatch);
                 }
 
-                account.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+                account.ChangePassword(BCrypt.Net.BCrypt.HashPassword(request.NewPassword));
             }
 
             await _accountRepository.UpdateAsync(account);
 
-            return new AccountResponse
-            {
-                Id = account.Id,
-                Email = account.Email,
-                EmployeeId = account.EmployeeId
-            };
+            return MapToResponse(account);
         }
 
         // =========================================================
@@ -295,7 +271,7 @@ namespace ApplicationServices.Services
         {
             if (string.IsNullOrWhiteSpace(email))
                 throw new ArgumentException(
-                    "Email is required.");
+                    ErrorShared.Account.EmailRequired);
 
             var account =
                 await _accountRepository.GetByEmailAsync(email);
@@ -306,7 +282,7 @@ namespace ApplicationServices.Services
             if (account.IsDeleted)
             {
                 throw new InvalidOperationException(
-                    "Account is already deleted.");
+                    ErrorShared.Account.AccountAlreadyDeleted);
             }
 
             await _accountRepository
@@ -317,18 +293,14 @@ namespace ApplicationServices.Services
 
         public async Task SetVerificationCodeAsync(Account account,string code,DateTime expiresAt)
         {
-            account.VerificationCode = code;
-            account.VerificationCodeExpiresAt = expiresAt;
-            account.IsEmailVerified = false;
+            account.SetVerificationCode(code, expiresAt);
 
             await _accountRepository.UpdateAsync(account);
         }
 
         public async Task VerifyEmailAsync(Account account)
         {
-            account.IsEmailVerified = true;
-            account.VerificationCode = null;
-            account.VerificationCodeExpiresAt = null;
+            account.VerifyEmail();
 
             await _accountRepository.UpdateAsync(account);
         }
@@ -342,7 +314,7 @@ namespace ApplicationServices.Services
         {
             if (string.IsNullOrWhiteSpace(email))
                 throw new ArgumentException(
-                    "Email is required.");
+                    ErrorShared.Account.EmailRequired);
 
             var account = await _accountRepository.GetByEmailAsync(email);
 
@@ -352,20 +324,20 @@ namespace ApplicationServices.Services
             if (!account.IsDeleted)
             {
                 throw new InvalidOperationException(
-                    "Account is already active.");
+                    ErrorShared.Account.AccountAlreadyActive);
             }
 
             if (!account.DeletedAt.HasValue)
             {
                 throw new InvalidOperationException(
-                    "Account deletion date is missing.");
+                    ErrorShared.Account.AccountDeletionDateMissing);
             }
 
             if (account.DeletedAt.Value.AddDays(30)
                 < DateTime.Now)
             {
                 throw new InvalidOperationException(
-                    "The 30-day reactivation period has expired.");
+                    ErrorShared.Account.ReactivationPeriodExpired);
             }
 
 
@@ -383,11 +355,8 @@ namespace ApplicationServices.Services
             Account account,
             string newPassword)
         {
-            account.PasswordHash =
-                BCrypt.Net.BCrypt.HashPassword(newPassword);
-
-            account.PasswordResetCode = null;
-            account.PasswordResetCodeExpiresAt = null;
+            account.ChangePassword(
+                BCrypt.Net.BCrypt.HashPassword(newPassword));
 
             await _accountRepository.UpdateAsync(account);
         }// =========================================================
@@ -399,10 +368,19 @@ namespace ApplicationServices.Services
             string code,
             DateTime expiresAt)
         {
-            account.PasswordResetCode = code;
-            account.PasswordResetCodeExpiresAt = expiresAt;
+            account.SetPasswordResetCode(code, expiresAt);
 
             await _accountRepository.UpdateAsync(account);
+        }
+
+        private static AccountResponse MapToResponse(Account account)
+        {
+            return new AccountResponse
+            {
+                Id = account.Id,
+                Email = account.Email,
+                EmployeeId = account.EmployeeId
+            };
         }
     }
 }

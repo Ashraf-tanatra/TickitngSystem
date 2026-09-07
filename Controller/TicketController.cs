@@ -20,11 +20,11 @@ namespace Controller
 
 
         [HttpGet("/Project/{projectId}")]
-        public ActionResult<IEnumerable<TicketResponse>> GetAllTicketsForAProject(int projectId)
+        public async Task<ActionResult<IEnumerable<TicketResponse>>> GetAllTicketsForAProject(int projectId)
         {
             try
             {
-                var tickets = _ticketManager.GetAllTicketsForAProject(projectId);
+                var tickets = await _ticketManager.GetAllTicketsForAProjectAsync(projectId);
                 return Ok(tickets);
             }
             catch (Exception ex)
@@ -33,11 +33,11 @@ namespace Controller
             }
         }
         [HttpGet("/Employee/{employeeId}")]
-        public ActionResult<IEnumerable<TicketResponse>> GetAllTicketsForAnEmployee(int employeeId)
+        public async Task<ActionResult<IEnumerable<TicketResponse>>> GetAllTicketsForAnEmployee(int employeeId)
         {
             try
             {
-                var tickets = _ticketManager.GetAllTicketsForAnEmployee(employeeId);
+                var tickets = await _ticketManager.GetAllTicketsForAnEmployeeAsync(employeeId);
                 return Ok(tickets);
             }
             catch (Exception ex)
@@ -46,11 +46,11 @@ namespace Controller
             }
         }
         [HttpGet("/Employee/{employeeId}/TicketCount")]
-        public ActionResult<int> GetTicketTotalCountForAnEmployee(int employeeId)
+        public async Task<ActionResult<int>> GetTicketTotalCountForAnEmployee(int employeeId)
         {
             try
             {
-                var count = _ticketManager.GetTicketTotalCountForAnEmployee(employeeId);
+                var count = await _ticketManager.GetTicketTotalCountForAnEmployeeAsync(employeeId);
                 return Ok(count);
             }
             catch (ArgumentException ex)
@@ -59,9 +59,9 @@ namespace Controller
             }
         }
         [HttpGet("{id}")]
-        public ActionResult<TicketResponse> GetById(int id)
+        public async Task<ActionResult<TicketResponse>> GetById(int id)
         {
-            var ticket = _ticketManager.GetById(id);
+            var ticket = await _ticketManager.GetByIdAsync(id);
 
             if (ticket == null)
                 return NotFound();
@@ -71,11 +71,11 @@ namespace Controller
 
         // POST: api/Ticket
         [HttpPost]
-        public IActionResult Create(CreateTicketRequest request)
+        public async Task<IActionResult> Create(CreateTicketRequest request)
         {
             try
             {
-                var ticketId = _ticketManager.Create(request);
+                var ticketId = await _ticketManager.CreateAsync(request);
 
                 return Ok(ticketId);
             }
@@ -90,11 +90,11 @@ namespace Controller
         }
         // PUT: api/Ticket/5
         [HttpPut("{id}")]
-        public IActionResult Update(int id, UpdateTicketRequest request)
+        public async Task<IActionResult> Update(int id, UpdateTicketRequest request)
         {
             try
             {
-                _ticketManager.Update(id, request);
+                await _ticketManager.UpdateAsync(id, request);
                 return NoContent();
             }
             catch (KeyNotFoundException)
@@ -112,23 +112,23 @@ namespace Controller
         }
         // DELETE: api/Ticket/5
         [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            if (!_ticketManager.Delete(id))
+            if (!await _ticketManager.DeleteAsync(id))
                 return NotFound();
 
             return NoContent();
         }
 
         [HttpPut("/Status/{ticketId}/{status}")]
-        public IActionResult ChangeTicketStatus(int ticketId, TicketStatus status)
+        public async Task<IActionResult> ChangeTicketStatus(int ticketId, TicketStatus status)
         {
             try
             {
-                if (!_ticketManager.TicketExists(ticketId))
+                if (!await _ticketManager.TicketExistsAsync(ticketId))
                     return NotFound();
 
-                _ticketManager.ChangeTicketStatus(ticketId, status);
+                await _ticketManager.ChangeTicketStatusAsync(ticketId, status);
                 return NoContent();
             }
             catch (ArgumentException ex)
@@ -137,14 +137,14 @@ namespace Controller
             }
         }
         [HttpPut("/Priority/{ticketId}/{priority}")]
-        public IActionResult ChangeTicketPriority(int ticketId, TicketPriority priority)
+        public async Task<IActionResult> ChangeTicketPriority(int ticketId, TicketPriority priority)
         {
             try
             {
-                if (!_ticketManager.TicketExists(ticketId))
+                if (!await _ticketManager.TicketExistsAsync(ticketId))
                     return NotFound();
 
-                _ticketManager.ChangeTicketPriority(ticketId, priority);
+                await _ticketManager.ChangeTicketPriorityAsync(ticketId, priority);
                 return NoContent();
             }
             catch (ArgumentException ex)
@@ -155,14 +155,14 @@ namespace Controller
 
 
         [HttpGet("/Employee/{employeeId}/CompletedCount")]
-        public ActionResult<int> GetCompletedTicketCountForAnEmployee(int employeeId)
+        public async Task<ActionResult<int>> GetCompletedTicketCountForAnEmployee(int employeeId)
         {
             try
             {
-                if (!_ticketManager.EmployeeExists(employeeId))
+                if (!await _ticketManager.EmployeeExistsAsync(employeeId))
                     return NotFound();
 
-                var count = _ticketManager.GetTicketCompletedCountForAnEmployee(employeeId);
+                var count = await _ticketManager.GetTicketCompletedCountForAnEmployeeAsync(employeeId);
                 return Ok(count);
             }
             catch (ArgumentException ex)
@@ -172,14 +172,14 @@ namespace Controller
         }
 
         [HttpGet("/Employee/{employeeId}/InProgressCount")]
-        public ActionResult<int> GetInProgressTicketCountForAnEmployee(int employeeId)
+        public async Task<ActionResult<int>> GetInProgressTicketCountForAnEmployee(int employeeId)
         {
             try
             {
-                if (!_ticketManager.EmployeeExists(employeeId))
+                if (!await _ticketManager.EmployeeExistsAsync(employeeId))
                     return NotFound();
 
-                var count = _ticketManager.GetTicketInProgressCountForAnEmployee(employeeId);
+                var count = await _ticketManager.GetTicketInProgressCountForAnEmployeeAsync(employeeId);
                 return Ok(count);
             }
             catch (ArgumentException ex)
@@ -200,7 +200,7 @@ namespace Controller
             if (file == null)
                 return BadRequest("No file was uploaded");
 
-            if (!_ticketManager.TicketExists(ticketId))
+            if (!await _ticketManager.TicketExistsAsync(ticketId))
                 return NotFound("Ticket does not found.");
 
             string uniqueName = $"{Guid.NewGuid()}_{Path.GetFileName(file.FileName)}";
@@ -209,7 +209,7 @@ namespace Controller
             {
                 await file.CopyToAsync(stream);
             }
-            _ticketManager.AddAttachmentToTicket(ticketId, filePath);
+            await _ticketManager.AddAttachmentToTicketAsync(ticketId, filePath);
             return Ok(new { fileName = uniqueName, massage = $"Upload successful!{filePath}" });
         }
 

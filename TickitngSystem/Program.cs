@@ -8,14 +8,7 @@ using Resend;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
-
-
-
-
 builder.Services.AddControllers();
-
-
-
 builder.Services.AddHostedService<DeletedAccountCleanupService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 
@@ -31,7 +24,7 @@ if (string.IsNullOrWhiteSpace(connectionString))
 Console.WriteLine(
     "CONNECTION STRING = " + connectionString);
 
-builder.Services.AddDbContext<AppDbContext>(options =>options.UseSqlServer(connectionString));
+builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString));
 
 
 // ==============================
@@ -64,6 +57,10 @@ builder.Services.AddScoped<
 builder.Services.AddScoped<
     IProjectRepository,
     ProjectRepository>();
+
+builder.Services.AddScoped<
+    IProjectEmployeeRepository,
+    ProjectEmployeeRepository>();
 
 
 // ==============================

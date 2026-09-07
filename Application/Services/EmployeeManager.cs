@@ -66,19 +66,19 @@ namespace ApplicationServices.Services
 
             if (employee.IsDeleted)
                 throw new InvalidOperationException(
-                    "Cannot update a deleted employee.");
+                    ErrorShared.Employee.CannotUpdateDeletedEmployee);
 
             if (string.IsNullOrWhiteSpace(request.FName))
                 throw new ArgumentException(
-                    "First name is required.");
+                    ErrorShared.Employee.FirstNameRequired);
 
             if (string.IsNullOrWhiteSpace(request.LName))
                 throw new ArgumentException(
-                    "Last name is required.");
+                    ErrorShared.Employee.LastNameRequired);
 
             if (string.IsNullOrWhiteSpace(request.Phone))
                 throw new ArgumentException(
-                    "Phone is required.");
+                    ErrorShared.Employee.PhoneRequired);
 
             // =====================================================
             // VALIDATE PHONE
@@ -86,7 +86,7 @@ namespace ApplicationServices.Services
 
             if (!ValidPhoneNumberFormat(request.Phone))
                 throw new ArgumentException(
-                    "Phone number must contain exactly 10 digits.");
+                    ErrorShared.Employee.InvalidPhoneNumber);
 
             // =====================================================
             // CHECK DUPLICATE PHONE
@@ -98,17 +98,18 @@ namespace ApplicationServices.Services
                     id))
             {
                 throw new InvalidOperationException(
-                    "This phone number is already in use.");
+                    ErrorShared.Employee.PhoneAlreadyExists);
             }
 
             // =====================================================
             // UPDATE EMPLOYEE
             // =====================================================
 
-            employee.FName = request.FName;
-            employee.LName = request.LName;
-            employee.Phone = request.Phone;
-            employee.Gender = request.Gender;
+            employee.UpdateDetails(
+                request.FName,
+                request.LName,
+                request.Phone,
+                request.Gender);
 
             await _employeeRepository.UpdateAsync(employee);
 
@@ -151,7 +152,7 @@ namespace ApplicationServices.Services
 
             if (employee.IsDeleted)
                 throw new InvalidOperationException(
-                    "Employee is already deleted.");
+                    ErrorShared.Employee.EmployeeAlreadyDeleted);
 
             // =====================================================
             // CHECK PROJECT MANAGER
@@ -167,14 +168,14 @@ namespace ApplicationServices.Services
                     "Assign another Project Manager first.");
             }
 
-            var EmployeeTickets = await _employeeRepository.GetEmployeeTickets(id);
+            var EmployeeTickets = await _employeeRepository.GetEmployeeTicketsAsync(id);
             if (EmployeeTickets.Any())
             {
                 foreach (var ticket in EmployeeTickets)
                 {
                     if (ticket.TicketStatus == TicketStatus.InProgress || ticket.TicketStatus == TicketStatus.Reopened)
                     {
-                        _ticketRepository.ChangeTicketStatus(ticket.TicketId, TicketStatus.Pending);
+                        await _ticketRepository.ChangeTicketStatusAsync(ticket.TicketId, TicketStatus.Pending);
                         
                     }
                 }
@@ -185,8 +186,7 @@ namespace ApplicationServices.Services
             // SOFT DELETE EMPLOYEE
             // =====================================================
 
-            employee.IsDeleted = true;
-            employee.DeletedAt = DateOnly.FromDateTime(DateTime.UtcNow);
+            employee.Deactivate();
 
             // =====================================================
             // SOFT DELETE ACCOUNT
@@ -221,11 +221,11 @@ namespace ApplicationServices.Services
 
             if (employee == null)
                 throw new KeyNotFoundException(
-                    "Employee not found.");
+                    ErrorShared.Employee.EmployeeNotFound);
 
             if (employee.IsDeleted)
                 throw new InvalidOperationException(
-                    "Cannot get projects for a deleted employee.");
+                    ErrorShared.Employee.CannotUpdateDeletedEmployee);
 
             var projects =
                 await _employeeRepository
@@ -247,7 +247,7 @@ namespace ApplicationServices.Services
                         ProjectName = project.ProjectName,
                         ProjectDescription =
                             project.ProjectDescription,
-                        Role = projectEmployee.Role.ToString(),
+                        Role = projectEmployee.Role ?? "No Role",
                         EmployeeCount =
                             project.ProjectEmployees.Count,
                         TicketCount =
@@ -324,18 +324,17 @@ namespace ApplicationServices.Services
 
             if (!employee.IsDeleted)
                 throw new InvalidOperationException(
-                    "Employee is already active.");
+                    ErrorShared.Employee.EmployeeAlreadyActive);
 
             if (!employee.DeletedAt.HasValue)
                 throw new InvalidOperationException(
-                    "Employee deletion date is missing.");
+                    ErrorShared.Employee.EmployeeDeletionDateMissing);
 
             if (employee.DeletedAt.Value.AddDays(30) < DateOnly.FromDateTime(DateTime.UtcNow))
                 throw new InvalidOperationException(
-                    "The 30-day reactivation period has expired.");
+                    ErrorShared.Employee.EmployeeReactivationPeriodExpired);
 
-            employee.IsDeleted = false;
-            employee.DeletedAt = null;
+            employee.Reactivate();
 
             var account = employee.Account;
 

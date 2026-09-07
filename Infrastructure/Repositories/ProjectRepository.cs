@@ -20,6 +20,7 @@ namespace Infrastructure.Repositories
                 throw new NullReferenceException("The project does not exists!!!");
 
             return await _context.Projects
+                .Include(p => p.ProjectManager)
                 .Include(p => p.ProjectEmployees)
                 .ThenInclude(pe => pe.Employee)
                 .FirstOrDefaultAsync(p => p.Id == id);
@@ -32,7 +33,7 @@ namespace Infrastructure.Repositories
 
             _context.Projects.Update(project);
             await _context.SaveChangesAsync();
-            return await Task.FromResult(true);
+            return true;
         }
         // Create
         public async Task<bool> CreateAsync(Project project)
@@ -44,7 +45,7 @@ namespace Infrastructure.Repositories
 
             await _context.Projects.AddAsync(project);
             await _context.SaveChangesAsync();
-            return await Task.FromResult(true);
+            return true;
         }
         //Number of projects that the employee works on
         public async Task<int> GetProjectCountAsync(int employeeId)
@@ -71,9 +72,12 @@ namespace Infrastructure.Repositories
             // If the project has tickets, make it cancelled and do not delete it from the database
             if (await TicketExistsAsync(projectId))
             {
-                await _context.Projects.Where(p => p.Id == projectId)
-                     .ExecuteUpdateAsync(setter => setter.SetProperty(p => p.ProjectStatus, ProjectStatus.Cancelled));
-                return await Task.FromResult(true);
+                var project = await GetByIdAsync(projectId);
+                project!.ChangeStatus(ProjectStatus.Cancelled);
+
+                _context.Projects.Update(project);
+                await _context.SaveChangesAsync();
+                return true;
             }
             else
             {
@@ -81,7 +85,7 @@ namespace Infrastructure.Repositories
                 // If the project has no tickets, delete it from the database
                 _context.Projects.Remove(project!);
                 await _context.SaveChangesAsync();
-                return await Task.FromResult(true);
+                return true;
             }
         }
         // All employees that work on the project
@@ -116,7 +120,7 @@ namespace Infrastructure.Repositories
 
             await _context.ProjectEmployees.AddAsync(projectEmployee);
             await _context.SaveChangesAsync();
-            return await Task.FromResult(true);
+            return true;
         }
         // Change the status of the project
         public async Task<bool> SetProjectStatusAsync(int projectId, ProjectStatus status)
@@ -124,13 +128,15 @@ namespace Infrastructure.Repositories
 
             if (!await ProjectExistsAsync(projectId))
                 throw new ArgumentException($"Project does not exist.");
-            if ((int)status < 0 || (int)status > 4)
+            if (!System.Enum.IsDefined(status))
                 throw new ArgumentException("Invalid project status.");
 
-            await _context.Projects
-                      .Where(p => p.Id == projectId)
-                      .ExecuteUpdateAsync(setter => setter.SetProperty(p => p.ProjectStatus, status));
-            return await Task.FromResult(true);
+            var project = await GetByIdAsync(projectId);
+            project!.ChangeStatus(status);
+
+            _context.Projects.Update(project);
+            await _context.SaveChangesAsync();
+            return true;
         }
         // Get all the projects that the employee works on
         public async Task<IEnumerable<Project>?> GetAllProjectWorkedByEmployeeAsync(int employeeId)
@@ -143,6 +149,7 @@ namespace Infrastructure.Repositories
 
             return await _context.Projects
                         .Where(p => p.ProjectStatus != ProjectStatus.Cancelled)
+                        .Include(p => p.ProjectManager)
                         .Include(p => p.ProjectEmployees)
                        .Where(p => p.ProjectManagerId == employeeId ||
                         (p.ProjectEmployees != null && p.ProjectEmployees.Any(pe => pe.EmployeeId == employeeId)))
@@ -179,6 +186,7 @@ namespace Infrastructure.Repositories
 
             return await _context.Projects
                          .Where(p => p.ProjectStatus == FilterByStatus)
+                         .Include(p => p.ProjectManager)
                          .Include(p => p.ProjectEmployees)
                          .Where(p => p.ProjectManagerId == employeeId
                          || p.ProjectEmployees.Any(pe => pe.EmployeeId == employeeId))

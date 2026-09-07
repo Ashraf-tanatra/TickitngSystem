@@ -96,8 +96,7 @@ namespace Infrastructure.Repositories
 
         public async Task SoftDeleteAsync(Account account)
         {
-            account.IsDeleted = true;
-            account.DeletedAt = DateTime.UtcNow;
+            account.Deactivate();
 
             _context.Accounts.Update(account);
 
@@ -110,8 +109,7 @@ namespace Infrastructure.Repositories
 
         public async Task ReactivateAsync(Account account)
         {
-            account.IsDeleted = false;
-            account.DeletedAt = null;
+            account.Reactivate();
 
             _context.Accounts.Update(account);
 

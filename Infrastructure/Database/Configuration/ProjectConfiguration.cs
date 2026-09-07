@@ -15,6 +15,12 @@ namespace Infrastructure.Database.Configuration
             builder.Property(x => x.Id)
                    .ValueGeneratedOnAdd();
 
+            builder.Property(x => x.CreatedAt)
+                   .HasColumnType("datetime2");
+
+            builder.Property(x => x.UpdatedAt)
+                   .HasColumnType("datetime2");
+
             builder.Property(x => x.ProjectName)
                    .HasColumnType("varchar")
                    .HasMaxLength(125)
@@ -31,9 +37,15 @@ namespace Infrastructure.Database.Configuration
                            typeof(ProjectStatus), x));
 
             builder.HasOne(x => x.ProjectManager)
-                   .WithMany()
+                   .WithMany(e => e.ManagedProjects)
                    .HasForeignKey(x => x.ProjectManagerId)
                    .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Navigation(x => x.ProjectTickets)
+                   .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+            builder.Navigation(x => x.ProjectEmployees)
+                   .UsePropertyAccessMode(PropertyAccessMode.Field);
 
             builder.ToTable("Projects");
         }

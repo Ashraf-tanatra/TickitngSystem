@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Domain.Entities;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.Database.Configuration
@@ -12,6 +13,12 @@ namespace Infrastructure.Database.Configuration
             builder.HasKey(a => a.Id);
             builder.Property(a => a.Id)
                    .ValueGeneratedOnAdd();
+
+            builder.Property(a => a.CreatedAt)
+                   .HasColumnType("datetime2");
+
+            builder.Property(a => a.UpdatedAt)
+                   .HasColumnType("datetime2");
 
 
             // Email
@@ -37,6 +44,12 @@ namespace Infrastructure.Database.Configuration
                    .HasForeignKey<Account>(a => a.EmployeeId)
                    .OnDelete(DeleteBehavior.Cascade);
 
+            builder.Property(a => a.IsDeleted)
+                   .IsRequired();
+
+            builder.Property(a => a.DeletedAt)
+                   .HasColumnType("datetime2");
+
 
             // Email Verification Code
             builder.Property(x => x.VerificationCode)
@@ -45,6 +58,13 @@ namespace Infrastructure.Database.Configuration
 
             // Email Verification Code Expiration
             builder.Property(x => x.VerificationCodeExpiresAt)
+                   .HasColumnType("DATETIME");
+
+            builder.Property(x => x.PasswordResetCode)
+                   .HasColumnType("VARCHAR")
+                   .HasMaxLength(6);
+
+            builder.Property(x => x.PasswordResetCodeExpiresAt)
                    .HasColumnType("DATETIME");
 
             // Email Verified

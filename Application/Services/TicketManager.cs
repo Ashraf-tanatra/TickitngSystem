@@ -15,13 +15,189 @@ namespace ApplicationServices.Services
             _ticketRepository = ticketRepository;
         }
 
-        public TicketResponse? GetById(int id)
+        public async Task<TicketResponse?> GetByIdAsync(int id)
         {
-            var ticket = _ticketRepository.GetById(id);
+            if (id <= 0)
+                return null;
+
+            var ticket = await _ticketRepository.GetByIdAsync(id);
 
             if (ticket == null)
                 return null;
 
+            return MapToResponse(ticket);
+        }
+
+        public async Task<IEnumerable<TicketResponse>> GetAllTicketsForAProjectAsync(int projectId)
+        {
+            if (projectId <= 0)
+                throw new ArgumentException(ErrorShared.Ticket.ProjectNotFound);
+
+            if (!await _ticketRepository.ProjectExistsAsync(projectId))
+                throw new ArgumentException(ErrorShared.Ticket.ProjectNotFound);
+
+            var tickets = await _ticketRepository.GetAllTicketsForAProjectAsync(projectId);
+            if (!tickets.Any())
+                throw new ArgumentException(ErrorShared.Ticket.NoTicketsForProject);
+
+            return tickets.Select(MapToResponse);
+        }
+
+        public async Task<IEnumerable<TicketResponse>> GetAllTicketsForAnEmployeeAsync(int employeeId)
+        {
+            if (employeeId <= 0)
+                throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
+
+            if (!await _ticketRepository.EmployeeExistsAsync(employeeId))
+                throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
+
+            var tickets = await _ticketRepository.GetAllTicketsForAnEmployeeAsync(employeeId);
+            if (!tickets.Any())
+                throw new ArgumentException(ErrorShared.Ticket.NoTicketsForEmployee);
+
+            return tickets.Select(MapToResponse);
+        }
+
+        public async Task<int> CreateAsync(CreateTicketRequest request)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            if (string.IsNullOrWhiteSpace(request.TicketTitle))
+                throw new ArgumentException(ErrorShared.Ticket.TicketTitleRequired);
+
+            if (!await _ticketRepository.EmployeeExistsAsync(request.EmployeeId))
+                throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
+
+            if (!await _ticketRepository.EmployeeExistsAsync(request.TicketCreatedById))
+                throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
+
+            if (!await _ticketRepository.ProjectExistsAsync(request.ProjectId))
+                throw new ArgumentException(ErrorShared.Ticket.ProjectNotFound);
+
+            var ticket = Ticket.Create(
+                request.TicketTitle,
+                request.DueTo,
+                request.Description,
+                request.Priority,
+                request.ProjectId,
+                request.EmployeeId,
+                request.TicketCreatedById);
+
+            if (!await _ticketRepository.IsManagerAsync(ticket.TicketCreatedById, ticket.ProjectId))
+                throw new UnauthorizedAccessException(ErrorShared.Ticket.UnauthorizedTicketCreation);
+
+            await _ticketRepository.CreateAsync(ticket);
+            return ticket.TicketId;
+
+        }
+
+        public async Task UpdateAsync(int id, UpdateTicketRequest request)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            if (!await _ticketRepository.TicketExistsAsync(id))
+                throw new KeyNotFoundException(ErrorShared.Ticket.TicketNotFound);
+
+            if (string.IsNullOrWhiteSpace(request.TicketTitle))
+                throw new ArgumentException(ErrorShared.Ticket.TicketTitleRequired);
+
+            if (!await _ticketRepository.EmployeeExistsAsync(request.EmployeeId))
+                throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
+
+            var ticket = await _ticketRepository.GetByIdAsync(id);
+
+            ticket!.UpdateDetails(
+                request.TicketTitle,
+                request.DueTo,
+                request.Description,
+                request.EmployeeId);
+
+            await _ticketRepository.UpdateAsync(ticket);
+        }
+
+        public async Task<bool> DeleteAsync(int id)
+        {
+            if (!await _ticketRepository.TicketExistsAsync(id))
+                return false;
+
+            var ticket = await _ticketRepository.GetByIdAsync(id);
+
+            if (ticket is null)
+            {
+                return false;
+            }
+
+            await _ticketRepository.DeleteAsync(ticket);
+            return true;
+        }
+
+        public async Task<int> GetTicketTotalCountForAnEmployeeAsync(int employeeId)
+        {
+            if (!await _ticketRepository.EmployeeExistsAsync(employeeId))
+                throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
+
+            return await _ticketRepository.GetTicketTotalCountForAnEmployeeAsync(employeeId);
+        }
+
+        public async Task<int> GetTicketInProgressCountForAnEmployeeAsync(int employeeId)
+        {
+            if (!await _ticketRepository.EmployeeExistsAsync(employeeId))
+                throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
+
+            return await _ticketRepository.GetTicketInProgressCountForAnEmployeeAsync(employeeId);
+        }
+
+        public async Task<int> GetTicketCompletedCountForAnEmployeeAsync(int employeeId)
+        {
+            if (!await _ticketRepository.EmployeeExistsAsync(employeeId))
+                throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
+
+            return await _ticketRepository.GetTicketCompletedCountForAnEmployeeAsync(employeeId);
+        }
+
+        public async Task ChangeTicketStatusAsync(int ticketId, TicketStatus status)
+        {
+            if (!await _ticketRepository.TicketExistsAsync(ticketId))
+                throw new KeyNotFoundException(ErrorShared.Ticket.TicketNotFound);
+
+            await _ticketRepository.ChangeTicketStatusAsync(ticketId, status);
+        }
+
+        public async Task ChangeTicketPriorityAsync(int ticketId, TicketPriority priority)
+        {
+            if (!await _ticketRepository.TicketExistsAsync(ticketId))
+                throw new KeyNotFoundException(ErrorShared.Ticket.TicketNotFound);
+
+            await _ticketRepository.ChangeTicketPriorityAsync(ticketId, priority);
+        }
+
+        public async Task AddAttachmentToTicketAsync(int ticketId, string filePath)
+        {
+            if (!await _ticketRepository.TicketExistsAsync(ticketId))
+                throw new KeyNotFoundException(ErrorShared.Ticket.TicketNotFound);
+
+            await _ticketRepository.AddAttachmentToTicketAsync(ticketId, filePath);
+        }
+
+        public async Task<bool> TicketExistsAsync(int ticketId)
+        {
+            return await _ticketRepository.TicketExistsAsync(ticketId);
+        }
+
+        public async Task<bool> EmployeeExistsAsync(int employeeId)
+        {
+            return await _ticketRepository.EmployeeExistsAsync(employeeId);
+        }
+
+        public async Task<bool> ProjectExistsAsync(int projectId)
+        {
+            return await _ticketRepository.ProjectExistsAsync(projectId);
+        }
+
+        private static TicketResponse MapToResponse(Ticket ticket)
+        {
             return new TicketResponse
             {
                 TicketId = ticket.TicketId,
@@ -30,167 +206,13 @@ namespace ApplicationServices.Services
                 TicketStatus = ticket.TicketStatus.ToString(),
                 Priority = ticket.Priority.ToString(),
                 Description = ticket.Description,
-
                 EmployeeId = ticket.EmployeeId,
-                EmployeeName = ticket.Employee?.FName + " " + ticket.Employee?.LName,
-
+                EmployeeName = ticket.Employee == null
+                    ? null
+                    : $"{ticket.Employee.FName} {ticket.Employee.LName}",
                 ProjectId = ticket.ProjectId,
                 ProjectName = ticket.Project?.ProjectName
             };
-        }
-        public IEnumerable<TicketResponse>? GetAllTicketsForAProject(int projectId)
-        {
-            if (!_ticketRepository.ProjectExists(projectId))
-                throw new ArgumentException("The specified Project does not exist.");
-
-            var tickets = _ticketRepository.GetAllTicketsForAProject(projectId);
-            if (tickets == null || tickets.Count() == 0)
-                throw new ArgumentException("There is no ticket available for the specified project.");
-
-            return tickets.Select(ticket => new TicketResponse
-            {
-                TicketId = ticket.TicketId,
-                TicketTitle = ticket.TicketTitle,
-                DueTo = ticket.DueTo,
-                TicketStatus = ticket.TicketStatus.ToString(),
-                Priority = ticket.Priority.ToString(),
-                Description = ticket.Description,
-                EmployeeId = ticket.EmployeeId,
-                EmployeeName = ticket.Employee?.FName + " " + ticket.Employee?.LName,
-                ProjectId = ticket.ProjectId,
-                ProjectName = ticket.Project?.ProjectName
-            });
-        }
-        public IEnumerable<TicketResponse>? GetAllTicketsForAnEmployee(int employeeId)
-        {
-            if (!_ticketRepository.EmployeeExists(employeeId))
-                throw new ArgumentException("The specified Employee does not exist.");
-
-            var tickets = _ticketRepository.GetAllTicketsForAnEmployee(employeeId);
-            if (tickets == null || tickets.Count() == 0)
-                throw new ArgumentException("There is no ticket available for the specified employee.");
-
-            return tickets.Select(ticket => new TicketResponse
-            {
-                TicketId = ticket.TicketId,
-                TicketTitle = ticket.TicketTitle,
-                DueTo = ticket.DueTo,
-                TicketStatus = ticket.TicketStatus.ToString(),
-                Priority = ticket.Priority.ToString(),
-                Description = ticket.Description,
-                EmployeeId = ticket.EmployeeId,
-                EmployeeName = ticket.Employee?.FName + " " + ticket.Employee?.LName,
-                ProjectId = ticket.ProjectId,
-                ProjectName = ticket.Project?.ProjectName
-            });
-        }
-
-        public int Create(CreateTicketRequest request)
-        {
-            Exception exception = new ArgumentException("Invalid ticket request.");
-
-            if (request == null)
-                throw exception;
-            if (string.IsNullOrWhiteSpace(request.TicketTitle))
-                throw exception;
-            if (!_ticketRepository.EmployeeExists(request.EmployeeId))
-                throw exception;
-            if (!_ticketRepository.ProjectExists(request.ProjectId))
-                throw exception;
-
-            var ticket = new Ticket
-            {
-                TicketTitle = request.TicketTitle,
-                DueTo = request.DueTo,
-                Description = request.Description,
-                TicketStatus = TicketStatus.Pending,
-                Priority = request.Priority,
-                EmployeeId = request.EmployeeId,
-                ProjectId = request.ProjectId,
-                TicketCreatedById = request.TicketCreatedById,
-            };
-            if (!_ticketRepository.IsManager(ticket.TicketCreatedById, ticket.ProjectId)) //need fixes
-                throw new UnauthorizedAccessException();
-            if ((int)ticket.Priority < 0 || (int)ticket.Priority > 2)
-                throw new ArgumentException("Priority must be between 0 and 2.");
-
-            _ticketRepository.Create(ticket);
-            return ticket.TicketId;
-
-        }
-        public void Update(int id, UpdateTicketRequest request)
-        {
-            Exception exception = new Exception();
-
-            if (request == null)
-                throw new ArgumentNullException(nameof(request));
-            if (!_ticketRepository.TicketExists(id))
-                throw exception;
-            if (string.IsNullOrWhiteSpace(request.TicketTitle))
-                throw exception;
-            if (!_ticketRepository.EmployeeExists(request.EmployeeId))
-                throw exception;
-
-            var ticket = _ticketRepository.GetById(id);
-
-            ticket.TicketTitle = request.TicketTitle;
-            ticket.DueTo = request.DueTo;
-            ticket.Description = request.Description;
-            ticket.EmployeeId = request.EmployeeId;
-
-            _ticketRepository.Update(ticket);
-        }
-        public bool Delete(int id)
-        {
-            if (!_ticketRepository.TicketExists(id))
-                return false;
-
-            var ticket = _ticketRepository.GetById(id);
-            _ticketRepository.Delete(ticket);
-            return true;
-        }
-
-        public int GetTicketTotalCountForAnEmployee(int employeeId)
-        {
-            if (!_ticketRepository.EmployeeExists(employeeId))
-                throw new ArgumentException("The specified Employee does not exist.");
-
-            return _ticketRepository.GetTicketTotalCountForAnEmployee(employeeId);
-        }
-        public int GetTicketInProgressCountForAnEmployee(int employeeId)
-        {
-            return _ticketRepository.GetTicketInProgressCountForAnEmployee(employeeId);
-        }
-        public int GetTicketCompletedCountForAnEmployee(int employeeId)
-        {
-            return _ticketRepository.GetTicketCompletedCountForAnEmployee(employeeId);
-        }
-
-        public void ChangeTicketStatus(int ticketId, TicketStatus status)
-        {
-            _ticketRepository.ChangeTicketStatus(ticketId, status);
-        }
-        public void ChangeTicketPriority(int ticketId, TicketPriority priority)
-        {
-            _ticketRepository.ChangeTicketPriority(ticketId, priority);
-        }
-
-        public void AddAttachmentToTicket(int ticketId, string filePath)
-        {
-            _ticketRepository.AddAttachmentToTicket(ticketId, filePath);
-        }
-
-        public bool TicketExists(int ticketId)
-        {
-            return _ticketRepository.TicketExists(ticketId);
-        }
-        public bool EmployeeExists(int employeeId)
-        {
-            return _ticketRepository.EmployeeExists(employeeId);
-        }
-        public bool ProjectExists(int projectId)
-        {
-            return _ticketRepository.ProjectExists(projectId);
         }
     }
 

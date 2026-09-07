@@ -5,27 +5,27 @@ namespace ApplicationServices.Interfaces
 {
     public interface ITicketManager
     {
-        TicketResponse? GetById(int id);
+        Task<TicketResponse?> GetByIdAsync(int id);
 
-        IEnumerable<TicketResponse>? GetAllTicketsForAProject(int projectId);
-        IEnumerable<TicketResponse>? GetAllTicketsForAnEmployee(int employeeId);
+        Task<IEnumerable<TicketResponse>> GetAllTicketsForAProjectAsync(int projectId);
+        Task<IEnumerable<TicketResponse>> GetAllTicketsForAnEmployeeAsync(int employeeId);
 
-        int Create(CreateTicketRequest request);
-        void Update(int id, UpdateTicketRequest request);
-        bool Delete(int id);
+        Task<int> CreateAsync(CreateTicketRequest request);
+        Task UpdateAsync(int id, UpdateTicketRequest request);
+        Task<bool> DeleteAsync(int id);
 
 
-        int GetTicketTotalCountForAnEmployee(int employeeId);
-        int GetTicketInProgressCountForAnEmployee(int employeeId);
-        int GetTicketCompletedCountForAnEmployee(int employeeId);
+        Task<int> GetTicketTotalCountForAnEmployeeAsync(int employeeId);
+        Task<int> GetTicketInProgressCountForAnEmployeeAsync(int employeeId);
+        Task<int> GetTicketCompletedCountForAnEmployeeAsync(int employeeId);
 
-        void ChangeTicketStatus(int ticketId, TicketStatus status);
-        void ChangeTicketPriority(int ticketId, TicketPriority priority);
+        Task ChangeTicketStatusAsync(int ticketId, TicketStatus status);
+        Task ChangeTicketPriorityAsync(int ticketId, TicketPriority priority);
 
-        void AddAttachmentToTicket(int ticketId, string filePath);
+        Task AddAttachmentToTicketAsync(int ticketId, string filePath);
 
-        bool TicketExists(int ticketId);
-        bool EmployeeExists(int employeeId);
-        bool ProjectExists(int projectId);
+        Task<bool> TicketExistsAsync(int ticketId);
+        Task<bool> EmployeeExistsAsync(int employeeId);
+        Task<bool> ProjectExistsAsync(int projectId);
     }
 }

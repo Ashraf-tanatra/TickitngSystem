@@ -5,26 +5,26 @@ namespace Domain.Interfaces
 {
     public interface ITicketRepository
     {
-        Ticket? GetById(int id);
-        IEnumerable<Ticket>? GetAllTicketsForAProject(int projectId);
-        IEnumerable<Ticket>? GetAllTicketsForAnEmployee(int employeeId);
+        Task<Ticket?> GetByIdAsync(int id);
+        Task<IEnumerable<Ticket>> GetAllTicketsForAProjectAsync(int projectId);
+        Task<IEnumerable<Ticket>> GetAllTicketsForAnEmployeeAsync(int employeeId);
 
-        int GetTicketTotalCountForAnEmployee(int employeeId);
-        int GetTicketInProgressCountForAnEmployee(int employeeId);
-        int GetTicketCompletedCountForAnEmployee(int employeeId);
+        Task<int> GetTicketTotalCountForAnEmployeeAsync(int employeeId);
+        Task<int> GetTicketInProgressCountForAnEmployeeAsync(int employeeId);
+        Task<int> GetTicketCompletedCountForAnEmployeeAsync(int employeeId);
 
-        void ChangeTicketStatus(int ticketId, TicketStatus status);
-        void ChangeTicketPriority(int ticketId, TicketPriority priority);
+        Task ChangeTicketStatusAsync(int ticketId, TicketStatus status);
+        Task ChangeTicketPriorityAsync(int ticketId, TicketPriority priority);
 
-        void Create(Ticket ticket);
-        void Update(Ticket ticket);
-        void Delete(Ticket ticket);
+        Task CreateAsync(Ticket ticket);
+        Task UpdateAsync(Ticket ticket);
+        Task DeleteAsync(Ticket ticket);
 
-        void AddAttachmentToTicket(int ticketId, string filePath);
+        Task AddAttachmentToTicketAsync(int ticketId, string filePath);
 
-        bool TicketExists(int ticketId);
-        bool EmployeeExists(int employeeId);
-        bool ProjectExists(int projectId);
-        bool IsManager(int employeeId, int projectId);
+        Task<bool> TicketExistsAsync(int ticketId);
+        Task<bool> EmployeeExistsAsync(int employeeId);
+        Task<bool> ProjectExistsAsync(int projectId);
+        Task<bool> IsManagerAsync(int employeeId, int projectId);
     }
 }

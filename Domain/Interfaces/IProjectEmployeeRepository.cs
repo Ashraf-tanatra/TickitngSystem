@@ -5,16 +5,16 @@ namespace Domain.Interfaces
     
     public interface IProjectEmployeeRepository
     {
-        IEnumerable<ProjectEmployee> GetAll();
-        IEnumerable<ProjectEmployee> GetByProjectId(int projectId);
-        IEnumerable<ProjectEmployee> GetByEmployeeId(int employeeId);
+        Task<IEnumerable<ProjectEmployee>> GetAllAsync();
+        Task<IEnumerable<ProjectEmployee>> GetByProjectIdAsync(int projectId);
+        Task<IEnumerable<ProjectEmployee>> GetByEmployeeIdAsync(int employeeId);
 
-        ProjectEmployee? Get(int projectId, int employeeId);
+        Task<ProjectEmployee?> GetAsync(int projectId, int employeeId);
 
-        bool Exists(int projectId, int employeeId);
+        Task<bool> ExistsAsync(int projectId, int employeeId);
 
-        void Add(ProjectEmployee projectEmployee);
+        Task AddAsync(ProjectEmployee projectEmployee);
 
-        void Delete(ProjectEmployee projectEmployee);
+        Task DeleteAsync(ProjectEmployee projectEmployee);
     }
 }

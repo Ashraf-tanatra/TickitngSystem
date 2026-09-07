@@ -1,36 +1,108 @@
-﻿using Domain.Enum;
+using Domain.Enum;
 
 namespace Domain.Entities
 {
     public class Ticket
     {
-        public int TicketId { get; } // Primary Key
-        public DateOnly? DueTo { get; set; }
-        public string? Description { get; set; }
-        public TicketPriority Priority { get; set; }
-        public required string TicketTitle { get; set; }
-        public TicketStatus TicketStatus { get; set; } = TicketStatus.Pending;
-        public DateOnly CreatedAt { get; set; } = DateOnly.FromDateTime(DateTime.Now);
+        private readonly List<TicketHistory> _ticketHistories = new();
+        private readonly List<TicketAttachments> _attachmentUrl = new();
 
+        private Ticket()
+        {
+        }
 
-        // RelationShips for EF_Core 
+        public int TicketId { get; private set; }
+        public DateOnly? DueTo { get; private set; }
+        public string? Description { get; private set; }
+        public TicketPriority Priority { get; private set; }
+        public string TicketTitle { get; private set; } = string.Empty;
+        public TicketStatus TicketStatus { get; private set; } = TicketStatus.Pending;
+        public DateOnly CreatedAt { get; private set; } = DateOnly.FromDateTime(DateTime.Now);
+
+        // RelationShips for EF_Core
         // Project
-        public int ProjectId { get; set; }
-        public Project Project { get; set; } = null!;
+        public int ProjectId { get; private set; }
+        public Project Project { get; private set; } = null!;
 
         // Current assigned Employee
-        public int EmployeeId { get; set; }
-        public Employee? Employee { get; set; } = null!;
+        public int EmployeeId { get; private set; }
+        public Employee Employee { get; private set; } = null!;
 
         // Employee who created the ticket
-        public int TicketCreatedById { get; set; }
-        public Employee TicketCreatedBy { get; set; } = null!;
+        public int TicketCreatedById { get; private set; }
+        public Employee TicketCreatedBy { get; private set; } = null!;
+
         // Ticket History
-        public ICollection<TicketHistory> TicketHistories { get; set; } = new List<TicketHistory>();
+        public IReadOnlyCollection<TicketHistory> TicketHistories => _ticketHistories;
+
         // Ticket Attachments
-        public ICollection<TicketAttachments> AttachmentURL { get; set; } = new List<TicketAttachments>();
+        public IReadOnlyCollection<TicketAttachments> AttachmentURL => _attachmentUrl;
 
-        public override string ToString() => $"{TicketId} Ticket Title: {TicketTitle} " +$"Created On: {CreatedAt}\nTicket Status: {TicketStatus}";
+        public static Ticket Create(
+            string ticketTitle,
+            DateOnly? dueTo,
+            string? description,
+            TicketPriority priority,
+            int projectId,
+            int employeeId,
+            int ticketCreatedById)
+        {
+            if (employeeId <= 0 || ticketCreatedById <= 0)
+                throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
 
+            if (projectId <= 0)
+                throw new ArgumentException(ErrorShared.Ticket.ProjectNotFound);
+
+            var ticket = new Ticket
+            {
+                Priority = priority,
+                ProjectId = projectId,
+                EmployeeId = employeeId,
+                TicketCreatedById = ticketCreatedById,
+                TicketStatus = TicketStatus.Pending
+            };
+
+            ticket.UpdateDetails(ticketTitle, dueTo, description, employeeId);
+            return ticket;
+        }
+
+        public void UpdateDetails(
+            string ticketTitle,
+            DateOnly? dueTo,
+            string? description,
+            int employeeId)
+        {
+            if (string.IsNullOrWhiteSpace(ticketTitle))
+                throw new ArgumentException(ErrorShared.Ticket.TicketTitleRequired);
+
+            if (employeeId <= 0)
+                throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
+
+            TicketTitle = ticketTitle.Trim();
+            DueTo = dueTo;
+            Description = string.IsNullOrWhiteSpace(description)
+                ? null
+                : description.Trim();
+            EmployeeId = employeeId;
+        }
+
+        public void ChangeStatus(TicketStatus status)
+        {
+            if (!System.Enum.IsDefined(status))
+                throw new ArgumentException("Invalid ticket status.");
+
+            TicketStatus = status;
+        }
+
+        public void ChangePriority(TicketPriority priority)
+        {
+            if (!System.Enum.IsDefined(priority))
+                throw new ArgumentException(ErrorShared.Ticket.InvalidPriority);
+
+            Priority = priority;
+        }
+
+        public override string ToString() =>
+            $"{TicketId} Ticket Title: {TicketTitle} Created On: {CreatedAt}\nTicket Status: {TicketStatus}";
     }
 }

@@ -11,9 +11,16 @@ namespace Infrastructure.Database.Configuration
             builder.HasKey(p => p.Id);
             builder.Property(a => a.Id).ValueGeneratedOnAdd();
 
+            builder.Property(a => a.CreatedAt)
+                .HasColumnType("datetime2");
+
+            builder.Property(a => a.UpdatedAt)
+                .HasColumnType("datetime2");
+
             builder.Property(u => u.URL)
                 .HasColumnType("VARCHAR")
-                .HasMaxLength(255);
+                .HasMaxLength(255)
+                .IsRequired();
 
             builder.HasOne(t => t.Ticket)
                 .WithMany(a => a.AttachmentURL)

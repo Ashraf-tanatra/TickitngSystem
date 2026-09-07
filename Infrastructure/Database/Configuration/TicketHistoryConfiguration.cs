@@ -19,6 +19,12 @@ namespace Infrastructure.Database.Configuration
             builder.Property(h => h.Id)
                    .ValueGeneratedOnAdd();
 
+            builder.Property(h => h.CreatedAt)
+                   .HasColumnType("datetime2");
+
+            builder.Property(h => h.UpdatedAt)
+                   .HasColumnType("datetime2");
+
 
             // =====================================================
             // Ticket

@@ -64,6 +64,13 @@ namespace Infrastructure.Database.Configuration
                    .IsRequired()
                    .OnDelete(DeleteBehavior.Restrict);
 
+            builder.Navigation(x => x.TicketHistories)
+                   .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+            builder.Navigation(x => x.AttachmentURL)
+                   .HasField("_attachmentUrl")
+                   .UsePropertyAccessMode(PropertyAccessMode.Field);
+
             builder.ToTable("Tickets");
         }
     }

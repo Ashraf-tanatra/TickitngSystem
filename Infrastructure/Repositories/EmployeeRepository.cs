@@ -108,10 +108,8 @@ namespace Infrastructure.Repositories
         {
             return await _context.Projects
                 .Where(p =>
-                    p.ProjectStatus == ProjectStatus.Active && p.ProjectManager.Id==employeeId&&
-                    p.ProjectEmployees.Any(pe =>
-                        pe.EmployeeId == employeeId &&
-                        !pe.Employee.IsDeleted))
+                    p.ProjectStatus == ProjectStatus.Active &&
+                    p.ProjectManagerId == employeeId)
                 .Include(p => p.ProjectEmployees)
                 .Include(p => p.ProjectTickets)
                 .ToListAsync();
@@ -121,7 +119,7 @@ namespace Infrastructure.Repositories
         // GET Employee Tickets
         // =========================================================
 
-        public async Task<IEnumerable<Ticket>> GetEmployeeTickets(int employeeId)
+        public async Task<IEnumerable<Ticket>> GetEmployeeTicketsAsync(int employeeId)
         {
             return await _context.Tickets.Where(t => t.EmployeeId == employeeId).ToListAsync();
 

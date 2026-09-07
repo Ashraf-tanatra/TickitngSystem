@@ -95,14 +95,11 @@ namespace ApplicationServices.Services
             // CREATE EMPLOYEE
             // =====================================================
 
-            var employee = new Employee
-            {
-                FName = request.FName,
-                LName = request.LName,
-                Phone = request.Phone,
-                Gender = request.Gender,
-                IsDeleted = false
-            };
+            var employee = Employee.Create(
+                request.FName,
+                request.LName,
+                request.Phone,
+                request.Gender);
 
             // =====================================================
             // GENERATE VERIFICATION CODE
@@ -112,33 +109,20 @@ namespace ApplicationServices.Services
                 Random.Shared.Next(100000, 1000000).ToString();
 
             var verificationCodeExpiresAt =
-                DateTime.Now.AddMinutes(10);
+                DateTime.UtcNow.AddMinutes(10);
 
             // =====================================================
             // CREATE ACCOUNT
             // =====================================================
 
-            var account = new Account
-            {
-                Email = request.Email,
+            var account = Account.Create(
+                request.Email,
+                BCrypt.Net.BCrypt.HashPassword(request.Password),
+                employee);
 
-                PasswordHash =
-                    BCrypt.Net.BCrypt.HashPassword(
-                        request.Password),
-
-                Employee = employee,
-
-                IsDeleted = false,
-
-                VerificationCode = verificationCode,
-
-                VerificationCodeExpiresAt =
-                    verificationCodeExpiresAt,
-
-                IsEmailVerified = false
-            };
-
-            employee.Account = account;
+            account.SetVerificationCode(
+                verificationCode,
+                verificationCodeExpiresAt);
 
             // =====================================================
             // SAVE EMPLOYEE + ACCOUNT
@@ -151,7 +135,7 @@ namespace ApplicationServices.Services
             // =====================================================
 
             await _emailService.SendVerificationCodeAsync(
-                account.Email!,
+                account.Email,
                 verificationCode);
 
             // =====================================================
@@ -197,15 +181,7 @@ namespace ApplicationServices.Services
 
             if (account == null)
                 throw new UnauthorizedAccessException(
-                    ErrorShared .Account.InvalidCredentials);
-
-            // =====================================================
-            // CHECK ACCOUNT STATUS
-            // =====================================================
-
-            if (account.IsDeleted)
-                throw new UnauthorizedAccessException(
-                    ErrorShared.Account.AccountDeactivated);
+                    ErrorShared.Account.InvalidCredentials);
 
             // =====================================================
             // CHECK ACCOUNT STATUS
@@ -308,7 +284,7 @@ namespace ApplicationServices.Services
                 Random.Shared.Next(100000, 1000000).ToString();
 
             var resetCodeExpiresAt =
-                DateTime.Now.AddMinutes(10);
+                DateTime.UtcNow.AddMinutes(10);
 
             // =====================================================
             // SAVE RESET CODE
@@ -324,7 +300,7 @@ namespace ApplicationServices.Services
             // =====================================================
 
             await _emailService.SendVerificationCodeAsync(
-                account.Email!,
+                account.Email,
                 resetCode);
         }
 
@@ -424,7 +400,7 @@ namespace ApplicationServices.Services
                     ErrorShared.Account.ResetCodeExpired);
             }
 
-            if (account.PasswordResetCodeExpiresAt.Value < DateTime.Now)
+            if (account.PasswordResetCodeExpiresAt.Value < DateTime.UtcNow)
             {
                 throw new InvalidOperationException(
                     ErrorShared.Account.ResetCodeExpired);
@@ -476,7 +452,7 @@ namespace ApplicationServices.Services
                 throw new InvalidOperationException(
                     ErrorShared.Account.VerificationCodeExpired);
 
-            if (account.VerificationCodeExpiresAt.Value < DateTime.Now)
+            if (account.VerificationCodeExpiresAt.Value < DateTime.UtcNow)
                 throw new InvalidOperationException(
                     ErrorShared.Account.VerificationCodeExpired);
 

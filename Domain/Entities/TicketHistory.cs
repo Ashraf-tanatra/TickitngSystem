@@ -1,27 +1,68 @@
-﻿namespace Domain.Entities
+namespace Domain.Entities
 {
-    public class TicketHistory
+    public class TicketHistory : BaseEntity
     {
-        public int Id { get; set; }
+        private TicketHistory()
+        {
+        }
+
         // Ticket
-        public int TicketId { get; set; }
-        public Ticket Ticket { get; set; } = null!;
+        public int TicketId { get; private set; }
+        public Ticket Ticket { get; private set; } = null!;
+
         // Employee who performed the action
-        public int ActionByEmployeeId { get; set; }
-        public Employee ActionByEmployee { get; set; } = null!;
+        public int ActionByEmployeeId { get; private set; }
+        public Employee ActionByEmployee { get; private set; } = null!;
+
         // Previous assigned employee
-        public int? FromEmployeeId { get; set; }
-        public Employee? FromEmployee { get; set; }
+        public int? FromEmployeeId { get; private set; }
+        public Employee? FromEmployee { get; private set; }
+
         // New assigned employee
-        public int? ToEmployeeId { get; set; }
-        public Employee? ToEmployee { get; set; }
+        public int? ToEmployeeId { get; private set; }
+        public Employee? ToEmployee { get; private set; }
+
         // What happened
-        public string Action { get; set; } = null!;
+        public string Action { get; private set; } = string.Empty;
+
         // Previous value
-        public string? OldValue { get; set; }
+        public string? OldValue { get; private set; }
+
         // New value
-        public string? NewValue { get; set; }
+        public string? NewValue { get; private set; }
+
         // When it happened
-        public DateTime ModifiedAt { get; set; } = DateTime.Now;
+        public DateTime ModifiedAt { get; private set; } = DateTime.Now;
+
+        public static TicketHistory Create(
+            int ticketId,
+            int actionByEmployeeId,
+            string action,
+            string? oldValue = null,
+            string? newValue = null,
+            int? fromEmployeeId = null,
+            int? toEmployeeId = null)
+        {
+            if (ticketId <= 0)
+                throw new ArgumentException(ErrorShared.Ticket.TicketNotFound);
+
+            if (actionByEmployeeId <= 0)
+                throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
+
+            if (string.IsNullOrWhiteSpace(action))
+                throw new ArgumentException("Action is required.");
+
+            return new TicketHistory
+            {
+                TicketId = ticketId,
+                ActionByEmployeeId = actionByEmployeeId,
+                Action = action.Trim(),
+                OldValue = string.IsNullOrWhiteSpace(oldValue) ? null : oldValue.Trim(),
+                NewValue = string.IsNullOrWhiteSpace(newValue) ? null : newValue.Trim(),
+                FromEmployeeId = fromEmployeeId,
+                ToEmployeeId = toEmployeeId,
+                ModifiedAt = DateTime.Now
+            };
+        }
     }
 }
