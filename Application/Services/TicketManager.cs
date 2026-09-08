@@ -28,6 +28,24 @@ namespace ApplicationServices.Services
             return MapToResponse(ticket);
         }
 
+        public async Task<IEnumerable<TicketHistoryResponse>> GetTicketHistoryAsync(int ticketId)
+        {
+            if (!await _ticketRepository.TicketExistsAsync(ticketId))
+                throw new KeyNotFoundException(ErrorShared.Ticket.TicketNotFound);
+
+            var history = await _ticketRepository.GetTicketHistoryAsync(ticketId);
+            return history.Select(MapHistoryToResponse);
+        }
+
+        public async Task<IEnumerable<TicketAttachmentResponse>> GetTicketAttachmentsAsync(int ticketId)
+        {
+            if (!await _ticketRepository.TicketExistsAsync(ticketId))
+                throw new KeyNotFoundException(ErrorShared.Ticket.TicketNotFound);
+
+            var attachments = await _ticketRepository.GetTicketAttachmentsAsync(ticketId);
+            return attachments.Select(MapAttachmentToResponse);
+        }
+
         public async Task<IEnumerable<TicketResponse>> GetAllTicketsForAProjectAsync(int projectId)
         {
             if (projectId <= 0)
@@ -75,6 +93,9 @@ namespace ApplicationServices.Services
             if (!await _ticketRepository.ProjectExistsAsync(request.ProjectId))
                 throw new ArgumentException(ErrorShared.Ticket.ProjectNotFound);
 
+            if (!await _ticketRepository.IsEmployeeAssignedToProjectAsync(request.EmployeeId, request.ProjectId))
+                throw new ArgumentException(ErrorShared.Ticket.EmployeeNotAssignedToProject);
+
             var ticket = Ticket.Create(
                 request.TicketTitle,
                 request.DueTo,
@@ -108,7 +129,10 @@ namespace ApplicationServices.Services
 
             var ticket = await _ticketRepository.GetByIdAsync(id);
 
-            ticket!.UpdateDetails(
+            if (!await _ticketRepository.IsEmployeeAssignedToProjectAsync(request.EmployeeId, ticket!.ProjectId))
+                throw new ArgumentException(ErrorShared.Ticket.EmployeeNotAssignedToProject);
+
+            ticket.UpdateDetails(
                 request.TicketTitle,
                 request.DueTo,
                 request.Description,
@@ -129,7 +153,8 @@ namespace ApplicationServices.Services
                 return false;
             }
 
-            await _ticketRepository.DeleteAsync(ticket);
+            ticket.ChangeStatus(TicketStatus.Cancelled);
+            await _ticketRepository.UpdateAsync(ticket);
             return true;
         }
 
@@ -157,6 +182,14 @@ namespace ApplicationServices.Services
             return await _ticketRepository.GetTicketCompletedCountForAnEmployeeAsync(employeeId);
         }
 
+        public async Task<int> GetTicketNeedReviewCountForAnEmployeeAsync(int employeeId)
+        {
+            if (!await _ticketRepository.EmployeeExistsAsync(employeeId))
+                throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
+
+            return await _ticketRepository.GetTicketNeedReviewCountForAnEmployeeAsync(employeeId);
+        }
+
         public async Task ChangeTicketStatusAsync(int ticketId, TicketStatus status)
         {
             if (!await _ticketRepository.TicketExistsAsync(ticketId))
@@ -173,12 +206,144 @@ namespace ApplicationServices.Services
             await _ticketRepository.ChangeTicketPriorityAsync(ticketId, priority);
         }
 
-        public async Task AddAttachmentToTicketAsync(int ticketId, string filePath)
+        public async Task SubmitForReviewAsync(int ticketId, TicketActionRequest request)
+        {
+            ValidateActionRequest(request);
+
+            var ticket = await GetTicketOrThrowAsync(ticketId);
+
+            if (ticket.EmployeeId != request.ActionByEmployeeId)
+                throw new UnauthorizedAccessException(ErrorShared.Ticket.OnlyAssigneeCanSubmitForReview);
+
+            var oldStatus = ticket.TicketStatus.ToString();
+            ticket.SubmitForReview();
+
+            var history = TicketHistory.Create(
+                ticket.TicketId,
+                request.ActionByEmployeeId,
+                "SubmitForReview",
+                oldStatus,
+                ticket.TicketStatus.ToString(),
+                note: request.Note);
+
+            await _ticketRepository.UpdateWithHistoryAsync(ticket, history);
+        }
+
+        public async Task ApproveAsync(int ticketId, TicketActionRequest request)
+        {
+            ValidateActionRequest(request);
+
+            var ticket = await GetTicketOrThrowAsync(ticketId);
+            await EnsureManagerAsync(request.ActionByEmployeeId, ticket.ProjectId);
+
+            var oldStatus = ticket.TicketStatus.ToString();
+            ticket.Approve();
+
+            var history = TicketHistory.Create(
+                ticket.TicketId,
+                request.ActionByEmployeeId,
+                "Approve",
+                oldStatus,
+                ticket.TicketStatus.ToString(),
+                note: request.Note);
+
+            await _ticketRepository.UpdateWithHistoryAsync(ticket, history);
+        }
+
+        public async Task RequestChangesAsync(int ticketId, TicketActionRequest request)
+        {
+            ValidateActionRequest(request);
+
+            var ticket = await GetTicketOrThrowAsync(ticketId);
+            await EnsureManagerAsync(request.ActionByEmployeeId, ticket.ProjectId);
+
+            var oldStatus = ticket.TicketStatus.ToString();
+            ticket.RequestChanges();
+
+            var history = TicketHistory.Create(
+                ticket.TicketId,
+                request.ActionByEmployeeId,
+                "RequestChanges",
+                oldStatus,
+                ticket.TicketStatus.ToString(),
+                note: request.Note);
+
+            await _ticketRepository.UpdateWithHistoryAsync(ticket, history);
+        }
+
+        public async Task ReassignAsync(int ticketId, TicketReassignRequest request)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            if (request.ActionByEmployeeId <= 0)
+                throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
+
+            if (request.ToEmployeeId <= 0)
+                throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
+
+            var ticket = await GetTicketOrThrowAsync(ticketId);
+            await EnsureManagerAsync(request.ActionByEmployeeId, ticket.ProjectId);
+
+            if (!await _ticketRepository.EmployeeExistsAsync(request.ToEmployeeId))
+                throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
+
+            if (!await _ticketRepository.IsEmployeeAssignedToProjectAsync(request.ToEmployeeId, ticket.ProjectId))
+                throw new ArgumentException(ErrorShared.Ticket.EmployeeNotAssignedToProject);
+
+            var fromEmployeeId = ticket.EmployeeId;
+            ticket.Reassign(request.ToEmployeeId);
+
+            var history = TicketHistory.Create(
+                ticket.TicketId,
+                request.ActionByEmployeeId,
+                "Reassign",
+                fromEmployeeId.ToString(),
+                request.ToEmployeeId.ToString(),
+                fromEmployeeId,
+                request.ToEmployeeId,
+                request.Note);
+
+            await _ticketRepository.UpdateWithHistoryAsync(ticket, history);
+        }
+
+        public async Task AddCommentAsync(int ticketId, TicketActionRequest request)
+        {
+            ValidateActionRequest(request);
+
+            if (string.IsNullOrWhiteSpace(request.Note))
+                throw new ArgumentException(ErrorShared.Ticket.CommentRequired);
+
+            var ticket = await GetTicketOrThrowAsync(ticketId);
+            await EnsureProjectMemberAsync(request.ActionByEmployeeId, ticket.ProjectId);
+
+            var history = TicketHistory.Create(
+                ticket.TicketId,
+                request.ActionByEmployeeId,
+                "Comment",
+                note: request.Note);
+
+            await _ticketRepository.UpdateWithHistoryAsync(ticket, history);
+        }
+
+        public async Task AddAttachmentToTicketAsync(
+            int ticketId,
+            string url,
+            string originalFileName,
+            string storedFileName,
+            string contentType,
+            long sizeInBytes)
         {
             if (!await _ticketRepository.TicketExistsAsync(ticketId))
                 throw new KeyNotFoundException(ErrorShared.Ticket.TicketNotFound);
 
-            await _ticketRepository.AddAttachmentToTicketAsync(ticketId, filePath);
+            await _ticketRepository.AddAttachmentToTicketAsync(
+                ticketId,
+                url,
+                originalFileName,
+                storedFileName,
+                contentType,
+                sizeInBytes);
         }
 
         public async Task<bool> TicketExistsAsync(int ticketId)
@@ -196,6 +361,46 @@ namespace ApplicationServices.Services
             return await _ticketRepository.ProjectExistsAsync(projectId);
         }
 
+        private async Task<Ticket> GetTicketOrThrowAsync(int ticketId)
+        {
+            var ticket = await _ticketRepository.GetByIdAsync(ticketId);
+
+            if (ticket is null)
+                throw new KeyNotFoundException(ErrorShared.Ticket.TicketNotFound);
+
+            return ticket;
+        }
+
+        private static void ValidateActionRequest(TicketActionRequest request)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            if (request.ActionByEmployeeId <= 0)
+                throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
+        }
+
+        private async Task EnsureManagerAsync(int employeeId, int projectId)
+        {
+            if (!await _ticketRepository.EmployeeExistsAsync(employeeId))
+                throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
+
+            if (!await _ticketRepository.IsManagerAsync(employeeId, projectId))
+                throw new UnauthorizedAccessException(ErrorShared.Ticket.UnauthorizedTicketReview);
+        }
+
+        private async Task EnsureProjectMemberAsync(int employeeId, int projectId)
+        {
+            if (!await _ticketRepository.EmployeeExistsAsync(employeeId))
+                throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
+
+            if (await _ticketRepository.IsManagerAsync(employeeId, projectId))
+                return;
+
+            if (!await _ticketRepository.IsEmployeeAssignedToProjectAsync(employeeId, projectId))
+                throw new UnauthorizedAccessException(ErrorShared.Ticket.UnauthorizedTicketComment);
+        }
+
         private static TicketResponse MapToResponse(Ticket ticket)
         {
             return new TicketResponse
@@ -211,7 +416,50 @@ namespace ApplicationServices.Services
                     ? null
                     : $"{ticket.Employee.FName} {ticket.Employee.LName}",
                 ProjectId = ticket.ProjectId,
-                ProjectName = ticket.Project?.ProjectName
+                ProjectName = ticket.Project?.ProjectName,
+                Attachments = ticket.AttachmentURL.Select(MapAttachmentToResponse)
+            };
+        }
+
+        private static TicketHistoryResponse MapHistoryToResponse(TicketHistory history)
+        {
+            return new TicketHistoryResponse
+            {
+                Id = history.Id,
+                TicketId = history.TicketId,
+                Action = history.Action,
+                OldValue = history.OldValue,
+                NewValue = history.NewValue,
+                Note = history.Note,
+                ActionByEmployeeId = history.ActionByEmployeeId,
+                ActionByEmployeeName = FormatEmployeeName(history.ActionByEmployee),
+                FromEmployeeId = history.FromEmployeeId,
+                FromEmployeeName = FormatEmployeeName(history.FromEmployee),
+                ToEmployeeId = history.ToEmployeeId,
+                ToEmployeeName = FormatEmployeeName(history.ToEmployee),
+                ModifiedAt = history.ModifiedAt
+            };
+        }
+
+        private static string? FormatEmployeeName(Employee? employee)
+        {
+            if (employee == null)
+                return null;
+
+            return $"{employee.FName} {employee.LName}";
+        }
+
+        private static TicketAttachmentResponse MapAttachmentToResponse(TicketAttachments attachment)
+        {
+            return new TicketAttachmentResponse
+            {
+                Id = attachment.Id,
+                TicketId = attachment.TicketId,
+                OriginalFileName = attachment.OriginalFileName,
+                StoredFileName = attachment.StoredFileName,
+                ContentType = attachment.ContentType,
+                SizeInBytes = attachment.SizeInBytes,
+                Url = attachment.URL
             };
         }
     }

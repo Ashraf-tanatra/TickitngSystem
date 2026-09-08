@@ -16,6 +16,7 @@ namespace Domain.Entities
         public string LName { get; private set; } = string.Empty;
         public string Phone { get; private set; } = string.Empty;
         public Gender Gender { get; private set; }
+        public string? ProfileImageUrl { get; private set; }
         public Account? Account { get; private set; }
         public DateOnly? DeletedAt { get; private set; }
         public bool IsDeleted { get; private set; }
@@ -63,6 +64,15 @@ namespace Domain.Entities
         {
             ArgumentNullException.ThrowIfNull(account);
             Account = account;
+            Touch();
+        }
+
+        public void ChangeProfileImage(string profileImageUrl)
+        {
+            if (string.IsNullOrWhiteSpace(profileImageUrl))
+                throw new ArgumentException("Profile image is required.");
+
+            ProfileImageUrl = profileImageUrl.Trim();
             Touch();
         }
 

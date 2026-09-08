@@ -4,6 +4,8 @@
     {
         Pending,
         InProgress,
+        InReview,
+        NeedReview,
         Completed,
         Cancelled,
         Reopened,

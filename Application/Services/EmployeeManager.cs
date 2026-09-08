@@ -11,13 +11,11 @@ namespace ApplicationServices.Services
     {
         private readonly IEmployeeRepository _employeeRepository;
         private readonly IAccountRepository _accountRepository;
-        private readonly ITicketRepository _ticketRepository;
 
-        public EmployeeManager(IEmployeeRepository employeeRepository,IAccountRepository accountRepository,ITicketRepository ticketRepository)
+        public EmployeeManager(IEmployeeRepository employeeRepository,IAccountRepository accountRepository)
         {
             _employeeRepository = employeeRepository;
             _accountRepository = accountRepository;
-            _ticketRepository = ticketRepository;
         }
 
         // =========================================================
@@ -115,6 +113,28 @@ namespace ApplicationServices.Services
 
             return MapToResponse(employee);
         }
+
+        public async Task<EmployeeResponse?> UpdateProfileImageAsync(
+            int id,
+            string profileImageUrl)
+        {
+            var employee =
+                await _employeeRepository.GetByIdAsync(id);
+
+            if (employee == null)
+                return null;
+
+            if (employee.IsDeleted)
+                throw new InvalidOperationException(
+                    ErrorShared.Employee.CannotUpdateDeletedEmployee);
+
+            employee.ChangeProfileImage(profileImageUrl);
+
+            await _employeeRepository.UpdateAsync(employee);
+
+            return MapToResponse(employee);
+        }
+
         //// =========================================================
         //// ACTIVE PROJECTS FOR EMPLOYEE
         //// =========================================================
@@ -168,18 +188,15 @@ namespace ApplicationServices.Services
                     "Assign another Project Manager first.");
             }
 
-            var EmployeeTickets = await _employeeRepository.GetEmployeeTicketsAsync(id);
-            if (EmployeeTickets.Any())
-            {
-                foreach (var ticket in EmployeeTickets)
-                {
-                    if (ticket.TicketStatus == TicketStatus.InProgress || ticket.TicketStatus == TicketStatus.Reopened)
-                    {
-                        await _ticketRepository.ChangeTicketStatusAsync(ticket.TicketId, TicketStatus.Pending);
-                        
-                    }
-                }
-            }
+            var employeeTickets = await _employeeRepository.GetEmployeeTicketsAsync(id);
+            var hasActiveTickets = employeeTickets.Any(ticket =>
+                ticket.TicketStatus != TicketStatus.Done &&
+                ticket.TicketStatus != TicketStatus.Completed &&
+                ticket.TicketStatus != TicketStatus.Cancelled);
+
+            if (hasActiveTickets)
+                throw new InvalidOperationException(
+                    ErrorShared.Employee.EmployeeHasActiveTickets);
 
 
             // =====================================================
@@ -249,7 +266,8 @@ namespace ApplicationServices.Services
                             project.ProjectDescription,
                         Role = projectEmployee.Role ?? "No Role",
                         EmployeeCount =
-                            project.ProjectEmployees.Count,
+                            project.ProjectEmployees.Count(projectEmployee =>
+                                !projectEmployee.Employee.IsDeleted),
                         TicketCount =
                             project.ProjectTickets.Count
                     };
@@ -306,6 +324,7 @@ namespace ApplicationServices.Services
                 LName = employee.LName,
                 Phone = employee.Phone,
                 Gender = employee.Gender,
+                ProfileImageUrl = employee.ProfileImageUrl,
                 IsDeleted = employee.IsDeleted
             };
         }

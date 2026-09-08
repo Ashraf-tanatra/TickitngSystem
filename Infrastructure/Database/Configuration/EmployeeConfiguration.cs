@@ -40,6 +40,10 @@ namespace Infrastructure.Database.Configuration
                    .HasColumnType("char(1)")
                    .IsRequired();
 
+            builder.Property(e => e.ProfileImageUrl)
+                   .HasColumnType("VARCHAR")
+                   .HasMaxLength(500);
+
             // Soft Delete
             builder.Property(e => e.IsDeleted)
                    .IsRequired();

@@ -32,11 +32,17 @@ namespace Controller
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
             }
             catch (InvalidOperationException ex)
             {
-                return Conflict(ex.Message);
+                return Conflict(new
+                {
+                    message = ex.Message
+                });
             }
         }
 
@@ -79,6 +85,41 @@ namespace Controller
             }
         }
 
+        [HttpPost("resend-verification-code")]
+        public async Task<IActionResult> ResendVerificationCode([FromBody] ForgotPasswordRequest request)
+        {
+            try
+            {
+                await _authManager.ResendVerificationCode(request);
+
+                return Ok(new
+                {
+                    message = "Verification code sent successfully."
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new
+                {
+                    message = ex.Message
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
+        }
+
         // =========================================================
         // POST: api/Auth/login
         // =========================================================
@@ -95,7 +136,10 @@ namespace Controller
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
             }
             catch (UnauthorizedAccessException ex)
             {
@@ -161,6 +205,41 @@ namespace Controller
                 {
                     message =
                         "Password reset code sent successfully."
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new
+                {
+                    message = ex.Message
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
+        }
+
+        [HttpPost("verify-reset-code")]
+        public async Task<IActionResult> VerifyResetCode([FromBody] VerifyResetCodeRequest request)
+        {
+            try
+            {
+                await _authManager.VerifyResetCode(request);
+
+                return Ok(new
+                {
+                    message = "Password reset code verified successfully."
                 });
             }
             catch (ArgumentException ex)

@@ -66,6 +66,41 @@ namespace ApplicationServices.Services
             return true;
         }
 
+        public async Task<bool> RemoveEmployeeFromProjectAsync(RemoveProjectEmployeeRequest request)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            if (!await _projectRepository.ProjectExistsAsync(request.ProjectId))
+                throw new ArgumentException(ErrorShared.Project.ProjectNotFound);
+
+            if (!await _projectRepository.EmployeeExistsAsync(request.EmployeeId))
+                throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
+
+            if (!await _projectRepository.EmployeeExistsAsync(request.ActionByEmployeeId))
+                throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
+
+            if (!await _projectRepository.IsManagerAsync(request.ProjectId, request.ActionByEmployeeId))
+                throw new UnauthorizedAccessException("Only the project manager can remove members.");
+
+            var project = await _projectRepository.GetByIdAsync(request.ProjectId);
+
+            if (project!.ProjectManagerId == request.EmployeeId)
+                throw new InvalidOperationException(ErrorShared.Project.ProjectManagerCannotBeRemoved);
+
+            var employeeIsAssigned = project.ProjectEmployees
+                .Any(pe => pe.EmployeeId == request.EmployeeId);
+
+            if (!employeeIsAssigned)
+                throw new ArgumentException(ErrorShared.Project.EmployeeNotAssigned);
+
+            if (await _projectRepository.EmployeeHasActiveTicketsInProjectAsync(request.ProjectId, request.EmployeeId))
+                throw new InvalidOperationException(ErrorShared.Project.EmployeeHasActiveTickets);
+
+            await _projectRepository.RemoveEmployeeFromProjectAsync(request.ProjectId, request.EmployeeId);
+            return true;
+        }
+
         public async Task<bool> SetProjectStatusAsync(int projectId, ProjectStatus status)
         {
             if (!System.Enum.IsDefined(status))
@@ -137,6 +172,15 @@ namespace ApplicationServices.Services
             return emp;
         }
 
+        public async Task<IEnumerable<ProjectResponse>>? GetDashboardProjectsAsync(int employeeId)
+        {
+            var projects = await _projectRepository.GetDashboardProjectsAsync(employeeId);
+            if (projects == null || !projects.Any())
+                throw new NullReferenceException("No projects found for the specified employee.");
+
+            return projects.Select(project => MapToResponse(project, employeeId));
+        }
+
         public async Task<bool> DeleteAsync(int projectId, int empId) => await _projectRepository.DeleteAsync(projectId, empId);
 
         public async Task<bool> ProjectExistsAsync(int projectId) => await _projectRepository.ProjectExistsAsync(projectId);
@@ -153,6 +197,11 @@ namespace ApplicationServices.Services
 
         private static ProjectResponse MapToResponse(Project project, int? employeeId = null)
         {
+            var ticketCount = project.ProjectTickets.Count;
+            var doneTicketCount = project.ProjectTickets.Count(ticket =>
+                ticket.TicketStatus == TicketStatus.Done ||
+                ticket.TicketStatus == TicketStatus.Completed);
+
             return new ProjectResponse
             {
                 Id = project.Id,
@@ -167,7 +216,19 @@ namespace ApplicationServices.Services
                     : null,
                 ProjectManagerName = project.ProjectManager == null
                     ? null
-                    : $"{project.ProjectManager.FName} {project.ProjectManager.LName}"
+                    : $"{project.ProjectManager.FName} {project.ProjectManager.LName}",
+                EmployeeCount = project.ProjectEmployees.Count(projectEmployee =>
+                    !projectEmployee.Employee.IsDeleted) + 1,
+                TicketCount = ticketCount,
+                InProgressTicketCount = project.ProjectTickets.Count(ticket =>
+                    ticket.TicketStatus == TicketStatus.InProgress),
+                NeedReviewTicketCount = project.ProjectTickets.Count(ticket =>
+                    ticket.TicketStatus == TicketStatus.NeedReview ||
+                    ticket.TicketStatus == TicketStatus.InReview),
+                DoneTicketCount = doneTicketCount,
+                ProgressPercentage = ticketCount == 0
+                    ? 0
+                    : (int)Math.Round(doneTicketCount * 100.0 / ticketCount)
             };
         }
 

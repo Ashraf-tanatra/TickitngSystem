@@ -10,7 +10,6 @@ using Scalar.AspNetCore;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddHostedService<DeletedAccountCleanupService>();
-builder.Services.AddScoped<IEmailService, EmailService>();
 
 var connectionString =
     builder.Configuration.GetConnectionString("constr");
@@ -21,10 +20,8 @@ if (string.IsNullOrWhiteSpace(connectionString))
         "Connection string 'constr' is NULL or EMPTY!");
 }
 
-Console.WriteLine(
-    "CONNECTION STRING = " + connectionString);
-
-builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString));
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(connectionString));
 
 
 // ==============================
@@ -39,12 +36,6 @@ builder.Services.AddScoped<
     IEmployeeRepository,
     EmployeeRepository>();
 
-
-// ==============================
-// Auto BackUp
-// ==============================
-
-builder.Services.AddScoped<DeletedAccountCleanupService>();
 
 // ==============================
 // Project
@@ -105,9 +96,6 @@ builder.Services.Configure<ResendClientOptions>(options =>
 builder.Services.AddTransient<IResend, ResendClient>();
 
 builder.Services.AddScoped<IEmailService, EmailService>();
-
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("constr")));
 
 // ==============================
 // OpenAPI / Scalar

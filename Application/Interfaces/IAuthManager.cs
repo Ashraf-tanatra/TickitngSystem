@@ -13,7 +13,11 @@ namespace ApplicationServices.Interfaces
 
         Task VerifyEmail(VerifyEmailRequest request);
 
+        Task ResendVerificationCode(ForgotPasswordRequest request);
+
         Task ForgotPassword(ForgotPasswordRequest request);
+
+        Task VerifyResetCode(VerifyResetCodeRequest request);
 
         Task ResetPassword(ResetPasswordRequest request);
     }

@@ -106,7 +106,7 @@ namespace Controller
         [HttpPut("{id}")]
         public async Task<ActionResult<AccountResponse>> Update(
             int id,
-            UpdateAccountRequest request)
+            [FromBody] UpdateAccountRequest request)
         {
             try
             {
@@ -151,15 +151,15 @@ namespace Controller
         // SOFT DELETE ACCOUNT
         // =========================================================
 
-        [HttpDelete("{email}")]
+        [HttpDelete("deactivate")]
         public async Task<IActionResult> SoftDelete(
-            string email)
+            [FromBody] DeactivateAccountRequest request)
         {
             try
             {
                 var result =
                     await _accountManager
-                        .SoftDeleteAsync(email);
+                        .SoftDeleteAsync(request);
 
                 if (!result)
                 {
@@ -177,6 +177,13 @@ namespace Controller
             catch (ArgumentException ex)
             {
                 return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new
                 {
                     message = ex.Message
                 });

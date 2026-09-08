@@ -22,5 +22,8 @@
 
         public string? ProjectName { get; set; } 
         public string? EmployeeName { get; set; }
+
+        public IEnumerable<TicketAttachmentResponse> Attachments { get; set; } =
+            Enumerable.Empty<TicketAttachmentResponse>();
     }
 }

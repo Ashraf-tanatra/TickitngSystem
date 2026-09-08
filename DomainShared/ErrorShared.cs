@@ -113,6 +113,8 @@ public static class ErrorShared
             public const string EmployeeReactivatedSuccessfully = "Employee Reactivated Successfully";
 
             public const string EmployeeReactivationPeriodExpired ="Employee cannot be reactivated after 30 days.";
+
+            public const string EmployeeHasActiveTickets ="Cannot delete this employee because they have active tickets. Reassign or close those tickets first.";
         }
 
 
@@ -133,6 +135,12 @@ public static class ErrorShared
             public const string EmployeeAlreadyAssigned ="Employee is already assigned to this project.";
 
             public const string EmployeeNotAssigned ="Employee is not assigned to this project.";
+
+            public const string ProjectManagerCannotBeRemoved ="Project manager cannot be removed from the project.";
+
+            public const string ProjectManagerCannotBeMember ="Project manager is already part of this project and cannot be added as a regular member.";
+
+            public const string EmployeeHasActiveTickets ="Employee has active tickets in this project. Reassign those tickets before removing the member.";
 
             public const string ProjectAlreadyExists ="Project already exists.";
 
@@ -164,6 +172,14 @@ public static class ErrorShared
             public const string NoTicketsForEmployee ="There is no ticket available for the specified employee.";
 
             public const string UnauthorizedTicketCreation ="Only the project manager can create tickets.";
+
+            public const string UnauthorizedTicketReview ="Only the project manager can review this ticket.";
+
+            public const string OnlyAssigneeCanSubmitForReview ="Only the assigned employee can submit this ticket for review.";
+
+            public const string CommentRequired ="Comment is required.";
+
+            public const string UnauthorizedTicketComment ="Only project members can comment on this ticket.";
 
             public const string InvalidPriority ="Priority must be between 1 and 3.";
 

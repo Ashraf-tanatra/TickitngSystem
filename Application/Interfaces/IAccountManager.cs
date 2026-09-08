@@ -23,6 +23,9 @@ namespace ApplicationServices.Interfaces
         Task<bool> SoftDeleteAsync(
             string email);
 
+        Task<bool> SoftDeleteAsync(
+            DeactivateAccountRequest request);
+
         Task<bool> ReactivateAsync(
             string email);
 

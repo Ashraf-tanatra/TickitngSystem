@@ -14,6 +14,10 @@ namespace ApplicationServices.Interfaces
             int id,
             UpdateEmployeeRequest request);
 
+        Task<EmployeeResponse?> UpdateProfileImageAsync(
+            int id,
+            string profileImageUrl);
+
         Task<bool> DeleteAsync(int id);
 
         Task<IEnumerable<EmployeeProjectResponse>> GetProjectsAsync(

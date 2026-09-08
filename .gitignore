@@ -368,3 +368,5 @@ Testing/
 /Infrastructure/AppDbContext.cs
 /Infrastructure/appsettings.json
 /TickitngSystem/appsettings.json
+**/.codex-obj/
+**/.codex-build/

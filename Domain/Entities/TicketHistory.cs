@@ -31,6 +31,8 @@ namespace Domain.Entities
         // New value
         public string? NewValue { get; private set; }
 
+        public string? Note { get; private set; }
+
         // When it happened
         public DateTime ModifiedAt { get; private set; } = DateTime.Now;
 
@@ -41,7 +43,8 @@ namespace Domain.Entities
             string? oldValue = null,
             string? newValue = null,
             int? fromEmployeeId = null,
-            int? toEmployeeId = null)
+            int? toEmployeeId = null,
+            string? note = null)
         {
             if (ticketId <= 0)
                 throw new ArgumentException(ErrorShared.Ticket.TicketNotFound);
@@ -61,6 +64,7 @@ namespace Domain.Entities
                 NewValue = string.IsNullOrWhiteSpace(newValue) ? null : newValue.Trim(),
                 FromEmployeeId = fromEmployeeId,
                 ToEmployeeId = toEmployeeId,
+                Note = string.IsNullOrWhiteSpace(note) ? null : note.Trim(),
                 ModifiedAt = DateTime.Now
             };
         }

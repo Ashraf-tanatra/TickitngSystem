@@ -291,6 +291,46 @@ namespace ApplicationServices.Services
             return true;
         }
 
+        public async Task<bool> SoftDeleteAsync(
+            DeactivateAccountRequest request)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            if (string.IsNullOrWhiteSpace(request.Email))
+                throw new ArgumentException(
+                    ErrorShared.Account.EmailRequired);
+
+            if (string.IsNullOrWhiteSpace(request.CurrentPassword))
+                throw new ArgumentException(
+                    ErrorShared.Account.CurrentPasswordRequired);
+
+            var account =
+                await _accountRepository.GetByEmailAsync(request.Email);
+
+            if (account == null)
+                return false;
+
+            if (account.IsDeleted)
+            {
+                throw new InvalidOperationException(
+                    ErrorShared.Account.AccountAlreadyDeleted);
+            }
+
+            if (!BCrypt.Net.BCrypt.Verify(
+                request.CurrentPassword,
+                account.PasswordHash))
+            {
+                throw new UnauthorizedAccessException(
+                    ErrorShared.Account.CurrentPasswordIncorrect);
+            }
+
+            await _accountRepository
+                .SoftDeleteAsync(account);
+
+            return true;
+        }
+
         public async Task SetVerificationCodeAsync(Account account,string code,DateTime expiresAt)
         {
             account.SetVerificationCode(code, expiresAt);

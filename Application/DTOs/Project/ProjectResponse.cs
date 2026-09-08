@@ -11,7 +11,11 @@
         public string? EmployeeRole { get; set; }
         public int ProjectManagerId { get; set; }
         public string? ProjectManagerName { get; set; }
-        //public int EmployeeCount { get; set; }
-        //public int TicketCount { get; set; }
+        public int EmployeeCount { get; set; }
+        public int TicketCount { get; set; }
+        public int InProgressTicketCount { get; set; }
+        public int NeedReviewTicketCount { get; set; }
+        public int DoneTicketCount { get; set; }
+        public int ProgressPercentage { get; set; }
     }
 }

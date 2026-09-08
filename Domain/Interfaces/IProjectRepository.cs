@@ -12,9 +12,12 @@ namespace Domain.Interfaces
         Task<bool> DeleteAsync(int projectId, int employeeId);
         Task<IEnumerable<Employee>?> GetEmployeesAsync(int employeeId);
         Task<bool> AddEmployeeToProjectAsync(ProjectEmployee projectEmployee);
+        Task<bool> RemoveEmployeeFromProjectAsync(int projectId, int employeeId);
+        Task<bool> EmployeeHasActiveTicketsInProjectAsync(int projectId, int employeeId);
         Task<bool> SetProjectStatusAsync(int projectId, ProjectStatus status);
         Task<IEnumerable<Project>?> GetAllProjectWorkedByEmployeeAsync(int employeeId);
         Task<IEnumerable<String[]>?> GetAllProjectWorkedByEmployeeTopThreeAsync(int employeeId);
+        Task<IEnumerable<Project>?> GetDashboardProjectsAsync(int employeeId);
         Task<IEnumerable<Project>?> GetAllProjectWorkedByEmployeeWithFilterAsync(int employeeId, ProjectStatus FilterByStatus);
 
         Task<bool> TicketExistsAsync(int ticketId);

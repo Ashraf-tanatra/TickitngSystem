@@ -25,6 +25,10 @@ namespace Infrastructure.Database.Configuration
             builder.Property(h => h.UpdatedAt)
                    .HasColumnType("datetime2");
 
+            builder.Property(h => h.Note)
+                   .HasColumnType("VARCHAR")
+                   .HasMaxLength(2500);
+
 
             // =====================================================
             // Ticket

@@ -1,6 +1,7 @@
 ﻿using ApplicationServices.DTOs.Employee;
 using ApplicationServices.DTOs.Project;
 using ApplicationServices.Interfaces;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Controller
@@ -10,6 +11,16 @@ namespace Controller
     public class EmployeeController : ControllerBase
     {
         private readonly IEmployeeManager _employeeManager;
+        private readonly string _profileImagesFolder = Path.Combine(Directory.GetCurrentDirectory(), "UploadedFiles", "ProfileImages");
+        private const long MaxProfileImageSizeInBytes = 5 * 1024 * 1024;
+        private static readonly string[] AllowedProfileImageContentTypes =
+        {
+            "image/jpeg",
+            "image/png",
+            "image/gif",
+            "image/webp"
+        };
+
         public EmployeeController(IEmployeeManager employeeManager)
         {
             _employeeManager = employeeManager;
@@ -41,7 +52,10 @@ namespace Controller
                 await _employeeManager.GetByIdAsync(id);
 
             if (employee == null)
-                return NotFound();
+                return NotFound(new
+                {
+                    message = ErrorShared.Employee.EmployeeNotFound
+                });
 
             return Ok(employee);
         }
@@ -64,7 +78,10 @@ namespace Controller
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(ex.Message);
+                return NotFound(new
+                {
+                    message = ex.Message
+                });
             }
         }
 
@@ -76,7 +93,7 @@ namespace Controller
         public async Task<ActionResult<EmployeeResponse>>
             Update(
                 int id,
-                UpdateEmployeeRequest request)
+                [FromBody] UpdateEmployeeRequest request)
         {
             try
             {
@@ -96,12 +113,106 @@ namespace Controller
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
             }
             catch (InvalidOperationException ex)
             {
-                return Conflict(ex.Message);
+                return Conflict(new
+                {
+                    message = ex.Message
+                });
             }
+        }
+
+        [HttpPost("{id:int}/ProfilePhoto")]
+        public async Task<ActionResult<EmployeeResponse>> UploadProfilePhoto(
+            int id,
+            [FromForm] IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest(new
+                {
+                    message = "No profile photo was uploaded."
+                });
+
+            if (file.Length > MaxProfileImageSizeInBytes)
+                return BadRequest(new
+                {
+                    message = $"Profile photo must be {MaxProfileImageSizeInBytes / 1024 / 1024}MB or smaller."
+                });
+
+            if (!AllowedProfileImageContentTypes.Contains(file.ContentType))
+                return BadRequest(new
+                {
+                    message = "Profile photo must be JPG, PNG, GIF, or WEBP."
+                });
+
+            if (!Directory.Exists(_profileImagesFolder))
+                Directory.CreateDirectory(_profileImagesFolder);
+
+            var extension = Path.GetExtension(file.FileName);
+            var fileName = $"{Guid.NewGuid()}{extension}";
+            var filePath = Path.Combine(_profileImagesFolder, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            var profileImageUrl = $"/api/Employee/{id}/ProfilePhoto/{fileName}";
+
+            try
+            {
+                var employee =
+                    await _employeeManager.UpdateProfileImageAsync(id, profileImageUrl);
+
+                if (employee == null)
+                    return NotFound(new
+                    {
+                        message = ErrorShared.Employee.EmployeeNotFound
+                    });
+
+                return Ok(employee);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
+        }
+
+        [HttpGet("{id:int}/ProfilePhoto/{fileName}")]
+        public IActionResult GetProfilePhoto(int id, string fileName)
+        {
+            var filePath = Path.Combine(_profileImagesFolder, fileName);
+
+            if (!System.IO.File.Exists(filePath))
+                return NotFound(new
+                {
+                    message = "The requested profile photo does not exist."
+                });
+
+            var contentType = GetImageContentType(filePath);
+            var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+            return File(fileStream, contentType, fileName);
+        }
+
+        private static string GetImageContentType(string filePath)
+        {
+            var extension = Path.GetExtension(filePath).ToLowerInvariant();
+            return extension switch
+            {
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                ".gif" => "image/gif",
+                ".webp" => "image/webp",
+                _ => "application/octet-stream"
+            };
         }
 
         // =========================================================

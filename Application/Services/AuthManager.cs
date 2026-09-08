@@ -2,6 +2,7 @@
 using ApplicationServices.DTOs.ApplicationServices.DTOs;
 using ApplicationServices.Interfaces;
 using Domain.Entities;
+using System.Security.Cryptography;
 
 
 namespace ApplicationServices.Services
@@ -105,8 +106,7 @@ namespace ApplicationServices.Services
             // GENERATE VERIFICATION CODE
             // =====================================================
 
-            var verificationCode =
-                Random.Shared.Next(100000, 1000000).ToString();
+            var verificationCode = GenerateVerificationCode();
 
             var verificationCodeExpiresAt =
                 DateTime.UtcNow.AddMinutes(10);
@@ -280,8 +280,7 @@ namespace ApplicationServices.Services
             // GENERATE RESET CODE
             // =====================================================
 
-            var resetCode =
-                Random.Shared.Next(100000, 1000000).ToString();
+            var resetCode = GenerateVerificationCode();
 
             var resetCodeExpiresAt =
                 DateTime.UtcNow.AddMinutes(10);
@@ -377,34 +376,7 @@ namespace ApplicationServices.Services
             // CHECK RESET CODE
             // =====================================================
 
-            if (string.IsNullOrWhiteSpace(
-                account.PasswordResetCode))
-            {
-                throw new InvalidOperationException(
-                    ErrorShared.Account.InvalidResetCode);
-            }
-
-            if (account.PasswordResetCode != request.Code)
-            {
-                throw new InvalidOperationException(
-                    ErrorShared.Account.InvalidResetCode);
-            }
-
-            // =====================================================
-            // CHECK CODE EXPIRATION
-            // =====================================================
-
-            if (!account.PasswordResetCodeExpiresAt.HasValue)
-            {
-                throw new InvalidOperationException(
-                    ErrorShared.Account.ResetCodeExpired);
-            }
-
-            if (account.PasswordResetCodeExpiresAt.Value < DateTime.UtcNow)
-            {
-                throw new InvalidOperationException(
-                    ErrorShared.Account.ResetCodeExpired);
-            }
+            EnsureValidResetCode(account, request.Code);
 
             // =====================================================
             // RESET PASSWORD
@@ -459,6 +431,113 @@ namespace ApplicationServices.Services
             await _accountManager.VerifyEmailAsync(account);
         }
 
-        
+        public async Task ResendVerificationCode(ForgotPasswordRequest request)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            if (string.IsNullOrWhiteSpace(request.Email))
+                throw new ArgumentException(
+                    ErrorShared.Account.EmailRequired);
+
+            if (!_accountManager.ValidEmailFormat(request.Email))
+                throw new ArgumentException(
+                    ErrorShared.Account.InvalidEmail);
+
+            var account =
+                await _accountManager
+                    .GetEntityByEmailAsync(request.Email);
+
+            if (account == null)
+                throw new KeyNotFoundException(
+                    ErrorShared.Account.AccountNotFound);
+
+            if (account.IsDeleted)
+                throw new InvalidOperationException(
+                    ErrorShared.Account.AccountDeactivated);
+
+            if (account.IsEmailVerified)
+                throw new InvalidOperationException(
+                    ErrorShared.Account.EmailAlreadyVerified);
+
+            var verificationCode = GenerateVerificationCode();
+            var verificationCodeExpiresAt =
+                DateTime.UtcNow.AddMinutes(10);
+
+            await _accountManager.SetVerificationCodeAsync(
+                account,
+                verificationCode,
+                verificationCodeExpiresAt);
+
+            await _emailService.SendVerificationCodeAsync(
+                account.Email,
+                verificationCode);
+        }
+
+        public async Task VerifyResetCode(VerifyResetCodeRequest request)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            if (string.IsNullOrWhiteSpace(request.Email))
+                throw new ArgumentException(
+                    ErrorShared.Account.EmailRequired);
+
+            if (string.IsNullOrWhiteSpace(request.Code))
+                throw new ArgumentException(
+                    ErrorShared.Account.ResetCodeRequired);
+
+            if (!_accountManager.ValidEmailFormat(request.Email))
+                throw new ArgumentException(
+                    ErrorShared.Account.InvalidEmail);
+
+            var account =
+                await _accountManager
+                    .GetEntityByEmailAsync(request.Email);
+
+            if (account == null)
+                throw new KeyNotFoundException(
+                    ErrorShared.Account.AccountNotFound);
+
+            if (account.IsDeleted)
+                throw new InvalidOperationException(
+                    ErrorShared.Account.AccountDeactivated);
+
+            EnsureValidResetCode(account, request.Code);
+        }
+
+        private static void EnsureValidResetCode(Account account, string code)
+        {
+            if (string.IsNullOrWhiteSpace(account.PasswordResetCode))
+            {
+                throw new InvalidOperationException(
+                    ErrorShared.Account.InvalidResetCode);
+            }
+
+            if (account.PasswordResetCode != code)
+            {
+                throw new InvalidOperationException(
+                    ErrorShared.Account.InvalidResetCode);
+            }
+
+            if (!account.PasswordResetCodeExpiresAt.HasValue)
+            {
+                throw new InvalidOperationException(
+                    ErrorShared.Account.ResetCodeExpired);
+            }
+
+            if (account.PasswordResetCodeExpiresAt.Value < DateTime.UtcNow)
+            {
+                throw new InvalidOperationException(
+                    ErrorShared.Account.ResetCodeExpired);
+            }
+        }
+
+        private static string GenerateVerificationCode()
+        {
+            return RandomNumberGenerator
+                .GetInt32(100000, 1000000)
+                .ToString();
+        }
     }
 }

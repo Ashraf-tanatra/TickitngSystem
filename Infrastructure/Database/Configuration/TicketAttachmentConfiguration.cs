@@ -19,7 +19,25 @@ namespace Infrastructure.Database.Configuration
 
             builder.Property(u => u.URL)
                 .HasColumnType("VARCHAR")
+                .HasMaxLength(500)
+                .IsRequired();
+
+            builder.Property(a => a.OriginalFileName)
+                .HasColumnType("VARCHAR")
                 .HasMaxLength(255)
+                .IsRequired();
+
+            builder.Property(a => a.StoredFileName)
+                .HasColumnType("VARCHAR")
+                .HasMaxLength(255)
+                .IsRequired();
+
+            builder.Property(a => a.ContentType)
+                .HasColumnType("VARCHAR")
+                .HasMaxLength(100)
+                .IsRequired();
+
+            builder.Property(a => a.SizeInBytes)
                 .IsRequired();
 
             builder.HasOne(t => t.Ticket)

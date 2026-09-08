@@ -1,0 +1,7 @@
+<Project>
+  <PropertyGroup>
+    <DefaultItemExcludes>
+      $(DefaultItemExcludes);**/.codex-obj/**;**/.codex-build/**
+    </DefaultItemExcludes>
+  </PropertyGroup>
+</Project>

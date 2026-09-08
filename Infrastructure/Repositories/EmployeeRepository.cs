@@ -98,6 +98,7 @@ namespace Infrastructure.Repositories
                         pe.EmployeeId == employeeId &&
                         !pe.Employee.IsDeleted))
                 .Include(p => p.ProjectEmployees)
+                .ThenInclude(pe => pe.Employee)
                 .Include(p => p.ProjectTickets)
                 .ToListAsync();
         }

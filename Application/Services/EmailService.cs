@@ -23,9 +23,15 @@ public class EmailService : IEmailService
         var fromEmail =
             _configuration["Resend:FromEmail"];
 
+        if (string.IsNullOrWhiteSpace(fromEmail))
+        {
+            throw new InvalidOperationException(
+                "Email sender address is not configured.");
+        }
+
         var message = new EmailMessage
         {
-            From = fromEmail!,
+            From = fromEmail,
             Subject = "Ticketing System - Email Verification",
             HtmlBody = $@"
                 <h2>Email Verification</h2>
@@ -43,6 +49,15 @@ public class EmailService : IEmailService
 
         message.To.Add(email);
 
-        await _resend.EmailSendAsync(message);
+        try
+        {
+            await _resend.EmailSendAsync(message);
+        }
+        catch (ResendException ex)
+        {
+            throw new InvalidOperationException(
+                "Email service rejected the message: " + ex.Message,
+                ex);
+        }
     }
 }

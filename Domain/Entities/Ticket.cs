@@ -94,6 +94,29 @@ namespace Domain.Entities
             TicketStatus = status;
         }
 
+        public void SubmitForReview()
+        {
+            TicketStatus = TicketStatus.NeedReview;
+        }
+
+        public void Approve()
+        {
+            TicketStatus = TicketStatus.Done;
+        }
+
+        public void RequestChanges()
+        {
+            TicketStatus = TicketStatus.InProgress;
+        }
+
+        public void Reassign(int employeeId)
+        {
+            if (employeeId <= 0)
+                throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
+
+            EmployeeId = employeeId;
+        }
+
         public void ChangePriority(TicketPriority priority)
         {
             if (!System.Enum.IsDefined(priority))
