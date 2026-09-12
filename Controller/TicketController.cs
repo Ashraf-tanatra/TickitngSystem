@@ -82,7 +82,7 @@ namespace Controller
             if (ticket == null)
                 return NotFound(new
                 {
-                    message = "Ticket was not found."
+                    message = ErrorShared.Ticket.TicketNotFoundMessage
                 });
 
             return Ok(ticket);
@@ -187,7 +187,7 @@ namespace Controller
                 if (!await _ticketManager.DeleteAsync(id))
                     return NotFound(new
                     {
-                        message = "Ticket was not found."
+                        message = ErrorShared.Ticket.TicketNotFoundMessage
                     });
 
                 return NoContent();
@@ -470,7 +470,7 @@ namespace Controller
             if (file == null || file.Length == 0)
                 return BadRequest(new
                 {
-                    message = "No file was uploaded."
+                    message = ErrorShared.Ticket.NoFileUploaded
                 });
 
             var ticketValidationResult = await ValidateTicketForAttachmentAsync(ticketId);
@@ -497,7 +497,7 @@ namespace Controller
                 contentType = file.ContentType,
                 sizeInBytes = file.Length,
                 url = uploadedFile.Url,
-                message = "Upload successful."
+                message = ErrorShared.Ticket.UploadSuccessful
             });
         }
 
@@ -507,13 +507,13 @@ namespace Controller
             if (files == null || files.Count == 0)
                 return BadRequest(new
                 {
-                    message = "No files were uploaded."
+                    message = ErrorShared.Ticket.NoFilesUploaded
                 });
 
             if (files.Count > MaxAttachmentCount)
                 return BadRequest(new
                 {
-                    message = $"You can upload up to {MaxAttachmentCount} files at a time."
+                    message = ErrorShared.Ticket.TooManyAttachments(MaxAttachmentCount)
                 });
 
             var ticketValidationResult = await ValidateTicketForAttachmentAsync(ticketId);
@@ -553,7 +553,7 @@ namespace Controller
             return Ok(new
             {
                 files = uploadedFiles,
-                message = "Upload successful."
+                message = ErrorShared.Ticket.UploadSuccessful
             });
         }
 
@@ -564,7 +564,7 @@ namespace Controller
 
             return NotFound(new
             {
-                message = "Ticket was not found."
+                message = ErrorShared.Ticket.TicketNotFoundMessage
             });
         }
 
@@ -573,13 +573,14 @@ namespace Controller
             if (file == null || file.Length == 0)
                 return BadRequest(new
                 {
-                    message = "No file was uploaded."
+                    message = ErrorShared.Ticket.NoFileUploaded
                 });
 
             if (file.Length > MaxAttachmentSizeInBytes)
                 return BadRequest(new
                 {
-                    message = $"Each attachment must be {MaxAttachmentSizeInBytes / 1024 / 1024}MB or smaller."
+                    message = ErrorShared.Ticket.AttachmentTooLarge(
+                        (int)(MaxAttachmentSizeInBytes / 1024 / 1024))
                 });
 
             return null;
@@ -605,12 +606,12 @@ namespace Controller
         [HttpGet("Attachments/download-file/{fileName}")]
         public IActionResult GetFileByName(string fileName)
         {
-            string filePath = Path.Combine(_storageFolder, fileName);
+            string filePath = Path.Combine(_storageFolder, Path.GetFileName(fileName));
 
             if (!System.IO.File.Exists(filePath))
                 return NotFound(new
                 {
-                    message = "The requested file does not exist."
+                    message = ErrorShared.Ticket.AttachmentNotFound
                 });
 
             string contentType = GetMimeType(filePath);
@@ -621,14 +622,16 @@ namespace Controller
         [HttpGet("Attachments/download/{URL}")]
         public IActionResult GetFile(string URL)
         {
-            if (!System.IO.File.Exists(URL))
+            var filePath = Path.Combine(_storageFolder, Path.GetFileName(URL));
+
+            if (!System.IO.File.Exists(filePath))
                 return NotFound(new
                 {
-                    message = "The requested file does not exist."
+                    message = ErrorShared.Ticket.AttachmentNotFound
                 });
 
-            string contentType = GetMimeType(URL);
-            var fileStream = new FileStream(URL, FileMode.Open, FileAccess.Read);
+            string contentType = GetMimeType(filePath);
+            var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
             return File(fileStream, contentType);
         }
         private string GetMimeType(string filePath)

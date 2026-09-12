@@ -55,6 +55,7 @@ namespace Infrastructure.Database.Configuration
             builder.HasMany(e => e.Tickets)
                    .WithOne(t => t.Employee)
                    .HasForeignKey(t => t.EmployeeId)
+                   .IsRequired(false)
                    .OnDelete(DeleteBehavior.Restrict);
 
             builder.Navigation(e => e.Tickets)

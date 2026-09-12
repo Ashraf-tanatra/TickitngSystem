@@ -104,7 +104,7 @@ namespace Controller
                 if (project == null)
                     return NotFound(new
                     {
-                        message = "Project was not found."
+                        message = ErrorShared.Project.ProjectNotFound
                     });
 
                 return Ok(project);
@@ -304,7 +304,7 @@ namespace Controller
                 if (projects == null)
                     return NotFound(new
                     {
-                        message = "Projects were not found."
+                        message = ErrorShared.Project.ProjectsNotFound
                     });
                 return Ok(projects);
             }

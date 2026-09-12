@@ -12,6 +12,7 @@ namespace Domain.Entities
         public DateTime? DeletedAt { get; private set; }
         public string PasswordHash { get; private set; } = string.Empty;
         public bool IsDeleted { get; private set; }
+        public bool IsAnonymized { get; private set; }
 
         //From Verify Account
         public bool IsEmailVerified { get; private set; }
@@ -22,10 +23,7 @@ namespace Domain.Entities
         public string? PasswordResetCode { get; private set; }
         public DateTime? PasswordResetCodeExpiresAt { get; private set; }
 
-        public static Account Create(
-            string email,
-            string passwordHash,
-            Employee employee)
+        public static Account Create(string email, string passwordHash, Employee employee)
         {
             if (string.IsNullOrWhiteSpace(email))
                 throw new ArgumentException(ErrorShared.Account.EmailRequired);
@@ -41,6 +39,7 @@ namespace Domain.Entities
                 PasswordHash = passwordHash,
                 Employee = employee,
                 IsDeleted = false,
+                IsAnonymized = false,
                 IsEmailVerified = false
             };
 
@@ -63,6 +62,7 @@ namespace Domain.Entities
                 Email = email.Trim(),
                 PasswordHash = passwordHash,
                 IsDeleted = false,
+                IsAnonymized = false,
                 IsEmailVerified = false
             };
         }
@@ -133,11 +133,39 @@ namespace Domain.Entities
 
         public void Reactivate()
         {
+            if (IsAnonymized)
+                throw new InvalidOperationException(ErrorShared.Account.ReactivationPeriodExpired);
+
             if (!IsDeleted)
                 throw new InvalidOperationException(ErrorShared.Account.AccountAlreadyActive);
 
             IsDeleted = false;
             DeletedAt = null;
+            Touch();
+        }
+
+        public void Anonymize(string anonymousEmail, string unusablePasswordHash)
+        {
+            if (!IsDeleted)
+                throw new InvalidOperationException(ErrorShared.Account.CannotAnonymizeActiveAccount);
+
+            if (IsAnonymized)
+                return;
+
+            if (string.IsNullOrWhiteSpace(anonymousEmail))
+                throw new ArgumentException(ErrorShared.Account.EmailRequired);
+
+            if (string.IsNullOrWhiteSpace(unusablePasswordHash))
+                throw new ArgumentException(ErrorShared.Account.PasswordRequired);
+
+            Email = anonymousEmail.Trim();
+            PasswordHash = unusablePasswordHash;
+            IsEmailVerified = false;
+            VerificationCode = null;
+            VerificationCodeExpiresAt = null;
+            PasswordResetCode = null;
+            PasswordResetCodeExpiresAt = null;
+            IsAnonymized = true;
             Touch();
         }
     }

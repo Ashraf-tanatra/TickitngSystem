@@ -16,9 +16,6 @@ namespace Infrastructure.Repositories
 
         public async Task<Project?> GetByIdAsync(int id)
         {
-            if (!await ProjectExistsAsync(id))
-                throw new NullReferenceException("The project does not exists!!!");
-
             return await _context.Projects
                 .Include(p => p.ProjectManager)
                 .Include(p => p.ProjectEmployees)
@@ -30,7 +27,7 @@ namespace Infrastructure.Repositories
         public async Task<bool> UpdateAsync(Project project)
         {
             if (!await ProjectExistsAsync(project.Id))
-                throw new ArgumentException("Project does not exist.");
+                throw new ArgumentException(ErrorShared.Project.ProjectNotFound);
 
             _context.Projects.Update(project);
             await _context.SaveChangesAsync();
@@ -40,9 +37,9 @@ namespace Infrastructure.Repositories
         public async Task<bool> CreateAsync(Project project)
         {
             if (!await EmployeeExistsAsync(project.ProjectManagerId))
-                throw new ArgumentException("Employee does not exist.");
+                throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
             if (await ProjectExistsAsync(project.Id))
-                throw new ArgumentException("Project already exists.");
+                throw new ArgumentException(ErrorShared.Project.ProjectAlreadyExists);
 
             await _context.Projects.AddAsync(project);
             await _context.SaveChangesAsync();
@@ -52,7 +49,7 @@ namespace Infrastructure.Repositories
         public async Task<int> GetProjectCountAsync(int employeeId)
         {
             if (!await EmployeeExistsAsync(employeeId))
-                throw new ArgumentException("Employee does not exist.");
+                throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
 
             return await _context.Projects
                         .Where(p => p.ProjectStatus == ProjectStatus.Active || p.ProjectStatus == ProjectStatus.OnHold)
@@ -64,11 +61,11 @@ namespace Infrastructure.Repositories
         public async Task<bool> DeleteAsync(int projectId, int employeeId)
         {
             if (!await ProjectExistsAsync(projectId))
-                throw new ArgumentException("Project does not exist.");
+                throw new ArgumentException(ErrorShared.Project.ProjectNotFound);
             if (!await EmployeeExistsAsync(employeeId))
-                throw new ArgumentException("Employee does not exist.");
+                throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
             if (!await IsManagerAsync(projectId, employeeId))
-                throw new UnauthorizedAccessException("Project cannot delete by you.");
+                throw new UnauthorizedAccessException(ErrorShared.Project.OnlyManagerCanDelete);
 
             var project = await GetByIdAsync(projectId);
             project!.ChangeStatus(ProjectStatus.Cancelled);
@@ -81,7 +78,7 @@ namespace Infrastructure.Repositories
         public async Task<IEnumerable<Employee>?> GetEmployeesAsync(int projectId)
         {
             if (!await ProjectExistsAsync(projectId))
-                throw new ArgumentException($"Project does not exist.");
+                throw new ArgumentException(ErrorShared.Project.ProjectNotFound);
 
             // return all employees that work on the project
             return await _context.ProjectEmployees
@@ -94,21 +91,21 @@ namespace Infrastructure.Repositories
         public async Task<bool> AddEmployeeToProjectAsync(ProjectEmployee projectEmployee)
         {
             if (!await EmployeeExistsAsync(projectEmployee.EmployeeId))
-                throw new ArgumentException($"Employee does not exist.");
+                throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
             if (!await ProjectExistsAsync(projectEmployee.ProjectId))
-                throw new ArgumentException($"Project does not exist.");
+                throw new ArgumentException(ErrorShared.Project.ProjectNotFound);
 
             var empIsAlreadyInProject = await _context.ProjectEmployees
                 .AnyAsync(pe => pe.ProjectId == projectEmployee.ProjectId && pe.EmployeeId == projectEmployee.EmployeeId);
 
             if (empIsAlreadyInProject)
-                throw new ArgumentException($"Employee is already in the project.");
+                throw new ArgumentException(ErrorShared.Project.EmployeeAlreadyAssigned);
 
             if (await IsManagerAsync(projectEmployee.ProjectId, projectEmployee.EmployeeId))
                 throw new ArgumentException(ErrorShared.Project.ProjectManagerCannotBeMember);
 
             if (await IsEmpDeleted(projectEmployee.EmployeeId))
-                throw new ArgumentException($"Employee is deleted.");
+                throw new ArgumentException(ErrorShared.Project.EmployeeIsDeleted);
 
             await _context.ProjectEmployees.AddAsync(projectEmployee);
             await _context.SaveChangesAsync();
@@ -143,9 +140,9 @@ namespace Infrastructure.Repositories
         {
 
             if (!await ProjectExistsAsync(projectId))
-                throw new ArgumentException($"Project does not exist.");
+                throw new ArgumentException(ErrorShared.Project.ProjectNotFound);
             if (!System.Enum.IsDefined(status))
-                throw new ArgumentException("Invalid project status.");
+                throw new ArgumentException(ErrorShared.Project.InvalidStatus);
 
             var project = await GetByIdAsync(projectId);
             project!.ChangeStatus(status);
@@ -158,7 +155,7 @@ namespace Infrastructure.Repositories
         public async Task<IEnumerable<Project>?> GetAllProjectWorkedByEmployeeAsync(int employeeId)
         {
             if (!await EmployeeExistsAsync(employeeId))
-                throw new ArgumentException($"Employee does not exist.");
+                throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
             //problem if the manager is exits 
             //if (await _context.ProjectEmployees.FirstOrDefaultAsync(pe => pe.EmployeeId == employeeId) == null)
             //    throw new ArgumentException("Employee does not work on any project.");
@@ -190,7 +187,7 @@ namespace Infrastructure.Repositories
                         p.ProjectEmployees
                             .Where(pe => pe.EmployeeId == employeeId)
                             .Select(pe => pe.Role)
-                            .FirstOrDefault() ?? "Manager/No Role"
+                            .FirstOrDefault() ?? ErrorShared.Project.ManagerOrNoRole
                     })
                    .ToListAsync();
         }
@@ -198,7 +195,7 @@ namespace Infrastructure.Repositories
         public async Task<IEnumerable<Project>?> GetDashboardProjectsAsync(int employeeId)
         {
             if (!await EmployeeExistsAsync(employeeId))
-                throw new ArgumentException($"Employee does not exist.");
+                throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
 
             return await _context.Projects
                    .Where(p => p.ProjectStatus == ProjectStatus.Active || p.ProjectStatus == ProjectStatus.OnHold)
@@ -219,7 +216,7 @@ namespace Infrastructure.Repositories
             ProjectStatus FilterByStatus)
         {
             if (!await EmployeeExistsAsync(employeeId))
-                throw new ArgumentException($"Employee does not exist.");
+                throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
 
             return await _context.Projects
                          .Where(p => p.ProjectStatus == FilterByStatus)

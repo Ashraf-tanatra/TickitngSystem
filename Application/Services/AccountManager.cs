@@ -1,6 +1,7 @@
 ﻿using ApplicationServices.DTOs.Account;
 using ApplicationServices.Interfaces;
 using Domain.Entities;
+using Domain.Enum;
 using Domain.Interfaces;
 using System.Net.Mail;
 
@@ -9,11 +10,14 @@ namespace ApplicationServices.Services
     public class AccountManager : IAccountManager
     {
         private readonly IAccountRepository _accountRepository;
+        private readonly IEmployeeRepository _employeeRepository;
 
         public AccountManager(
-            IAccountRepository accountRepository)
+            IAccountRepository accountRepository,
+            IEmployeeRepository employeeRepository)
         {
             _accountRepository = accountRepository;
+            _employeeRepository = employeeRepository;
         }
 
         // =========================================================
@@ -51,7 +55,7 @@ namespace ApplicationServices.Services
             }
 
             throw new InvalidOperationException(
-                "Create account through signup so the account is connected to an employee.");
+                ErrorShared.Account.CreateAccountThroughSignup);
         }
 
         // =========================================================
@@ -285,8 +289,7 @@ namespace ApplicationServices.Services
                     ErrorShared.Account.AccountAlreadyDeleted);
             }
 
-            await _accountRepository
-                .SoftDeleteAsync(account);
+            await DeactivateAccountAsync(account);
 
             return true;
         }
@@ -325,10 +328,56 @@ namespace ApplicationServices.Services
                     ErrorShared.Account.CurrentPasswordIncorrect);
             }
 
-            await _accountRepository
-                .SoftDeleteAsync(account);
+            await DeactivateAccountAsync(account);
 
             return true;
+        }
+
+        private async Task DeactivateAccountAsync(Account account)
+        {
+            var employee = account.Employee;
+            var managedProjects = await _employeeRepository
+                .GetActiveProjectsAsync(employee.Id);
+
+            if (managedProjects.Any())
+            {
+                throw new InvalidOperationException(
+                    ErrorShared.Account.CannotDeactivateProjectManager);
+            }
+
+            var activeTickets = (await _employeeRepository
+                    .GetEmployeeTicketsAsync(employee.Id))
+                .Where(ticket =>
+                    ticket.TicketStatus != TicketStatus.Done &&
+                    ticket.TicketStatus != TicketStatus.Completed &&
+                    ticket.TicketStatus != TicketStatus.Cancelled)
+                .ToList();
+
+            var histories = new List<TicketHistory>(activeTickets.Count);
+
+            foreach (var ticket in activeTickets)
+            {
+                histories.Add(TicketHistory.Create(
+                    ticket.TicketId,
+                    employee.Id,
+                    ErrorShared.Ticket.UnassignedDueToAccountDeactivationAction,
+                    oldValue: ticket.TicketStatus.ToString(),
+                    newValue: TicketStatus.Pending.ToString(),
+                    fromEmployeeId: employee.Id,
+                    note: ErrorShared.Ticket.UnassignedDueToAccountDeactivationNote));
+
+                ticket.UnassignAndResetToPending();
+            }
+
+            account.Deactivate();
+
+            if (!employee.IsDeleted)
+                employee.Deactivate();
+
+            await _accountRepository.SaveDeactivationAsync(
+                account,
+                activeTickets,
+                histories);
         }
 
         public async Task SetVerificationCodeAsync(Account account,string code,DateTime expiresAt)
@@ -373,8 +422,8 @@ namespace ApplicationServices.Services
                     ErrorShared.Account.AccountDeletionDateMissing);
             }
 
-            if (account.DeletedAt.Value.AddDays(30)
-                < DateTime.Now)
+            if (account.DeletedAt.Value.AddDays(ErrorShared.Account.ReactivationPeriodDays)
+                < DateTime.UtcNow)
             {
                 throw new InvalidOperationException(
                     ErrorShared.Account.ReactivationPeriodExpired);

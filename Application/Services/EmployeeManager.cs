@@ -183,9 +183,7 @@ namespace ApplicationServices.Services
             if (managedProjects.Any())
             {
                 throw new InvalidOperationException(
-                    "Cannot delete this employee because they are " +
-                    "a Project Manager of an active project. " +
-                    "Assign another Project Manager first.");
+                    ErrorShared.Employee.CannotDeleteProjectManager);
             }
 
             var employeeTickets = await _employeeRepository.GetEmployeeTicketsAsync(id);
@@ -264,7 +262,7 @@ namespace ApplicationServices.Services
                         ProjectName = project.ProjectName,
                         ProjectDescription =
                             project.ProjectDescription,
-                        Role = projectEmployee.Role ?? "No Role",
+                        Role = projectEmployee.Role ?? ErrorShared.Employee.NoRole,
                         EmployeeCount =
                             project.ProjectEmployees.Count(projectEmployee =>
                                 !projectEmployee.Employee.IsDeleted),
@@ -349,7 +347,8 @@ namespace ApplicationServices.Services
                 throw new InvalidOperationException(
                     ErrorShared.Employee.EmployeeDeletionDateMissing);
 
-            if (employee.DeletedAt.Value.AddDays(30) < DateOnly.FromDateTime(DateTime.UtcNow))
+            if (employee.DeletedAt.Value.AddDays(ErrorShared.Employee.ReactivationPeriodDays) <
+                DateOnly.FromDateTime(DateTime.UtcNow))
                 throw new InvalidOperationException(
                     ErrorShared.Employee.EmployeeReactivationPeriodExpired);
 

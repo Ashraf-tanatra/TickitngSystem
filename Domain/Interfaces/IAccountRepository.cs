@@ -15,6 +15,10 @@ namespace Domain.Interfaces
 
         Task DeleteAsync(Account account);
         Task SoftDeleteAsync(Account account);
+        Task SaveDeactivationAsync(
+            Account account,
+            IEnumerable<Ticket> tickets,
+            IEnumerable<TicketHistory> histories);
         Task ReactivateAsync(Account account);
         
     }

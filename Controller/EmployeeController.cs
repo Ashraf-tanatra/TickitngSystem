@@ -135,19 +135,20 @@ namespace Controller
             if (file == null || file.Length == 0)
                 return BadRequest(new
                 {
-                    message = "No profile photo was uploaded."
+                    message = ErrorShared.Employee.NoProfileImageUploaded
                 });
 
             if (file.Length > MaxProfileImageSizeInBytes)
                 return BadRequest(new
                 {
-                    message = $"Profile photo must be {MaxProfileImageSizeInBytes / 1024 / 1024}MB or smaller."
+                    message = ErrorShared.Employee.ProfileImageTooLarge(
+                        (int)(MaxProfileImageSizeInBytes / 1024 / 1024))
                 });
 
             if (!AllowedProfileImageContentTypes.Contains(file.ContentType))
                 return BadRequest(new
                 {
-                    message = "Profile photo must be JPG, PNG, GIF, or WEBP."
+                    message = ErrorShared.Employee.InvalidProfileImageType
                 });
 
             if (!Directory.Exists(_profileImagesFolder))
@@ -155,7 +156,7 @@ namespace Controller
 
             var extension = Path.GetExtension(file.FileName);
             var fileName = $"{Guid.NewGuid()}{extension}";
-            var filePath = Path.Combine(_profileImagesFolder, fileName);
+            var filePath = Path.Combine(_profileImagesFolder, Path.GetFileName(fileName));
 
             using (var stream = new FileStream(filePath, FileMode.Create))
             {
@@ -194,7 +195,7 @@ namespace Controller
             if (!System.IO.File.Exists(filePath))
                 return NotFound(new
                 {
-                    message = "The requested profile photo does not exist."
+                    message = ErrorShared.Employee.ProfileImageNotFound
                 });
 
             var contentType = GetImageContentType(filePath);

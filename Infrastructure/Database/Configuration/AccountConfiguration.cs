@@ -47,6 +47,9 @@ namespace Infrastructure.Database.Configuration
             builder.Property(a => a.IsDeleted)
                    .IsRequired();
 
+            builder.Property(a => a.IsAnonymized)
+                   .IsRequired();
+
             builder.Property(a => a.DeletedAt)
                    .HasColumnType("datetime2");
 

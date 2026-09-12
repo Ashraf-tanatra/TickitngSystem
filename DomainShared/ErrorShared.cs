@@ -54,6 +54,16 @@ public static class ErrorShared
             public const string InvalidCredentials = "Invalid email or password.";
             public const string AccountDeactivated = "Account deactivated.";
             public const string EmailNotVerified = "Please verify your email before logging in.";
+            public const string CannotAnonymizeActiveAccount = "An active account cannot be anonymized.";
+            public const string CannotDeactivateProjectManager = "Cannot deactivate this account while the employee manages an active project. Assign another project manager first.";
+            public const string CreateAccountThroughSignup = "Create the account through signup so it is connected to an employee.";
+            public const string EmailSenderNotConfigured = "Email sender address is not configured.";
+            public const string EmailServiceRejectedPrefix = "Email service rejected the message: ";
+            public const string EmailVerifiedSuccessfully = "Email verified successfully.";
+            public const string VerificationCodeSentSuccessfully = "Verification code sent successfully.";
+            public const string PasswordResetCodeSentSuccessfully = "Password reset code sent successfully.";
+            public const string ResetCodeVerifiedSuccessfully = "Password reset code verified successfully.";
+            public const string AccountAnonymized = "Deleted account data was anonymized.";
 
         // Email Verification
             public const string VerificationCodeRequired ="Verification code is required.";
@@ -86,6 +96,7 @@ public static class ErrorShared
         {
             // Business Rules
             public const int PhoneNumberLength = 10;
+            public const int ReactivationPeriodDays = 30;
 
             // Exception Messages
             public const string EmployeeNotFound ="Employee not found.";
@@ -115,6 +126,16 @@ public static class ErrorShared
             public const string EmployeeReactivationPeriodExpired ="Employee cannot be reactivated after 30 days.";
 
             public const string EmployeeHasActiveTickets ="Cannot delete this employee because they have active tickets. Reassign or close those tickets first.";
+            public const string CannotDeleteProjectManager = "Cannot delete this employee because they manage an active project. Assign another project manager first.";
+            public const string ProfileImageRequired = "Profile image is required.";
+            public const string NoProfileImageUploaded = "No profile photo was uploaded.";
+            public const string InvalidProfileImageType = "Profile photo must be JPG, PNG, GIF, or WEBP.";
+            public const string ProfileImageNotFound = "The requested profile photo does not exist.";
+            public const string CannotAnonymizeActiveEmployee = "An active employee cannot be anonymized.";
+            public const string AnonymousFirstName = "Deleted";
+            public const string AnonymousLastNamePrefix = "User";
+            public const string NoRole = "No Role";
+            public static string ProfileImageTooLarge(int maxSizeMb) => $"Profile photo must be {maxSizeMb}MB or smaller.";
         }
 
 
@@ -145,6 +166,16 @@ public static class ErrorShared
             public const string ProjectAlreadyExists ="Project already exists.";
 
             public const string CannotUpdateDeletedProject ="Cannot update a deleted project.";
+            public const string InvalidStatus = "Invalid project status.";
+            public const string OnlyManagerCanRemoveMembers = "Only the project manager can remove members.";
+            public const string OnlyManagerCanUpdate = "Only the project manager can update this project.";
+            public const string OnlyManagerCanDelete = "Only the project manager can delete this project.";
+            public const string EmployeeIsDeleted = "Employee is deleted.";
+            public const string NoEmployees = "No employees found for the specified project.";
+            public const string NoProjects = "No projects found for the specified employee.";
+            public const string ProjectsNotFound = "Projects were not found.";
+            public const string ManagerRole = "Manager";
+            public const string ManagerOrNoRole = "Manager/No Role";
         }
 
 
@@ -184,5 +215,28 @@ public static class ErrorShared
             public const string InvalidPriority ="Priority must be between 1 and 3.";
 
             public const string EmployeeNotAssignedToProject ="Employee does not belong to this project.";
+            public const string InvalidStatus = "Invalid ticket status.";
+            public const string HistoryActionRequired = "History action is required.";
+            public const string UnassignedDueToAccountDeactivationAction = "UnassignedDueToAccountDeactivation";
+            public const string UnassignedDueToAccountDeactivationNote = "The ticket was unassigned because the employee account was deactivated.";
+            public const string UnassignedEmployeeName = "Unassigned";
+            public const string TicketNotFoundMessage = "Ticket was not found.";
+            public const string NoFileUploaded = "No file was uploaded.";
+            public const string NoFilesUploaded = "No files were uploaded.";
+            public const string UploadSuccessful = "Upload successful.";
+            public const string AttachmentNotFound = "The requested file does not exist.";
+            public const string AttachmentUrlRequired = "Attachment URL is required.";
+            public const string OriginalFileNameRequired = "Original file name is required.";
+            public const string StoredFileNameRequired = "Stored file name is required.";
+            public const string ContentTypeRequired = "Content type is required.";
+            public const string AttachmentSizeInvalid = "Attachment size must be greater than zero.";
+            public static string TooManyAttachments(int maxCount) => $"You can upload up to {maxCount} files at a time.";
+            public static string AttachmentTooLarge(int maxSizeMb) => $"Each attachment must be {maxSizeMb}MB or smaller.";
+        }
+
+        public static class System
+        {
+            public const string ServerWorking = "Server is working!";
+            public const string CleanupErrorPrefix = "Account cleanup error: ";
         }
     }

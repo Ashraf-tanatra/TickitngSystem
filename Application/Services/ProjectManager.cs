@@ -81,7 +81,7 @@ namespace ApplicationServices.Services
                 throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
 
             if (!await _projectRepository.IsManagerAsync(request.ProjectId, request.ActionByEmployeeId))
-                throw new UnauthorizedAccessException("Only the project manager can remove members.");
+                throw new UnauthorizedAccessException(ErrorShared.Project.OnlyManagerCanRemoveMembers);
 
             var project = await _projectRepository.GetByIdAsync(request.ProjectId);
 
@@ -104,7 +104,7 @@ namespace ApplicationServices.Services
         public async Task<bool> SetProjectStatusAsync(int projectId, ProjectStatus status)
         {
             if (!System.Enum.IsDefined(status))
-                throw new ArgumentException("Invalid project status.");
+                throw new ArgumentException(ErrorShared.Project.InvalidStatus);
 
             await _projectRepository.SetProjectStatusAsync(projectId, status);
             return true;
@@ -125,7 +125,7 @@ namespace ApplicationServices.Services
                 throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
 
             if (!await _projectRepository.IsManagerAsync(projectId, empId))
-                throw new UnauthorizedAccessException("Only the project manager can update this project.");
+                throw new UnauthorizedAccessException(ErrorShared.Project.OnlyManagerCanUpdate);
 
             var project = await _projectRepository.GetByIdAsync(projectId);
 
@@ -141,11 +141,12 @@ namespace ApplicationServices.Services
 
         public async Task<IEnumerable<EmployeeResponse>>? GetEmployeesWorkOnProjectAsync(int projectId)
         {
-            var employees = await _projectRepository.GetEmployeesAsync(projectId);
-            if (employees == null || !employees.Any())
-                throw new NullReferenceException("No employees found for the specified project.");
+            if (!await _projectRepository.ProjectExistsAsync(projectId))
+                throw new ArgumentException(ErrorShared.Project.ProjectNotFound);
 
-            return employees.Select(employee => new EmployeeResponse
+            var employees = await _projectRepository.GetEmployeesAsync(projectId);
+
+            return employees!.Select(employee => new EmployeeResponse
             {
                 Id = employee.Id,
                 FName = employee.FName,
@@ -156,29 +157,29 @@ namespace ApplicationServices.Services
         }
         public async Task<IEnumerable<ProjectResponse>>? GetAllProjectWorkedByEmployeeAsync(int employeeId)
         {
-            var project = await _projectRepository.GetAllProjectWorkedByEmployeeAsync(employeeId);
-            if (project == null || !project.Any())
-                throw new NullReferenceException("No projects found for the specified employee.");
+            if (!await _projectRepository.EmployeeExistsAsync(employeeId))
+                throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
 
-            return project.Select(project => MapToResponse(project, employeeId));
+            var project = await _projectRepository.GetAllProjectWorkedByEmployeeAsync(employeeId);
+            return project!.Select(project => MapToResponse(project, employeeId));
         }
 
         public async Task<IEnumerable<string[]>>? GetAllProjectWorkedByEmployeeTopThreeAsync(int employeeId)
         {
-            var emp = await _projectRepository.GetAllProjectWorkedByEmployeeTopThreeAsync(employeeId);
-            if (emp == null || !emp.Any())
-                throw new NullReferenceException("No projects found for the specified employee.");
+            if (!await _projectRepository.EmployeeExistsAsync(employeeId))
+                throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
 
+            var emp = await _projectRepository.GetAllProjectWorkedByEmployeeTopThreeAsync(employeeId);
             return emp;
         }
 
         public async Task<IEnumerable<ProjectResponse>>? GetDashboardProjectsAsync(int employeeId)
         {
-            var projects = await _projectRepository.GetDashboardProjectsAsync(employeeId);
-            if (projects == null || !projects.Any())
-                throw new NullReferenceException("No projects found for the specified employee.");
+            if (!await _projectRepository.EmployeeExistsAsync(employeeId))
+                throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
 
-            return projects.Select(project => MapToResponse(project, employeeId));
+            var projects = await _projectRepository.GetDashboardProjectsAsync(employeeId);
+            return projects!.Select(project => MapToResponse(project, employeeId));
         }
 
         public async Task<bool> DeleteAsync(int projectId, int empId) => await _projectRepository.DeleteAsync(projectId, empId);
@@ -188,11 +189,14 @@ namespace ApplicationServices.Services
         public async Task<IEnumerable<ProjectResponse>>? GetAllProjectWorkedByEmployeeWithFilterAsync(int employeeId,
             ProjectStatus FilterByStatus)
         {
-            var project = await _projectRepository.GetAllProjectWorkedByEmployeeWithFilterAsync(employeeId, FilterByStatus);
-            if (project == null)
-                throw new NullReferenceException("No projects found for the specified employee.");
+            if (!await _projectRepository.EmployeeExistsAsync(employeeId))
+                throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
 
-            return project.Select(project => MapToResponse(project, employeeId));
+            if (!System.Enum.IsDefined(FilterByStatus))
+                throw new ArgumentException(ErrorShared.Project.InvalidStatus);
+
+            var project = await _projectRepository.GetAllProjectWorkedByEmployeeWithFilterAsync(employeeId, FilterByStatus);
+            return project!.Select(project => MapToResponse(project, employeeId));
         }
 
         private static ProjectResponse MapToResponse(Project project, int? employeeId = null)
@@ -235,7 +239,7 @@ namespace ApplicationServices.Services
         private static string? GetEmployeeRole(Project project, int employeeId)
         {
             if (project.ProjectManagerId == employeeId)
-                return "Manager";
+                return ErrorShared.Project.ManagerRole;
 
             return project.ProjectEmployees
                 .FirstOrDefault(pe => pe.EmployeeId == employeeId)

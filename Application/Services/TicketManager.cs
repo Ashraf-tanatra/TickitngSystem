@@ -55,9 +55,6 @@ namespace ApplicationServices.Services
                 throw new ArgumentException(ErrorShared.Ticket.ProjectNotFound);
 
             var tickets = await _ticketRepository.GetAllTicketsForAProjectAsync(projectId);
-            if (!tickets.Any())
-                throw new ArgumentException(ErrorShared.Ticket.NoTicketsForProject);
-
             return tickets.Select(MapToResponse);
         }
 
@@ -70,9 +67,6 @@ namespace ApplicationServices.Services
                 throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
 
             var tickets = await _ticketRepository.GetAllTicketsForAnEmployeeAsync(employeeId);
-            if (!tickets.Any())
-                throw new ArgumentException(ErrorShared.Ticket.NoTicketsForEmployee);
-
             return tickets.Select(MapToResponse);
         }
 

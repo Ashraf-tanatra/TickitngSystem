@@ -59,7 +59,7 @@ namespace Controller
 
                 return Ok(new
                 {
-                    message = "Email verified successfully."
+                    message = ErrorShared.Account.EmailVerifiedSuccessfully
                 });
             }
             catch (ArgumentException ex)
@@ -94,7 +94,7 @@ namespace Controller
 
                 return Ok(new
                 {
-                    message = "Verification code sent successfully."
+                    message = ErrorShared.Account.VerificationCodeSentSuccessfully
                 });
             }
             catch (ArgumentException ex)
@@ -164,7 +164,7 @@ namespace Controller
                 return Ok(new
                 {
                     message =
-                        "Password reset successfully."
+                        ErrorShared.Account.PasswordResetSuccessful
                 });
             }
             catch (ArgumentException ex)
@@ -204,7 +204,7 @@ namespace Controller
                 return Ok(new
                 {
                     message =
-                        "Password reset code sent successfully."
+                        ErrorShared.Account.PasswordResetCodeSentSuccessfully
                 });
             }
             catch (ArgumentException ex)
@@ -239,7 +239,7 @@ namespace Controller
 
                 return Ok(new
                 {
-                    message = "Password reset code verified successfully."
+                    message = ErrorShared.Account.ResetCodeVerifiedSuccessfully
                 });
             }
             catch (ArgumentException ex)

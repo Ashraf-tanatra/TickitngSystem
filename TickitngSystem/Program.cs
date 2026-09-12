@@ -107,14 +107,11 @@ builder.Services.AddOpenApi("v1");
 var app = builder.Build();
 
 
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi(); // /openapi/v1.json
-    app.MapScalarApiReference(); // /scalar
-}
+app.MapOpenApi(); // /openapi/v1.json
+app.MapScalarApiReference(); // /scalar
 
 
-app.MapGet("/", () => "Server is working!");
+app.MapGet("/", () => ErrorShared.System.ServerWorking);
 
 app.MapControllers();
 

@@ -25,8 +25,8 @@ namespace Domain.Entities
         public Project Project { get; private set; } = null!;
 
         // Current assigned Employee
-        public int EmployeeId { get; private set; }
-        public Employee Employee { get; private set; } = null!;
+        public int? EmployeeId { get; private set; }
+        public Employee? Employee { get; private set; }
 
         // Employee who created the ticket
         public int TicketCreatedById { get; private set; }
@@ -89,7 +89,7 @@ namespace Domain.Entities
         public void ChangeStatus(TicketStatus status)
         {
             if (!System.Enum.IsDefined(status))
-                throw new ArgumentException("Invalid ticket status.");
+                throw new ArgumentException(ErrorShared.Ticket.InvalidStatus);
 
             TicketStatus = status;
         }
@@ -115,6 +115,13 @@ namespace Domain.Entities
                 throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
 
             EmployeeId = employeeId;
+        }
+
+        public void UnassignAndResetToPending()
+        {
+            EmployeeId = null;
+            Employee = null;
+            TicketStatus = TicketStatus.Pending;
         }
 
         public void ChangePriority(TicketPriority priority)

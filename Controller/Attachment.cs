@@ -30,7 +30,7 @@ namespace Controller
             return Ok(new
             {
                 fileName = uploadedFile.FileName,
-                message = "Upload successful."
+                message = ErrorShared.Ticket.UploadSuccessful
             });
         }
 
@@ -40,13 +40,13 @@ namespace Controller
             if (files == null || files.Count == 0)
                 return BadRequest(new
                 {
-                    message = "No files were uploaded."
+                    message = ErrorShared.Ticket.NoFilesUploaded
                 });
 
             if (files.Count > MaxAttachmentCount)
                 return BadRequest(new
                 {
-                    message = $"You can upload up to {MaxAttachmentCount} files at a time."
+                    message = ErrorShared.Ticket.TooManyAttachments(MaxAttachmentCount)
                 });
 
             foreach (var file in files)
@@ -70,7 +70,7 @@ namespace Controller
             return Ok(new
             {
                 files = uploadedFiles,
-                message = "Upload successful."
+                message = ErrorShared.Ticket.UploadSuccessful
             });
         }
 
@@ -79,13 +79,14 @@ namespace Controller
             if (file == null || file.Length == 0)
                 return BadRequest(new
                 {
-                    message = "No file was uploaded."
+                    message = ErrorShared.Ticket.NoFileUploaded
                 });
 
             if (file.Length > MaxAttachmentSizeInBytes)
                 return BadRequest(new
                 {
-                    message = $"Each attachment must be {MaxAttachmentSizeInBytes / 1024 / 1024}MB or smaller."
+                    message = ErrorShared.Ticket.AttachmentTooLarge(
+                        (int)(MaxAttachmentSizeInBytes / 1024 / 1024))
                 });
 
             return null;
@@ -107,13 +108,13 @@ namespace Controller
         [HttpGet("download/{fileName}")]
         public IActionResult GetFile(string fileName)
         {
-            string filePath = Path.Combine(_storageFolder, fileName);
+            string filePath = Path.Combine(_storageFolder, Path.GetFileName(fileName));
 
             // 1. Check if the file physically exists on the disk
             if (!System.IO.File.Exists(filePath))
                 return NotFound(new
                 {
-                    message = "The requested file does not exist."
+                    message = ErrorShared.Ticket.AttachmentNotFound
                 });
 
             // 2. Automatically detect the correct file content type (e.g., image/jpeg, video/mp4)

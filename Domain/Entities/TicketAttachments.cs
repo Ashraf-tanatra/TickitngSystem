@@ -20,7 +20,7 @@ namespace Domain.Entities
                 throw new ArgumentException(ErrorShared.Ticket.TicketNotFound);
 
             if (string.IsNullOrWhiteSpace(url))
-                throw new ArgumentException("Attachment URL is required.");
+                throw new ArgumentException(ErrorShared.Ticket.AttachmentUrlRequired);
 
             return new TicketAttachments
             {
@@ -44,19 +44,19 @@ namespace Domain.Entities
                 throw new ArgumentException(ErrorShared.Ticket.TicketNotFound);
 
             if (string.IsNullOrWhiteSpace(url))
-                throw new ArgumentException("Attachment URL is required.");
+                throw new ArgumentException(ErrorShared.Ticket.AttachmentUrlRequired);
 
             if (string.IsNullOrWhiteSpace(originalFileName))
-                throw new ArgumentException("Original file name is required.");
+                throw new ArgumentException(ErrorShared.Ticket.OriginalFileNameRequired);
 
             if (string.IsNullOrWhiteSpace(storedFileName))
-                throw new ArgumentException("Stored file name is required.");
+                throw new ArgumentException(ErrorShared.Ticket.StoredFileNameRequired);
 
             if (string.IsNullOrWhiteSpace(contentType))
-                throw new ArgumentException("Content type is required.");
+                throw new ArgumentException(ErrorShared.Ticket.ContentTypeRequired);
 
             if (sizeInBytes <= 0)
-                throw new ArgumentException("Attachment size must be greater than zero.");
+                throw new ArgumentException(ErrorShared.Ticket.AttachmentSizeInvalid);
 
             return new TicketAttachments
             {

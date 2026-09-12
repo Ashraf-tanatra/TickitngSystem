@@ -64,7 +64,7 @@ namespace Domain.Entities
         public void ChangeStatus(ProjectStatus status)
         {
             if (!System.Enum.IsDefined(status))
-                throw new ArgumentException("Invalid project status.");
+                throw new ArgumentException(ErrorShared.Project.InvalidStatus);
 
             ProjectStatus = status;
             Touch();

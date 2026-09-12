@@ -49,6 +49,7 @@ namespace Infrastructure.Database.Configuration
             builder.HasOne(x => x.Employee)
                    .WithMany(e => e.Tickets)
                    .HasForeignKey(x => x.EmployeeId)
+                   .IsRequired(false)
                    .OnDelete(DeleteBehavior.Restrict);
 
             // Ticket Created By

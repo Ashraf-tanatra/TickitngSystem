@@ -103,6 +103,17 @@ namespace Infrastructure.Repositories
             await _context.SaveChangesAsync();
         }
 
+        public async Task SaveDeactivationAsync(
+            Account account,
+            IEnumerable<Ticket> tickets,
+            IEnumerable<TicketHistory> histories)
+        {
+            _context.Accounts.Update(account);
+            _context.Tickets.UpdateRange(tickets);
+            await _context.TicketHistories.AddRangeAsync(histories);
+            await _context.SaveChangesAsync();
+        }
+
         // =========================================================
         // REACTIVATE
         // =========================================================
@@ -110,6 +121,9 @@ namespace Infrastructure.Repositories
         public async Task ReactivateAsync(Account account)
         {
             account.Reactivate();
+
+            if (account.Employee.IsDeleted)
+                account.Employee.Reactivate();
 
             _context.Accounts.Update(account);
 

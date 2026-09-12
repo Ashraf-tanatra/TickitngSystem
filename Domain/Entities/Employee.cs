@@ -70,7 +70,7 @@ namespace Domain.Entities
         public void ChangeProfileImage(string profileImageUrl)
         {
             if (string.IsNullOrWhiteSpace(profileImageUrl))
-                throw new ArgumentException("Profile image is required.");
+                throw new ArgumentException(ErrorShared.Employee.ProfileImageRequired);
 
             ProfileImageUrl = profileImageUrl.Trim();
             Touch();
@@ -93,6 +93,18 @@ namespace Domain.Entities
 
             IsDeleted = false;
             DeletedAt = null;
+            Touch();
+        }
+
+        public void Anonymize()
+        {
+            if (!IsDeleted)
+                throw new InvalidOperationException(ErrorShared.Employee.CannotAnonymizeActiveEmployee);
+
+            FName = ErrorShared.Employee.AnonymousFirstName;
+            LName = $"{ErrorShared.Employee.AnonymousLastNamePrefix} {Id}";
+            Phone = Id.ToString("D10");
+            ProfileImageUrl = null;
             Touch();
         }
     }

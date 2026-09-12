@@ -1,7 +1,6 @@
 ﻿using ApplicationServices.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Resend;
-using System.Net.Mail;
 
 public class EmailService : IEmailService
 {
@@ -26,7 +25,7 @@ public class EmailService : IEmailService
         if (string.IsNullOrWhiteSpace(fromEmail))
         {
             throw new InvalidOperationException(
-                "Email sender address is not configured.");
+                ErrorShared.Account.EmailSenderNotConfigured);
         }
 
         var message = new EmailMessage
@@ -35,13 +34,9 @@ public class EmailService : IEmailService
             Subject = "Ticketing System - Email Verification",
             HtmlBody = $@"
                 <h2>Email Verification</h2>
-
                 <p>Your verification code is:</p>
-
                 <h1>{code}</h1>
-
                 <p>This code will expire in 10 minutes.</p>
-
                 <p>If you did not create this account,
                 please ignore this email.</p>
             "
@@ -56,7 +51,7 @@ public class EmailService : IEmailService
         catch (ResendException ex)
         {
             throw new InvalidOperationException(
-                "Email service rejected the message: " + ex.Message,
+                ErrorShared.Account.EmailServiceRejectedPrefix + ex.Message,
                 ex);
         }
     }

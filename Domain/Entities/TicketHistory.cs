@@ -53,7 +53,7 @@ namespace Domain.Entities
                 throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
 
             if (string.IsNullOrWhiteSpace(action))
-                throw new ArgumentException("Action is required.");
+                throw new ArgumentException(ErrorShared.Ticket.HistoryActionRequired);
 
             return new TicketHistory
             {
