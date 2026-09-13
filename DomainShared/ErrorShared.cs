@@ -248,6 +248,8 @@ public static class ErrorShared
             public const string HistoryActionRequired = "History action is required.";
             public const string UnassignedDueToAccountDeactivationAction = "UnassignedDueToAccountDeactivation";
             public const string UnassignedDueToAccountDeactivationNote = "The ticket was unassigned because the employee account was deactivated.";
+            public const string CancelledDueToProjectCancellationAction = "CancelledDueToProjectCancellation";
+            public const string CancelledDueToProjectCancellationNote = "The ticket was cancelled because its project was cancelled.";
             public const string UnassignedEmployeeName = "Unassigned";
             public const string SubmitForReviewAction = "SubmitForReview";
             public const string ApproveAction = "Approve";

@@ -60,19 +60,63 @@ namespace Infrastructure.Repositories
         // Delete
         public async Task<bool> DeleteAsync(int projectId, int employeeId)
         {
-            if (!await ProjectExistsAsync(projectId))
-                throw new ArgumentException(ErrorShared.Project.ProjectNotFound);
-            if (!await EmployeeExistsAsync(employeeId))
-                throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
-            if (!await IsManagerAsync(projectId, employeeId))
-                throw new UnauthorizedAccessException(ErrorShared.Project.OnlyManagerCanDelete);
+            await using var transaction = await _context.Database.BeginTransactionAsync();
 
-            var project = await GetByIdAsync(projectId);
-            project!.ChangeStatus(ProjectStatus.Cancelled);
+            try
+            {
+                if (!await EmployeeExistsAsync(employeeId))
+                    throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
 
-            _context.Projects.Update(project);
-            await _context.SaveChangesAsync();
-            return true;
+                var project = await _context.Projects
+                    .Include(p => p.ProjectTickets)
+                    .FirstOrDefaultAsync(p =>
+                        p.Id == projectId &&
+                        p.ProjectStatus != ProjectStatus.Cancelled);
+
+                if (project is null)
+                    throw new ArgumentException(ErrorShared.Project.ProjectNotFound);
+
+                if (project.ProjectManagerId != employeeId)
+                    throw new UnauthorizedAccessException(ErrorShared.Project.OnlyManagerCanDelete);
+
+                var activeTickets = project.ProjectTickets
+                    .Where(ticket =>
+                        ticket.TicketStatus != TicketStatus.Done &&
+                        ticket.TicketStatus != TicketStatus.Completed &&
+                        ticket.TicketStatus != TicketStatus.Cancelled)
+                    .ToList();
+
+                var histories = new List<TicketHistory>(activeTickets.Count);
+
+                foreach (var ticket in activeTickets)
+                {
+                    var oldStatus = ticket.TicketStatus.ToString();
+                    ticket.ChangeStatus(TicketStatus.Cancelled);
+
+                    histories.Add(TicketHistory.Create(
+                        ticket.TicketId,
+                        employeeId,
+                        ErrorShared.Ticket.CancelledDueToProjectCancellationAction,
+                        oldValue: oldStatus,
+                        newValue: TicketStatus.Cancelled.ToString(),
+                        note: ErrorShared.Ticket.CancelledDueToProjectCancellationNote));
+                }
+
+                project.ChangeStatus(ProjectStatus.Cancelled);
+
+                _context.Projects.Update(project);
+                _context.Tickets.UpdateRange(activeTickets);
+                await _context.TicketHistories.AddRangeAsync(histories);
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return true;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
         // All employees that work on the project
         public async Task<IEnumerable<Employee>?> GetEmployeesAsync(int projectId)
