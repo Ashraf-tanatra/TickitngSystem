@@ -7,9 +7,44 @@ using Microsoft.EntityFrameworkCore;
 using Resend;
 using Scalar.AspNetCore;
 
+const string CorsPolicy = "Frontend";
+
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddHostedService<DeletedAccountCleanupService>();
+
+var defaultAllowedOrigins = new[]
+{
+    "http://localhost:5173",
+    "http://13.140.154.75:8081",
+    "http://taskflow-pal.xyz",
+    "https://taskflow-pal.xyz",
+    "http://www.taskflow-pal.xyz",
+    "https://www.taskflow-pal.xyz",
+    "http://taskflow-pal.xyz:8081"
+};
+
+var configuredAllowedOrigins =
+    builder.Configuration
+        .GetSection("Cors:AllowedOrigins")
+        .Get<string[]>()
+    ?? [];
+
+var allowedOrigins = defaultAllowedOrigins
+    .Concat(configuredAllowedOrigins)
+    .Distinct(StringComparer.OrdinalIgnoreCase)
+    .ToArray();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(CorsPolicy, policy =>
+    {
+        policy
+            .WithOrigins(allowedOrigins)
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 
 var connectionString =
     builder.Configuration.GetConnectionString("constr");
@@ -106,6 +141,7 @@ builder.Services.AddOpenApi("v1");
 
 var app = builder.Build();
 
+app.UseCors(CorsPolicy);
 
 app.MapOpenApi(); // /openapi/v1.json
 app.MapScalarApiReference(); // /scalar
