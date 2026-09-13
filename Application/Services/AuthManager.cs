@@ -183,13 +183,35 @@ namespace ApplicationServices.Services
                 throw new UnauthorizedAccessException(
                     ErrorShared.Account.InvalidCredentials);
 
+            // Validate the password before revealing the account state.
+            if (!BCrypt.Net.BCrypt.Verify(
+                    request.Password,
+                    account.PasswordHash))
+            {
+                throw new UnauthorizedAccessException(
+                    ErrorShared.Account.InvalidCredentials);
+            }
+
             // =====================================================
             // CHECK ACCOUNT STATUS
             // =====================================================
 
             if (account.IsDeleted)
-                throw new UnauthorizedAccessException(
-                    ErrorShared.Account.AccountDeactivated);
+            {
+                var canReactivate =
+                    !account.IsAnonymized &&
+                    account.DeletedAt.HasValue &&
+                    account.DeletedAt.Value
+                        .AddDays(ErrorShared.Account.ReactivationPeriodDays) >= DateTime.UtcNow;
+
+                if (!canReactivate)
+                {
+                    throw new UnauthorizedAccessException(
+                        ErrorShared.Account.AccountDeactivated);
+                }
+
+                await _accountManager.ReactivateAsync(account.Email);
+            }
 
             // =====================================================
             // CHECK EMPLOYEE STATUS
@@ -209,18 +231,6 @@ namespace ApplicationServices.Services
             if (!account.IsEmailVerified)
                 throw new UnauthorizedAccessException(
                     ErrorShared.Account.EmailNotVerified);
-
-            // =====================================================
-            // CHECK PASSWORD
-            // =====================================================
-
-            if (!BCrypt.Net.BCrypt.Verify(
-                    request.Password,
-                    account.PasswordHash))
-            {
-                throw new UnauthorizedAccessException(
-                    ErrorShared.Account.InvalidCredentials);
-            }
 
             // =====================================================
             // LOGIN RESPONSE
@@ -400,33 +410,9 @@ namespace ApplicationServices.Services
                 throw new ArgumentException(
                     ErrorShared.Account.VerificationCodeRequired);
 
-            var account =
-                await _accountManager
-                    .GetEntityByEmailAsync(request.Email);
-
-            if (account == null)
-                throw new KeyNotFoundException(
-                    ErrorShared.Account.AccountNotFound);
-
-            if (account.IsEmailVerified)
-                throw new InvalidOperationException(
-                    ErrorShared.Account.EmailAlreadyVerified);
-
-            if (string.IsNullOrWhiteSpace(account.VerificationCode))
-                throw new InvalidOperationException(
-                    ErrorShared.Account.InvalidVerificationCode);
-
-            if (account.VerificationCode != request.Code)
-                throw new InvalidOperationException(
-                    ErrorShared.Account.InvalidVerificationCode);
-
-            if (!account.VerificationCodeExpiresAt.HasValue)
-                throw new InvalidOperationException(
-                    ErrorShared.Account.VerificationCodeExpired);
-
-            if (account.VerificationCodeExpiresAt.Value < DateTime.UtcNow)
-                throw new InvalidOperationException(
-                    ErrorShared.Account.VerificationCodeExpired);
+            var account = await GetPendingAccountForVerificationAsync(
+                request.Email,
+                request.Code);
 
             await _accountManager.VerifyEmailAsync(account);
         }
@@ -504,6 +490,42 @@ namespace ApplicationServices.Services
                     ErrorShared.Account.AccountDeactivated);
 
             EnsureValidResetCode(account, request.Code);
+        }
+
+        private async Task<Account> GetPendingAccountForVerificationAsync(
+            string email,
+            string token)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                throw new ArgumentException(ErrorShared.Account.EmailRequired);
+
+            if (string.IsNullOrWhiteSpace(token))
+                throw new ArgumentException(ErrorShared.Account.VerificationCodeRequired);
+
+            var account = await _accountManager.GetEntityByEmailAsync(email);
+
+            if (account == null)
+                throw new KeyNotFoundException(ErrorShared.Account.AccountNotFound);
+
+            if (account.IsDeleted)
+                throw new InvalidOperationException(ErrorShared.Account.AccountDeactivated);
+
+            if (account.IsEmailVerified)
+                throw new InvalidOperationException(ErrorShared.Account.EmailAlreadyVerified);
+
+            if (string.IsNullOrWhiteSpace(account.VerificationCode) ||
+                account.VerificationCode != token)
+            {
+                throw new InvalidOperationException(ErrorShared.Account.InvalidVerificationCode);
+            }
+
+            if (!account.VerificationCodeExpiresAt.HasValue ||
+                account.VerificationCodeExpiresAt.Value < DateTime.UtcNow)
+            {
+                throw new InvalidOperationException(ErrorShared.Account.VerificationCodeExpired);
+            }
+
+            return account;
         }
 
         private static void EnsureValidResetCode(Account account, string code)

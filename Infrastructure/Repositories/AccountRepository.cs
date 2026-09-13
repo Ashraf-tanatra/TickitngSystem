@@ -111,6 +111,18 @@ namespace Infrastructure.Repositories
             _context.Accounts.Update(account);
             _context.Tickets.UpdateRange(tickets);
             await _context.TicketHistories.AddRangeAsync(histories);
+
+            var projectIds = tickets
+                .Select(ticket => ticket.ProjectId)
+                .Distinct()
+                .ToList();
+
+            foreach (var projectId in projectIds)
+            {
+                var project = await _context.Projects.FindAsync(projectId);
+                project?.RecordActivity();
+            }
+
             await _context.SaveChangesAsync();
         }
 

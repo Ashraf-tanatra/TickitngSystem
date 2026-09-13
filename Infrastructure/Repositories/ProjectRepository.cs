@@ -108,6 +108,10 @@ namespace Infrastructure.Repositories
                 throw new ArgumentException(ErrorShared.Project.EmployeeIsDeleted);
 
             await _context.ProjectEmployees.AddAsync(projectEmployee);
+
+            var project = await _context.Projects.FindAsync(projectEmployee.ProjectId);
+            project?.RecordActivity();
+
             await _context.SaveChangesAsync();
             return true;
         }
@@ -121,6 +125,10 @@ namespace Infrastructure.Repositories
                 return false;
 
             _context.ProjectEmployees.Remove(projectEmployee);
+
+            var project = await _context.Projects.FindAsync(projectId);
+            project?.RecordActivity();
+
             await _context.SaveChangesAsync();
             return true;
         }
@@ -132,6 +140,7 @@ namespace Infrastructure.Repositories
                     t.ProjectId == projectId &&
                     t.EmployeeId == employeeId &&
                     t.TicketStatus != TicketStatus.Done &&
+                    t.TicketStatus != TicketStatus.Completed &&
                     t.TicketStatus != TicketStatus.Cancelled);
         }
 
@@ -156,10 +165,6 @@ namespace Infrastructure.Repositories
         {
             if (!await EmployeeExistsAsync(employeeId))
                 throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
-            //problem if the manager is exits 
-            //if (await _context.ProjectEmployees.FirstOrDefaultAsync(pe => pe.EmployeeId == employeeId) == null)
-            //    throw new ArgumentException("Employee does not work on any project.");
-
             return await _context.Projects
                         .Where(p => p.ProjectStatus != ProjectStatus.Cancelled)
                         .Include(p => p.ProjectManager)
@@ -174,22 +179,18 @@ namespace Infrastructure.Repositories
         // last three projects that the employee added to works on
         public async Task<IEnumerable<String[]>?> GetAllProjectWorkedByEmployeeTopThreeAsync(int employeeId)
         {
-            return await _context.Projects
-                   .Where(p => p.ProjectStatus == ProjectStatus.Active || p.ProjectStatus == ProjectStatus.OnHold)
-                   .Include(p => p.ProjectEmployees)
-                   .Where(p => p.ProjectManagerId == employeeId ||
-                   p.ProjectEmployees.Any(pe => pe.EmployeeId == employeeId))
-                   .OrderByDescending(d => d.StartedAt)
-                   .Take(3)
-                   .Select(p => new string[2]
-                  {
-                        p.ProjectName ?? string.Empty,
-                        p.ProjectEmployees
-                            .Where(pe => pe.EmployeeId == employeeId)
-                            .Select(pe => pe.Role)
-                            .FirstOrDefault() ?? ErrorShared.Project.ManagerOrNoRole
-                    })
-                   .ToListAsync();
+            var projects = await GetRecentActiveProjectsAsync(employeeId);
+
+            return projects
+                .Select(p => new string[2]
+                {
+                    p.ProjectName,
+                    p.ProjectEmployees
+                        .Where(pe => pe.EmployeeId == employeeId)
+                        .Select(pe => pe.Role)
+                        .FirstOrDefault() ?? ErrorShared.Project.ManagerOrNoRole
+                })
+                .ToList();
         }
 
         public async Task<IEnumerable<Project>?> GetDashboardProjectsAsync(int employeeId)
@@ -197,18 +198,57 @@ namespace Infrastructure.Repositories
             if (!await EmployeeExistsAsync(employeeId))
                 throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
 
-            return await _context.Projects
-                   .Where(p => p.ProjectStatus == ProjectStatus.Active || p.ProjectStatus == ProjectStatus.OnHold)
-                   .Include(p => p.ProjectManager)
-                   .Include(p => p.ProjectEmployees)
-                   .ThenInclude(pe => pe.Employee)
-                   .Include(p => p.ProjectTickets)
-                   .AsSplitQuery()
-                   .Where(p => p.ProjectManagerId == employeeId ||
-                   p.ProjectEmployees.Any(pe => pe.EmployeeId == employeeId))
-                   .OrderByDescending(d => d.StartedAt)
-                   .Take(3)
-                   .ToListAsync();
+            return await GetRecentActiveProjectsAsync(employeeId);
+        }
+
+        public async Task<IEnumerable<Project>> GetRecentActiveProjectsAsync(int employeeId)
+        {
+            var projects = await _context.Projects
+                .AsNoTracking()
+                .Where(p => p.ProjectStatus == ProjectStatus.Active)
+                .Where(p => p.ProjectManagerId == employeeId ||
+                    p.ProjectEmployees.Any(pe => pe.EmployeeId == employeeId))
+                .Include(p => p.ProjectManager)
+                .Include(p => p.ProjectEmployees)
+                .ThenInclude(pe => pe.Employee)
+                .Include(p => p.ProjectTickets)
+                .ThenInclude(t => t.TicketHistories)
+                .Include(p => p.ProjectTickets)
+                .ThenInclude(t => t.AttachmentURL)
+                .AsSplitQuery()
+                .ToListAsync();
+
+            return projects
+                .OrderByDescending(GetLastActivityAt)
+                .ThenByDescending(p => p.Id)
+                .Take(3)
+                .ToList();
+        }
+
+        private static DateTime GetLastActivityAt(Project project)
+        {
+            var lastActivityAt = project.UpdatedAt ?? project.CreatedAt;
+
+            foreach (var ticket in project.ProjectTickets)
+            {
+                var ticketCreatedAt = ticket.CreatedAt.ToDateTime(TimeOnly.MinValue);
+                if (ticketCreatedAt > lastActivityAt)
+                    lastActivityAt = ticketCreatedAt;
+
+                foreach (var history in ticket.TicketHistories)
+                {
+                    if (history.ModifiedAt > lastActivityAt)
+                        lastActivityAt = history.ModifiedAt;
+                }
+
+                foreach (var attachment in ticket.AttachmentURL)
+                {
+                    if (attachment.CreatedAt > lastActivityAt)
+                        lastActivityAt = attachment.CreatedAt;
+                }
+            }
+
+            return lastActivityAt;
         }
 
         // Filter the projects that the employee works on by status

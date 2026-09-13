@@ -65,12 +65,20 @@ namespace Infrastructure.Repositories
         public async Task CreateAsync(Ticket ticket)
         {
             await _context.Tickets.AddAsync(ticket);
+
+            var project = await _context.Projects.FindAsync(ticket.ProjectId);
+            project?.RecordActivity();
+
             await _context.SaveChangesAsync();
         }
 
         public async Task UpdateAsync(Ticket ticket)
         {
             _context.Tickets.Update(ticket);
+
+            var project = await _context.Projects.FindAsync(ticket.ProjectId);
+            project?.RecordActivity();
+
             await _context.SaveChangesAsync();
         }
 
@@ -78,6 +86,10 @@ namespace Infrastructure.Repositories
         {
             _context.Tickets.Update(ticket);
             await _context.TicketHistories.AddAsync(history);
+
+            var project = await _context.Projects.FindAsync(ticket.ProjectId);
+            project?.RecordActivity();
+
             await _context.SaveChangesAsync();
         }
 
@@ -124,6 +136,9 @@ namespace Infrastructure.Repositories
 
             ticket.ChangeStatus(status);
             _context.Tickets.Update(ticket);
+
+            ticket.Project.RecordActivity();
+
             await _context.SaveChangesAsync();
         }
 
@@ -138,6 +153,9 @@ namespace Infrastructure.Repositories
 
             ticket.ChangePriority(priority);
             _context.Tickets.Update(ticket);
+
+            ticket.Project.RecordActivity();
+
             await _context.SaveChangesAsync();
         }
 
@@ -158,6 +176,14 @@ namespace Infrastructure.Repositories
                 sizeInBytes);
 
             await _context.Attachments.AddAsync(attachment);
+
+            var projectId = await _context.Tickets
+                .Where(t => t.TicketId == ticketId)
+                .Select(t => t.ProjectId)
+                .SingleAsync();
+            var project = await _context.Projects.FindAsync(projectId);
+            project?.RecordActivity();
+
             await _context.SaveChangesAsync();
         }
 

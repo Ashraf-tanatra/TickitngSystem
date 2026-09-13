@@ -116,6 +116,13 @@ namespace Controller
                     message = ex.Message
                 });
             }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
 
         }
 
@@ -131,13 +138,6 @@ namespace Controller
             catch (ArgumentException ex)
             {
                 return BadRequest(new
-                {
-                    message = ex.Message
-                });
-            }
-            catch (NullReferenceException ex)
-            {
-                return NotFound(new
                 {
                     message = ex.Message
                 });
@@ -196,6 +196,13 @@ namespace Controller
             catch (NullReferenceException ex)
             {
                 return NotFound(new
+                {
+                    message = ex.Message
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
                 {
                     message = ex.Message
                 });
@@ -266,6 +273,13 @@ namespace Controller
                     message = ex.Message
                 });
             }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
         }
 
         [HttpGet("Dashboard/{employeeId:int}/Projects")]
@@ -282,6 +296,24 @@ namespace Controller
                 {
                     message = ex.Message
                 });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
+        }
+
+        // GET: api/Project/RecentActive/1
+        [HttpGet("RecentActive/{employeeId:int}")]
+        public async Task<ActionResult<IEnumerable<RecentActivityResponse>>> GetRecentActiveProjects(int employeeId)
+        {
+            try
+            {
+                var activities = await _projectManager.GetRecentActivityAsync(employeeId);
+                return Ok(activities);
             }
             catch (ArgumentException ex)
             {

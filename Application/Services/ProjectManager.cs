@@ -170,7 +170,7 @@ namespace ApplicationServices.Services
                 throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
 
             var emp = await _projectRepository.GetAllProjectWorkedByEmployeeTopThreeAsync(employeeId);
-            return emp;
+            return emp ?? Array.Empty<string[]>();
         }
 
         public async Task<IEnumerable<ProjectResponse>>? GetDashboardProjectsAsync(int employeeId)
@@ -180,6 +180,27 @@ namespace ApplicationServices.Services
 
             var projects = await _projectRepository.GetDashboardProjectsAsync(employeeId);
             return projects!.Select(project => MapToResponse(project, employeeId));
+        }
+
+        public async Task<IEnumerable<ProjectResponse>> GetRecentActiveProjectsAsync(int employeeId)
+        {
+            if (!await _projectRepository.EmployeeExistsAsync(employeeId))
+                throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
+
+            var projects = await _projectRepository.GetRecentActiveProjectsAsync(employeeId);
+            return projects.Select(project => MapToResponse(project, employeeId));
+        }
+
+        public async Task<IEnumerable<RecentActivityResponse>> GetRecentActivityAsync(int employeeId)
+        {
+            if (!await _projectRepository.EmployeeExistsAsync(employeeId))
+                throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
+
+            var projects = await _projectRepository.GetRecentActiveProjectsAsync(employeeId);
+
+            return projects
+                .Select(MapRecentActivity)
+                .ToList();
         }
 
         public async Task<bool> DeleteAsync(int projectId, int empId) => await _projectRepository.DeleteAsync(projectId, empId);
@@ -235,6 +256,144 @@ namespace ApplicationServices.Services
                     : (int)Math.Round(doneTicketCount * 100.0 / ticketCount)
             };
         }
+
+        private static RecentActivityResponse MapRecentActivity(Project project)
+        {
+            var activity = GetLatestActivity(project);
+
+            return new RecentActivityResponse
+            {
+                ProjectId = project.Id,
+                TicketId = activity.TicketId,
+                ProjectName = project.ProjectName,
+                Activity = activity.Description,
+                OccurredAt = activity.OccurredAt,
+                TimeAgo = FormatTimeAgo(activity.OccurredAt)
+            };
+        }
+
+        private static ActivityCandidate GetLatestActivity(Project project)
+        {
+            var specificActivities = new List<ActivityCandidate>();
+
+            foreach (var ticket in project.ProjectTickets)
+            {
+                specificActivities.Add(new ActivityCandidate(
+                    ErrorShared.RecentActivity.TicketCreated(ticket.TicketTitle),
+                    ticket.CreatedAt.ToDateTime(TimeOnly.MinValue),
+                    ticket.TicketId));
+
+                foreach (var history in ticket.TicketHistories)
+                {
+                    specificActivities.Add(new ActivityCandidate(
+                        FormatHistoryActivity(ticket.TicketTitle, history),
+                        ToLocalTime(history.ModifiedAt),
+                        ticket.TicketId));
+                }
+
+                foreach (var attachment in ticket.AttachmentURL)
+                {
+                    specificActivities.Add(new ActivityCandidate(
+                        ErrorShared.RecentActivity.AttachmentAdded(attachment.OriginalFileName, ticket.TicketTitle),
+                        ToLocalTime(attachment.CreatedAt),
+                        ticket.TicketId));
+                }
+            }
+
+            var candidates = new List<ActivityCandidate>
+            {
+                new ActivityCandidate(
+                    ErrorShared.RecentActivity.ProjectCreated,
+                    ToLocalTime(project.CreatedAt),
+                    null)
+            };
+
+            if (project.UpdatedAt is DateTime updatedAt)
+            {
+                var localUpdatedAt = ToLocalTime(updatedAt);
+                var isRelatedToSpecificActivity = specificActivities.Any(activity =>
+                    Math.Abs((activity.OccurredAt - localUpdatedAt).TotalSeconds) <= 2);
+
+                if (!isRelatedToSpecificActivity)
+                {
+                    candidates.Add(new ActivityCandidate(
+                        ErrorShared.RecentActivity.ProjectUpdated,
+                        localUpdatedAt,
+                        null));
+                }
+            }
+
+            candidates.AddRange(specificActivities);
+            return candidates
+                .OrderByDescending(activity => activity.OccurredAt)
+                .First();
+        }
+
+        private static string FormatHistoryActivity(string ticketTitle, TicketHistory history)
+        {
+            return history.Action switch
+            {
+                ErrorShared.Ticket.SubmitForReviewAction =>
+                        ErrorShared.RecentActivity.TicketMovedTo(
+                        ticketTitle,
+                        FormatDisplayValue(history.NewValue ?? nameof(TicketStatus.NeedReview))),
+                ErrorShared.Ticket.ApproveAction =>
+                    ErrorShared.RecentActivity.TicketMarkedCompleted(ticketTitle),
+                ErrorShared.Ticket.RequestChangesAction =>
+                    ErrorShared.RecentActivity.TicketMovedTo(
+                        ticketTitle,
+                        FormatDisplayValue(history.NewValue ?? nameof(TicketStatus.InProgress))),
+                ErrorShared.Ticket.ReassignAction =>
+                    ErrorShared.RecentActivity.TicketReassigned(ticketTitle),
+                ErrorShared.Ticket.CommentAction =>
+                    ErrorShared.RecentActivity.TicketCommented(ticketTitle),
+                ErrorShared.Ticket.UnassignedDueToAccountDeactivationAction =>
+                    ErrorShared.RecentActivity.TicketUnassigned(ticketTitle),
+                _ when !string.IsNullOrWhiteSpace(history.NewValue) =>
+                    ErrorShared.RecentActivity.TicketChangedTo(ticketTitle, FormatDisplayValue(history.NewValue)),
+                _ => ErrorShared.RecentActivity.TicketUpdated(ticketTitle)
+            };
+        }
+
+        private static string FormatTimeAgo(DateTime occurredAt)
+        {
+            var elapsed = DateTime.Now - occurredAt;
+
+            if (elapsed.TotalMinutes < 1)
+                return ErrorShared.RecentActivity.JustNow;
+
+            if (elapsed.TotalHours < 1)
+                return ErrorShared.RecentActivity.MinutesAgo((long)elapsed.TotalMinutes);
+
+            if (elapsed.TotalHours < 24)
+                return ErrorShared.RecentActivity.HoursAgo((long)elapsed.TotalHours);
+
+            if (occurredAt.Date == DateTime.Today.AddDays(-1))
+                return ErrorShared.RecentActivity.Yesterday;
+
+            return ErrorShared.RecentActivity.DaysAgo(Math.Max(2, (long)elapsed.TotalDays));
+        }
+
+        private static DateTime ToLocalTime(DateTime value) =>
+            value.Kind == DateTimeKind.Utc ? value.ToLocalTime() : value;
+
+        private static string FormatDisplayValue(string value)
+        {
+            var result = new System.Text.StringBuilder(value.Length + 5);
+
+            for (var index = 0; index < value.Length; index++)
+            {
+                var character = value[index];
+                if (index > 0 && char.IsUpper(character) && char.IsLower(value[index - 1]))
+                    result.Append(' ');
+
+                result.Append(character);
+            }
+
+            return result.ToString();
+        }
+
+        private sealed record ActivityCandidate(string Description, DateTime OccurredAt, int? TicketId);
 
         private static string? GetEmployeeRole(Project project, int employeeId)
         {

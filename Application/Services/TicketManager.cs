@@ -215,7 +215,7 @@ namespace ApplicationServices.Services
             var history = TicketHistory.Create(
                 ticket.TicketId,
                 request.ActionByEmployeeId,
-                "SubmitForReview",
+                ErrorShared.Ticket.SubmitForReviewAction,
                 oldStatus,
                 ticket.TicketStatus.ToString(),
                 note: request.Note);
@@ -236,7 +236,7 @@ namespace ApplicationServices.Services
             var history = TicketHistory.Create(
                 ticket.TicketId,
                 request.ActionByEmployeeId,
-                "Approve",
+                ErrorShared.Ticket.ApproveAction,
                 oldStatus,
                 ticket.TicketStatus.ToString(),
                 note: request.Note);
@@ -257,7 +257,7 @@ namespace ApplicationServices.Services
             var history = TicketHistory.Create(
                 ticket.TicketId,
                 request.ActionByEmployeeId,
-                "RequestChanges",
+                ErrorShared.Ticket.RequestChangesAction,
                 oldStatus,
                 ticket.TicketStatus.ToString(),
                 note: request.Note);
@@ -291,7 +291,7 @@ namespace ApplicationServices.Services
             var history = TicketHistory.Create(
                 ticket.TicketId,
                 request.ActionByEmployeeId,
-                "Reassign",
+                ErrorShared.Ticket.ReassignAction,
                 fromEmployeeId.ToString(),
                 request.ToEmployeeId.ToString(),
                 fromEmployeeId,
@@ -314,7 +314,7 @@ namespace ApplicationServices.Services
             var history = TicketHistory.Create(
                 ticket.TicketId,
                 request.ActionByEmployeeId,
-                "Comment",
+                ErrorShared.Ticket.CommentAction,
                 note: request.Note);
 
             await _ticketRepository.UpdateWithHistoryAsync(ticket, history);

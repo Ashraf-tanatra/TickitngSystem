@@ -70,6 +70,8 @@ namespace Domain.Entities
             Touch();
         }
 
+        public void RecordActivity() => Touch();
+
         public override string ToString() =>
             $"Project Id: {Id}\nProject Name: {ProjectName}\nDetails: {ProjectDescription}";
     }

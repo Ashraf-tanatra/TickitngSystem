@@ -17,6 +17,8 @@ namespace ApplicationServices.Interfaces
         Task<IEnumerable<ProjectResponse>>? GetAllProjectWorkedByEmployeeAsync(int employeeId);
         Task<IEnumerable<string[]>>? GetAllProjectWorkedByEmployeeTopThreeAsync(int employeeId);
         Task<IEnumerable<ProjectResponse>>? GetDashboardProjectsAsync(int employeeId);
+        Task<IEnumerable<ProjectResponse>> GetRecentActiveProjectsAsync(int employeeId);
+        Task<IEnumerable<RecentActivityResponse>> GetRecentActivityAsync(int employeeId);
         Task<IEnumerable<ProjectResponse>>? GetAllProjectWorkedByEmployeeWithFilterAsync(int employeeId, ProjectStatus FilterByStatus);
     }
 }

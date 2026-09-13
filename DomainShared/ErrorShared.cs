@@ -178,6 +178,35 @@ public static class ErrorShared
             public const string ManagerOrNoRole = "Manager/No Role";
         }
 
+        public static class RecentActivity
+        {
+            public const string JustNow = "Just now";
+            public const string Yesterday = "Yesterday";
+            public const string ProjectCreated = "Project created";
+            public const string ProjectUpdated = "Project updated";
+
+            public static string MinutesAgo(long minutes) => $"{minutes} min ago";
+            public static string HoursAgo(long hours) => $"{hours} hr ago";
+            public static string DaysAgo(long days) => $"{days} days ago";
+            public static string TicketCreated(string title) => $"Ticket \"{title}\" created";
+            public static string TicketMovedTo(string title, string status) =>
+                $"Ticket \"{title}\" moved to {status}";
+            public static string TicketMarkedCompleted(string title) =>
+                $"Ticket \"{title}\" marked Completed";
+            public static string TicketReassigned(string title) =>
+                $"Ticket \"{title}\" was reassigned";
+            public static string TicketCommented(string title) =>
+                $"Ticket \"{title}\" received a comment";
+            public static string TicketUnassigned(string title) =>
+                $"Ticket \"{title}\" was unassigned";
+            public static string TicketChangedTo(string title, string value) =>
+                $"Ticket \"{title}\" changed to {value}";
+            public static string TicketUpdated(string title) =>
+                $"Ticket \"{title}\" updated";
+            public static string AttachmentAdded(string fileName, string title) =>
+                $"Attachment \"{fileName}\" added to ticket \"{title}\"";
+        }
+
 
         // =========================================================
         // TICKET
@@ -220,6 +249,11 @@ public static class ErrorShared
             public const string UnassignedDueToAccountDeactivationAction = "UnassignedDueToAccountDeactivation";
             public const string UnassignedDueToAccountDeactivationNote = "The ticket was unassigned because the employee account was deactivated.";
             public const string UnassignedEmployeeName = "Unassigned";
+            public const string SubmitForReviewAction = "SubmitForReview";
+            public const string ApproveAction = "Approve";
+            public const string RequestChangesAction = "RequestChanges";
+            public const string ReassignAction = "Reassign";
+            public const string CommentAction = "Comment";
             public const string TicketNotFoundMessage = "Ticket was not found.";
             public const string NoFileUploaded = "No file was uploaded.";
             public const string NoFilesUploaded = "No files were uploaded.";

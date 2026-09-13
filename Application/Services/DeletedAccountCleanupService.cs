@@ -40,9 +40,12 @@ namespace ApplicationServices.Services
                             a.DeletedAt <= expirationDate)
                         .ToListAsync(stoppingToken);
 
+                    var profileImageUrls = accounts
+                        .Select(account => account.Employee.ProfileImageUrl)
+                        .ToList();
+
                     foreach (var account in accounts)
                     {
-                        var profileImageUrl = account.Employee.ProfileImageUrl;
                         var anonymousEmail =
                             $"deleted-{account.Id}-{Guid.NewGuid():N}@deleted.invalid";
                         var unusablePasswordHash = BCrypt.Net.BCrypt.HashPassword(
@@ -56,13 +59,15 @@ namespace ApplicationServices.Services
                             account.Employee.Deactivate();
 
                         account.Employee.Anonymize();
-                        DeleteProfileImage(profileImageUrl);
                     }
 
                     if (accounts.Any())
                     {
                         await context.SaveChangesAsync(
                             stoppingToken);
+
+                        foreach (var profileImageUrl in profileImageUrls)
+                            DeleteProfileImage(profileImageUrl);
                     }
                 }
                 catch (Exception ex)
