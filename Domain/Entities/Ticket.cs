@@ -17,7 +17,8 @@ namespace Domain.Entities
         public TicketPriority Priority { get; private set; }
         public string TicketTitle { get; private set; } = string.Empty;
         public TicketStatus TicketStatus { get; private set; } = TicketStatus.Pending;
-        public DateOnly CreatedAt { get; private set; } = DateOnly.FromDateTime(DateTime.Now);
+        public DateTime CreatedAt { get; private set; } = DateTime.Now;
+        public DateTime? UpdatedAt { get; private set; }
 
         // RelationShips for EF_Core
         // Project
@@ -63,6 +64,7 @@ namespace Domain.Entities
             };
 
             ticket.UpdateDetails(ticketTitle, dueTo, description, employeeId);
+            ticket.UpdatedAt = null;
             return ticket;
         }
 
@@ -84,6 +86,7 @@ namespace Domain.Entities
                 ? null
                 : description.Trim();
             EmployeeId = employeeId;
+            Touch();
         }
 
         public void ChangeStatus(TicketStatus status)
@@ -92,21 +95,25 @@ namespace Domain.Entities
                 throw new ArgumentException(ErrorShared.Ticket.InvalidStatus);
 
             TicketStatus = status;
+            Touch();
         }
 
         public void SubmitForReview()
         {
             TicketStatus = TicketStatus.NeedReview;
+            Touch();
         }
 
         public void Approve()
         {
             TicketStatus = TicketStatus.Done;
+            Touch();
         }
 
         public void RequestChanges()
         {
             TicketStatus = TicketStatus.InProgress;
+            Touch();
         }
 
         public void Reassign(int employeeId)
@@ -115,6 +122,7 @@ namespace Domain.Entities
                 throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
 
             EmployeeId = employeeId;
+            Touch();
         }
 
         public void UnassignAndResetToPending()
@@ -122,6 +130,7 @@ namespace Domain.Entities
             EmployeeId = null;
             Employee = null;
             TicketStatus = TicketStatus.Pending;
+            Touch();
         }
 
         public void ChangePriority(TicketPriority priority)
@@ -130,6 +139,12 @@ namespace Domain.Entities
                 throw new ArgumentException(ErrorShared.Ticket.InvalidPriority);
 
             Priority = priority;
+            Touch();
+        }
+
+        private void Touch()
+        {
+            UpdatedAt = DateTime.Now;
         }
 
         public override string ToString() =>

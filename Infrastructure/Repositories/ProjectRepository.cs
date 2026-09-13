@@ -231,9 +231,11 @@ namespace Infrastructure.Repositories
 
             foreach (var ticket in project.ProjectTickets)
             {
-                var ticketCreatedAt = ticket.CreatedAt.ToDateTime(TimeOnly.MinValue);
-                if (ticketCreatedAt > lastActivityAt)
-                    lastActivityAt = ticketCreatedAt;
+                if (ticket.CreatedAt > lastActivityAt)
+                    lastActivityAt = ticket.CreatedAt;
+
+                if (ticket.UpdatedAt is DateTime ticketUpdatedAt && ticketUpdatedAt > lastActivityAt)
+                    lastActivityAt = ticketUpdatedAt;
 
                 foreach (var history in ticket.TicketHistories)
                 {

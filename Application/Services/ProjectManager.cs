@@ -280,8 +280,17 @@ namespace ApplicationServices.Services
             {
                 specificActivities.Add(new ActivityCandidate(
                     ErrorShared.RecentActivity.TicketCreated(ticket.TicketTitle),
-                    ticket.CreatedAt.ToDateTime(TimeOnly.MinValue),
+                    ticket.CreatedAt,
                     ticket.TicketId));
+
+                if (ticket.UpdatedAt is DateTime ticketUpdatedAt &&
+                    ticketUpdatedAt > ticket.CreatedAt.AddSeconds(1))
+                {
+                    specificActivities.Add(new ActivityCandidate(
+                        ErrorShared.RecentActivity.TicketUpdated(ticket.TicketTitle),
+                        ticketUpdatedAt,
+                        ticket.TicketId));
+                }
 
                 foreach (var history in ticket.TicketHistories)
                 {
