@@ -12,10 +12,9 @@ namespace Domain.Interfaces
         Task<IEnumerable<Ticket>> GetAllTicketsForAProjectAsync(Guid projectId);
         Task<IEnumerable<Ticket>> GetAllTicketsForAnEmployeeAsync(Guid employeeId);
 
-        Task<int> GetTicketTotalCountForAnEmployeeAsync(Guid employeeId);
-        Task<int> GetTicketInProgressCountForAnEmployeeAsync(Guid employeeId);
+        Task<(int TicketCount, int InProgressCount, int NeedReviewCount)>
+            GetTicketCountsForAnEmployeeAsync(Guid employeeId);
         Task<int> GetTicketCompletedCountForAnEmployeeAsync(Guid employeeId);
-        Task<int> GetTicketNeedReviewCountForAnEmployeeAsync(Guid employeeId);
 
         Task ChangeTicketStatusAsync(Guid ticketId, TicketStatus status);
         Task ChangeTicketPriorityAsync(Guid ticketId, TicketPriority priority);

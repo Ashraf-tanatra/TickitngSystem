@@ -65,17 +65,16 @@ namespace Controller
             }
         }
 
-        [HttpGet("Employee/{employeeId:guid}/TicketCount")]
-        [HttpGet("/Employee/{employeeId:guid}/TicketCount")]
-        public async Task<ActionResult<int>> GetTicketTotalCountForAnEmployee(Guid employeeId)
+        [HttpGet("Employee/{employeeId:guid}/Counts")]
+        public async Task<ActionResult<TicketCountsResponse>> GetTicketCountsForAnEmployee(Guid employeeId)
         {
             if (employeeId != User.GetEmployeeId())
                 return Forbid();
 
             try
             {
-                var count = await _ticketManager.GetTicketTotalCountForAnEmployeeAsync(employeeId);
-                return Ok(count);
+                var counts = await _ticketManager.GetTicketCountsForAnEmployeeAsync(employeeId);
+                return Ok(counts);
             }
             catch (ArgumentException ex)
             {
@@ -445,49 +444,6 @@ namespace Controller
                 });
             }
         }
-
-        [HttpGet("Employee/{employeeId:guid}/InProgressCount")]
-        [HttpGet("/Employee/{employeeId:guid}/InProgressCount")]
-        public async Task<ActionResult<int>> GetInProgressTicketCountForAnEmployee(Guid employeeId)
-        {
-            if (employeeId != User.GetEmployeeId())
-                return Forbid();
-
-            try
-            {
-                var count = await _ticketManager.GetTicketInProgressCountForAnEmployeeAsync(employeeId);
-                return Ok(count);
-            }
-            catch (ArgumentException ex)
-            {
-                return NotFound(new
-                {
-                    message = ex.Message
-                });
-            }
-        }
-
-        [HttpGet("Employee/{employeeId:guid}/NeedReviewCount")]
-        [HttpGet("/Employee/{employeeId:guid}/NeedReviewCount")]
-        public async Task<ActionResult<int>> GetNeedReviewTicketCountForAnEmployee(Guid employeeId)
-        {
-            if (employeeId != User.GetEmployeeId())
-                return Forbid();
-
-            try
-            {
-                var count = await _ticketManager.GetTicketNeedReviewCountForAnEmployeeAsync(employeeId);
-                return Ok(count);
-            }
-            catch (ArgumentException ex)
-            {
-                return NotFound(new
-                {
-                    message = ex.Message
-                });
-            }
-        }
-
 
         //Need Enhancement for directory structure.
         //api/Ticket/Attachments/upload/Ticket/{1}

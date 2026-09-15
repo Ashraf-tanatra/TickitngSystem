@@ -106,30 +106,33 @@ namespace Infrastructure.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task<int> GetTicketTotalCountForAnEmployeeAsync(Guid employeeId)
+        public async Task<(int TicketCount, int InProgressCount, int NeedReviewCount)>
+            GetTicketCountsForAnEmployeeAsync(Guid employeeId)
         {
-            return await _context.Tickets
-                .CountAsync(t => t.EmployeeId == employeeId
-                && t.TicketStatus != TicketStatus.Done
-                && t.TicketStatus != TicketStatus.Cancelled);
-        }
+            var counts = await _context.Tickets
+                .Where(ticket => ticket.EmployeeId == employeeId)
+                .GroupBy(_ => 1)
+                .Select(group => new
+                {
+                    TicketCount = group.Count(ticket =>
+                        ticket.TicketStatus != TicketStatus.Done &&
+                        ticket.TicketStatus != TicketStatus.Cancelled),
+                    InProgressCount = group.Count(ticket =>
+                        ticket.TicketStatus == TicketStatus.InProgress),
+                    NeedReviewCount = group.Count(ticket =>
+                        ticket.TicketStatus == TicketStatus.NeedReview ||
+                        ticket.TicketStatus == TicketStatus.InReview)
+                })
+                .FirstOrDefaultAsync();
 
-        public async Task<int> GetTicketInProgressCountForAnEmployeeAsync(Guid employeeId)
-        {
-            return await _context.Tickets.CountAsync(t => t.EmployeeId == employeeId && t.TicketStatus == TicketStatus.InProgress);
+            return counts == null
+                ? (0, 0, 0)
+                : (counts.TicketCount, counts.InProgressCount, counts.NeedReviewCount);
         }
 
         public async Task<int> GetTicketCompletedCountForAnEmployeeAsync(Guid employeeId)
         {
             return await _context.Tickets.CountAsync(t => t.EmployeeId == employeeId && t.TicketStatus == TicketStatus.Completed);
-        }
-
-        public async Task<int> GetTicketNeedReviewCountForAnEmployeeAsync(Guid employeeId)
-        {
-            return await _context.Tickets.CountAsync(t =>
-                t.EmployeeId == employeeId &&
-                (t.TicketStatus == TicketStatus.NeedReview ||
-                 t.TicketStatus == TicketStatus.InReview));
         }
 
         public async Task ChangeTicketStatusAsync(Guid ticketId, TicketStatus status)

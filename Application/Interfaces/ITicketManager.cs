@@ -18,10 +18,8 @@ namespace ApplicationServices.Interfaces
         Task<bool> DeleteAsync(Guid id, Guid actionByEmployeeId);
 
 
-        Task<int> GetTicketTotalCountForAnEmployeeAsync(Guid employeeId);
-        Task<int> GetTicketInProgressCountForAnEmployeeAsync(Guid employeeId);
+        Task<TicketCountsResponse> GetTicketCountsForAnEmployeeAsync(Guid employeeId);
         Task<int> GetTicketCompletedCountForAnEmployeeAsync(Guid employeeId);
-        Task<int> GetTicketNeedReviewCountForAnEmployeeAsync(Guid employeeId);
 
         Task ChangeTicketStatusAsync(Guid ticketId, TicketStatus status, Guid actionByEmployeeId);
         Task ChangeTicketPriorityAsync(Guid ticketId, TicketPriority priority, Guid actionByEmployeeId);

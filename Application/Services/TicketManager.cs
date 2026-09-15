@@ -167,20 +167,18 @@ namespace ApplicationServices.Services
             return true;
         }
 
-        public async Task<int> GetTicketTotalCountForAnEmployeeAsync(Guid employeeId)
+        public async Task<TicketCountsResponse> GetTicketCountsForAnEmployeeAsync(Guid employeeId)
         {
             if (!await _ticketRepository.EmployeeExistsAsync(employeeId))
                 throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
 
-            return await _ticketRepository.GetTicketTotalCountForAnEmployeeAsync(employeeId);
-        }
-
-        public async Task<int> GetTicketInProgressCountForAnEmployeeAsync(Guid employeeId)
-        {
-            if (!await _ticketRepository.EmployeeExistsAsync(employeeId))
-                throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
-
-            return await _ticketRepository.GetTicketInProgressCountForAnEmployeeAsync(employeeId);
+            var counts = await _ticketRepository.GetTicketCountsForAnEmployeeAsync(employeeId);
+            return new TicketCountsResponse
+            {
+                TicketCount = counts.TicketCount,
+                InProgressCount = counts.InProgressCount,
+                NeedReviewCount = counts.NeedReviewCount
+            };
         }
 
         public async Task<int> GetTicketCompletedCountForAnEmployeeAsync(Guid employeeId)
@@ -189,14 +187,6 @@ namespace ApplicationServices.Services
                 throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
 
             return await _ticketRepository.GetTicketCompletedCountForAnEmployeeAsync(employeeId);
-        }
-
-        public async Task<int> GetTicketNeedReviewCountForAnEmployeeAsync(Guid employeeId)
-        {
-            if (!await _ticketRepository.EmployeeExistsAsync(employeeId))
-                throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
-
-            return await _ticketRepository.GetTicketNeedReviewCountForAnEmployeeAsync(employeeId);
         }
 
         public async Task ChangeTicketStatusAsync(Guid ticketId, TicketStatus status, Guid actionByEmployeeId)
