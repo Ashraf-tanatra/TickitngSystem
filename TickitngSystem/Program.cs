@@ -3,15 +3,99 @@ using ApplicationServices.Services;
 using Domain.Interfaces;
 using Infrastructure;
 using Infrastructure.Repositories;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.RateLimiting;
 using Resend;
 using Scalar.AspNetCore;
+using System.Threading.RateLimiting;
+using System.Text;
+using TickitngSystem.Security;
 
 const string CorsPolicy = "Frontend";
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddHostedService<DeletedAccountCleanupService>();
+
+var jwtKey = builder.Configuration["Jwt:Key"];
+if (string.IsNullOrWhiteSpace(jwtKey) || Encoding.UTF8.GetByteCount(jwtKey) < 32)
+    throw new InvalidOperationException("Jwt:Key must contain at least 32 bytes.");
+
+var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "TaskFlow.Api";
+var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "TaskFlow.Frontend";
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.MapInboundClaims = false;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = jwtIssuer,
+            ValidateAudience = true,
+            ValidAudience = jwtAudience,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromSeconds(30),
+            NameClaimType = "email"
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = async context =>
+            {
+                var accountIdValue = context.Principal?.FindFirst(JwtClaimNames.AccountId)?.Value;
+                var versionValue = context.Principal?.FindFirst(JwtClaimNames.AccountVersion)?.Value;
+
+                if (!Guid.TryParse(accountIdValue, out var accountId) ||
+                    !long.TryParse(versionValue, out var tokenVersion))
+                {
+                    context.Fail("The access token is missing required claims.");
+                    return;
+                }
+
+                var dbContext = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
+                var account = await dbContext.Accounts
+                    .AsNoTracking()
+                    .Include(item => item.Employee)
+                    .FirstOrDefaultAsync(item => item.Id == accountId, context.HttpContext.RequestAborted);
+
+                var accountVersion = (account?.UpdatedAt ?? account?.CreatedAt)?.Ticks;
+                if (account == null || account.IsDeleted || !account.IsEmailVerified ||
+                    account.Employee == null || account.Employee.IsDeleted ||
+                    accountVersion != tokenVersion)
+                {
+                    context.Fail("The access token is no longer valid.");
+                }
+            }
+        };
+    });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.FallbackPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+});
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddPolicy("auth", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
 
 var defaultAllowedOrigins = new[]
 {
@@ -131,6 +215,8 @@ builder.Services.Configure<ResendClientOptions>(options =>
 builder.Services.AddTransient<IResend, ResendClient>();
 
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IAccessControlService, AccessControlService>();
+builder.Services.AddSingleton<IAuthTokenService, JwtTokenService>();
 
 // ==============================
 // OpenAPI / Scalar
@@ -142,12 +228,15 @@ builder.Services.AddOpenApi("v1");
 var app = builder.Build();
 
 app.UseCors(CorsPolicy);
+app.UseRateLimiter();
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapOpenApi(); // /openapi/v1.json
 app.MapScalarApiReference(); // /scalar
 
 
-app.MapGet("/", () => ErrorShared.System.ServerWorking);
+app.MapGet("/", () => ErrorShared.System.ServerWorking).AllowAnonymous();
 
 app.MapControllers();
 

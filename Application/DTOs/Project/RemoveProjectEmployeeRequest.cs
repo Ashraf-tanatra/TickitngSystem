@@ -6,6 +6,5 @@ namespace ApplicationServices.DTOs.Project
 
         public Guid EmployeeId { get; set; }
 
-        public Guid ActionByEmployeeId { get; set; }
     }
 }

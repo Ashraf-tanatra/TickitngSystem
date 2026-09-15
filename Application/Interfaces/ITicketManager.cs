@@ -8,13 +8,14 @@ namespace ApplicationServices.Interfaces
         Task<TicketResponse?> GetByIdAsync(Guid id);
         Task<IEnumerable<TicketHistoryResponse>> GetTicketHistoryAsync(Guid ticketId);
         Task<IEnumerable<TicketAttachmentResponse>> GetTicketAttachmentsAsync(Guid ticketId);
+        Task<Guid?> GetAttachmentTicketIdAsync(string storedFileName);
 
         Task<IEnumerable<TicketResponse>> GetAllTicketsForAProjectAsync(Guid projectId);
         Task<IEnumerable<TicketResponse>> GetAllTicketsForAnEmployeeAsync(Guid employeeId);
 
-        Task<Guid> CreateAsync(CreateTicketRequest request);
-        Task UpdateAsync(Guid id, UpdateTicketRequest request);
-        Task<bool> DeleteAsync(Guid id);
+        Task<Guid> CreateAsync(CreateTicketRequest request, Guid actionByEmployeeId);
+        Task UpdateAsync(Guid id, UpdateTicketRequest request, Guid actionByEmployeeId);
+        Task<bool> DeleteAsync(Guid id, Guid actionByEmployeeId);
 
 
         Task<int> GetTicketTotalCountForAnEmployeeAsync(Guid employeeId);
@@ -22,13 +23,13 @@ namespace ApplicationServices.Interfaces
         Task<int> GetTicketCompletedCountForAnEmployeeAsync(Guid employeeId);
         Task<int> GetTicketNeedReviewCountForAnEmployeeAsync(Guid employeeId);
 
-        Task ChangeTicketStatusAsync(Guid ticketId, TicketStatus status);
-        Task ChangeTicketPriorityAsync(Guid ticketId, TicketPriority priority);
-        Task SubmitForReviewAsync(Guid ticketId, TicketActionRequest request);
-        Task ApproveAsync(Guid ticketId, TicketActionRequest request);
-        Task RequestChangesAsync(Guid ticketId, TicketActionRequest request);
-        Task ReassignAsync(Guid ticketId, TicketReassignRequest request);
-        Task AddCommentAsync(Guid ticketId, TicketActionRequest request);
+        Task ChangeTicketStatusAsync(Guid ticketId, TicketStatus status, Guid actionByEmployeeId);
+        Task ChangeTicketPriorityAsync(Guid ticketId, TicketPriority priority, Guid actionByEmployeeId);
+        Task SubmitForReviewAsync(Guid ticketId, TicketActionRequest request, Guid actionByEmployeeId);
+        Task ApproveAsync(Guid ticketId, TicketActionRequest request, Guid actionByEmployeeId);
+        Task RequestChangesAsync(Guid ticketId, TicketActionRequest request, Guid actionByEmployeeId);
+        Task ReassignAsync(Guid ticketId, TicketReassignRequest request, Guid actionByEmployeeId);
+        Task AddCommentAsync(Guid ticketId, TicketActionRequest request, Guid actionByEmployeeId);
 
         Task AddAttachmentToTicketAsync(
             Guid ticketId,
@@ -36,7 +37,8 @@ namespace ApplicationServices.Interfaces
             string originalFileName,
             string storedFileName,
             string contentType,
-            long sizeInBytes);
+            long sizeInBytes,
+            Guid actionByEmployeeId);
 
         Task<bool> TicketExistsAsync(Guid ticketId);
         Task<bool> EmployeeExistsAsync(Guid employeeId);

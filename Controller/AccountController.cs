@@ -24,6 +24,9 @@ namespace Controller
         public async Task<ActionResult<AccountResponse>> GetByEmail(
             string email)
         {
+            if (!string.Equals(email, User.GetEmail(), StringComparison.OrdinalIgnoreCase))
+                return Forbid();
+
             try
             {
                 var account =
@@ -49,57 +52,6 @@ namespace Controller
         }
 
         // =========================================================
-        // REACTIVATE ACCOUNT
-        // =========================================================
-
-        [HttpPost("reactivate/{email}")]
-        public async Task<IActionResult> Reactivate(
-            string email)
-        {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(email))
-                {
-                    return BadRequest(new
-                    {
-                        message = ErrorShared.Account.EmailRequired
-                    });
-                }
-
-                var result =
-                    await _accountManager
-                        .ReactivateAsync(email);
-
-                if (!result)
-                {
-                    return NotFound(new
-                    {
-                        message = ErrorShared.Account.AccountNotFound
-                    });
-                }
-
-                return Ok(new
-                {
-                    message = ErrorShared.Account.AccountReactivatedSuccessfully
-                });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    message = ex.Message
-                });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new
-                {
-                    message = ex.Message
-                });
-            }
-        }
-
-        // =========================================================
         // UPDATE ACCOUNT
         // =========================================================
 
@@ -108,6 +60,9 @@ namespace Controller
             Guid id,
             [FromBody] UpdateAccountRequest request)
         {
+            if (id != User.GetAccountId())
+                return Forbid();
+
             try
             {
                 var account =
@@ -155,6 +110,9 @@ namespace Controller
         public async Task<IActionResult> SoftDelete(
             [FromBody] DeactivateAccountRequest request)
         {
+            if (!string.Equals(request.Email, User.GetEmail(), StringComparison.OrdinalIgnoreCase))
+                return Forbid();
+
             try
             {
                 var result =

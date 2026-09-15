@@ -31,7 +31,7 @@ namespace Controller
         // =========================================================
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<EmployeeResponse>>>
+        public async Task<ActionResult<IEnumerable<EmployeeSummaryResponse>>>
             GetAll()
         {
             var employees =
@@ -48,6 +48,9 @@ namespace Controller
         public async Task<ActionResult<EmployeeResponse>>
             GetById(Guid id)
         {
+            if (id != User.GetEmployeeId())
+                return Forbid();
+
             var employee =
                 await _employeeManager.GetByIdAsync(id);
 
@@ -69,6 +72,9 @@ namespace Controller
             ActionResult<IEnumerable<EmployeeProjectResponse>>>
             GetProjects(Guid id)
         {
+            if (id != User.GetEmployeeId())
+                return Forbid();
+
             try
             {
                 var projects =
@@ -95,6 +101,9 @@ namespace Controller
                 Guid id,
                 [FromBody] UpdateEmployeeRequest request)
         {
+            if (id != User.GetEmployeeId())
+                return Forbid();
+
             try
             {
                 var employee =
@@ -132,6 +141,9 @@ namespace Controller
             Guid id,
             [FromForm] IFormFile file)
         {
+            if (id != User.GetEmployeeId())
+                return Forbid();
+
             if (file == null || file.Length == 0)
                 return BadRequest(new
                 {
@@ -154,7 +166,7 @@ namespace Controller
             if (!Directory.Exists(_profileImagesFolder))
                 Directory.CreateDirectory(_profileImagesFolder);
 
-            var extension = Path.GetExtension(file.FileName);
+            var extension = GetImageExtension(file.ContentType);
             var fileName = $"{Guid.NewGuid()}{extension}";
             var filePath = Path.Combine(_profileImagesFolder, Path.GetFileName(fileName));
 
@@ -190,7 +202,11 @@ namespace Controller
         [HttpGet("{id:guid}/ProfilePhoto/{fileName}")]
         public IActionResult GetProfilePhoto(Guid id, string fileName)
         {
-            var filePath = Path.Combine(_profileImagesFolder, fileName);
+            var safeFileName = Path.GetFileName(fileName);
+            if (!string.Equals(fileName, safeFileName, StringComparison.Ordinal))
+                return BadRequest();
+
+            var filePath = Path.Combine(_profileImagesFolder, safeFileName);
 
             if (!System.IO.File.Exists(filePath))
                 return NotFound(new
@@ -216,6 +232,15 @@ namespace Controller
             };
         }
 
+        private static string GetImageExtension(string contentType) => contentType switch
+        {
+            "image/jpeg" => ".jpg",
+            "image/png" => ".png",
+            "image/gif" => ".gif",
+            "image/webp" => ".webp",
+            _ => throw new ArgumentOutOfRangeException(nameof(contentType))
+        };
+
         // =========================================================
         // DELETE
         // =========================================================
@@ -223,6 +248,9 @@ namespace Controller
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> Delete(Guid id)
         {
+            if (id != User.GetEmployeeId())
+                return Forbid();
+
             try
             {
                 var deleted =
@@ -258,6 +286,9 @@ namespace Controller
         [HttpPost("reactivate/{id:guid}")]
         public async Task<IActionResult> Reactivate(Guid id)
         {
+            if (id != User.GetEmployeeId())
+                return Forbid();
+
             try
             {
                 var result =

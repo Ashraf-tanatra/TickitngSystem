@@ -11,10 +11,12 @@ namespace Controller
     public class ProjectController : ControllerBase
     {
         private readonly IProjectManager _projectManager;
+        private readonly IAccessControlService _accessControl;
 
-        public ProjectController(IProjectManager projectManager)
+        public ProjectController(IProjectManager projectManager, IAccessControlService accessControl)
         {
             _projectManager = projectManager;
+            _accessControl = accessControl;
         }
 
         // DELETE: api/Project/Delete/5/1
@@ -22,17 +24,18 @@ namespace Controller
         [HttpDelete("Delete/{id:guid}/{empId:guid}")]
         public async Task<IActionResult> Delete(Guid id, Guid empId)
         {
+            var currentEmployeeId = User.GetEmployeeId();
+            if (empId != currentEmployeeId)
+                return Forbid();
+
             try
             {
-                await _projectManager.DeleteAsync(id, empId);
+                await _projectManager.DeleteAsync(id, currentEmployeeId);
                 return NoContent();
             }
-            catch (UnauthorizedAccessException ex)
+            catch (UnauthorizedAccessException)
             {
-                return Unauthorized(new
-                {
-                    message = ex.Message
-                });
+                return Forbid();
             }
             catch (ArgumentException ex)
             {
@@ -47,6 +50,9 @@ namespace Controller
         [HttpGet("ProjectCount/{employeeId:guid}")]
         public async Task<ActionResult<int>> ProjectCount(Guid employeeId)
         {
+            if (employeeId != User.GetEmployeeId())
+                return Forbid();
+
             try
             {
                 return Ok(await _projectManager.GetProjectCountAsync(employeeId));
@@ -66,7 +72,7 @@ namespace Controller
         {
             try
             {
-                var projectId = await _projectManager.CreateAsync(request);
+                var projectId = await _projectManager.CreateAsync(request, User.GetEmployeeId());
                 return Ok(projectId);
             }
             catch (ArgumentException ex)
@@ -82,7 +88,7 @@ namespace Controller
         {
             try
             {
-                await _projectManager.SetProjectStatusAsync(id, status);
+                await _projectManager.SetProjectStatusAsync(id, status, User.GetEmployeeId());
                 return NoContent();
             }
             catch (ArgumentException ex)
@@ -92,12 +98,19 @@ namespace Controller
                     message = ex.Message
                 });
             }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
         }
 
         // GET: api/Project/1
         [HttpGet("{id:guid}")]
         public async Task<ActionResult<ProjectResponse>> GetByIdAsync(Guid id)
         {
+            if (!await _accessControl.CanAccessProjectAsync(User.GetEmployeeId(), id))
+                return Forbid();
+
             try
             {
                 var project = await _projectManager.GetByIdAsync(id);
@@ -129,12 +142,21 @@ namespace Controller
 
         //Get api/project/Employees/1
         [HttpGet("Employees/{projectId:guid}")]
-        public async Task<ActionResult<IEnumerable<EmployeeResponse>>> GetEmployees(Guid projectId)
+        public async Task<ActionResult<IEnumerable<EmployeeSummaryResponse>>> GetEmployees(Guid projectId)
         {
+            if (!await _accessControl.CanAccessProjectAsync(User.GetEmployeeId(), projectId))
+                return Forbid();
+
             try
             {
                 var employees = await _projectManager.GetEmployeesWorkOnProjectAsync(projectId)!;
-                return Ok(employees);
+                return Ok(employees.Select(employee => new EmployeeSummaryResponse
+                {
+                    Id = employee.Id,
+                    FName = employee.FName,
+                    LName = employee.LName,
+                    ProfileImageUrl = employee.ProfileImageUrl
+                }));
             }
             catch (ArgumentException ex)
             {
@@ -149,9 +171,13 @@ namespace Controller
         [HttpPut("Update/{id:guid}/{empId:guid}")]
         public async Task<IActionResult> Update(Guid id, Guid empId, [FromBody] UpdateProjectRequest request)
         {
+            var currentEmployeeId = User.GetEmployeeId();
+            if (empId != currentEmployeeId)
+                return Forbid();
+
             try
             {
-                await _projectManager.UpdateAsync(id, empId, request);
+                await _projectManager.UpdateAsync(id, currentEmployeeId, request);
                 return NoContent();
             }
             catch (KeyNotFoundException ex)
@@ -168,12 +194,9 @@ namespace Controller
                     message = ex.Message
                 });
             }
-            catch (UnauthorizedAccessException ex)
+            catch (UnauthorizedAccessException)
             {
-                return Unauthorized(new
-                {
-                    message = ex.Message
-                });
+                return Forbid();
             }
             catch (InvalidOperationException ex)
             {
@@ -189,6 +212,9 @@ namespace Controller
         [HttpGet("employeeId = {employeeId:guid}")]
         public async Task<ActionResult<IEnumerable<ProjectResponse>>> GetProjectsWorkedByEmployee(Guid employeeId)
         {
+            if (employeeId != User.GetEmployeeId())
+                return Forbid();
+
             try
             {
                 var projects = await _projectManager.GetAllProjectWorkedByEmployeeAsync(employeeId)!;
@@ -215,7 +241,7 @@ namespace Controller
         {
             try
             {
-                await _projectManager.ProjectAddEmployeeAsync(request);
+                await _projectManager.ProjectAddEmployeeAsync(request, User.GetEmployeeId());
                 return NoContent();
             }
             catch (ArgumentException ex)
@@ -225,6 +251,10 @@ namespace Controller
                     message = ex.Message
                 });
             }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
         }
 
         [HttpDelete("RemoveEmployee")]
@@ -232,15 +262,12 @@ namespace Controller
         {
             try
             {
-                await _projectManager.RemoveEmployeeFromProjectAsync(request);
+                await _projectManager.RemoveEmployeeFromProjectAsync(request, User.GetEmployeeId());
                 return NoContent();
             }
-            catch (UnauthorizedAccessException ex)
+            catch (UnauthorizedAccessException)
             {
-                return Unauthorized(new
-                {
-                    message = ex.Message
-                });
+                return Forbid();
             }
             catch (InvalidOperationException ex)
             {
@@ -262,6 +289,9 @@ namespace Controller
         [HttpGet("Dashboard/{employeeId:guid}")]
         public async Task<ActionResult<IEnumerable<string[]>>> GetProjectsWorkedByEmployeeTopThree(Guid employeeId)
         {
+            if (employeeId != User.GetEmployeeId())
+                return Forbid();
+
             try
             {
                 var projects = await _projectManager.GetAllProjectWorkedByEmployeeTopThreeAsync(employeeId)!;
@@ -286,6 +316,9 @@ namespace Controller
         [HttpGet("Dashboard/{employeeId:guid}/Projects")]
         public async Task<ActionResult<IEnumerable<ProjectResponse>>> GetDashboardProjects(Guid employeeId)
         {
+            if (employeeId != User.GetEmployeeId())
+                return Forbid();
+
             try
             {
                 var projects = await _projectManager.GetDashboardProjectsAsync(employeeId)!;
@@ -311,6 +344,9 @@ namespace Controller
         [HttpGet("RecentActive/{employeeId:guid}")]
         public async Task<ActionResult<IEnumerable<RecentActivityResponse>>> GetRecentActiveProjects(Guid employeeId)
         {
+            if (employeeId != User.GetEmployeeId())
+                return Forbid();
+
             try
             {
                 var activities = await _projectManager.GetRecentActivityAsync(employeeId);
@@ -330,6 +366,9 @@ namespace Controller
         public async Task<ActionResult<IEnumerable<ProjectResponse>>> GetProjectsWorkedByEmployeeWithFilter(Guid employeeId,
             [FromQuery] ProjectStatus filterStatus)
         {
+            if (employeeId != User.GetEmployeeId())
+                return Forbid();
+
             try
             {
                 var projects = await _projectManager.GetAllProjectWorkedByEmployeeWithFilterAsync(employeeId, filterStatus)!;

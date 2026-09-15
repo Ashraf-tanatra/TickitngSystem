@@ -8,7 +8,7 @@ namespace ApplicationServices.Interfaces
     {
         Task<EmployeeResponse?> GetByIdAsync(Guid id);
 
-        Task<IEnumerable<EmployeeResponse>> GetAllAsync();
+        Task<IEnumerable<EmployeeSummaryResponse>> GetAllAsync();
 
         Task<EmployeeResponse?> UpdateAsync(
             Guid id,

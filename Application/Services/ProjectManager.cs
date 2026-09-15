@@ -31,7 +31,7 @@ namespace ApplicationServices.Services
             return await _projectRepository.GetProjectCountAsync(employeeId);
         }
 
-        public async Task<Guid> CreateAsync(CreateProjectRequest request)
+        public async Task<Guid> CreateAsync(CreateProjectRequest request, Guid managerId)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -39,13 +39,13 @@ namespace ApplicationServices.Services
             if (string.IsNullOrWhiteSpace(request.ProjectName))
                 throw new ArgumentException(ErrorShared.Project.ProjectNameRequired);
 
-            if (!await _projectRepository.EmployeeExistsAsync(request.ProjectManagerId))
+            if (!await _projectRepository.EmployeeExistsAsync(managerId))
                 throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
 
             var project = Project.Create(
                 request.ProjectName,
                 request.ProjectDescription,
-                request.ProjectManagerId,
+                managerId,
                 request.StartTime,
                 request.EndTime);
 
@@ -53,10 +53,13 @@ namespace ApplicationServices.Services
             return project.Id;
         }
 
-        public async Task<bool> ProjectAddEmployeeAsync(ProjectEmployeeRequest request)
+        public async Task<bool> ProjectAddEmployeeAsync(ProjectEmployeeRequest request, Guid actionByEmployeeId)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
+
+            if (!await _projectRepository.IsManagerAsync(request.ProjectId, actionByEmployeeId))
+                throw new UnauthorizedAccessException(ErrorShared.Project.OnlyManagerCanUpdate);
 
             var projectEmployee = ProjectEmployee.Create(
                 request.ProjectId,
@@ -67,7 +70,7 @@ namespace ApplicationServices.Services
             return true;
         }
 
-        public async Task<bool> RemoveEmployeeFromProjectAsync(RemoveProjectEmployeeRequest request)
+        public async Task<bool> RemoveEmployeeFromProjectAsync(RemoveProjectEmployeeRequest request, Guid actionByEmployeeId)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -78,10 +81,10 @@ namespace ApplicationServices.Services
             if (!await _projectRepository.EmployeeExistsAsync(request.EmployeeId))
                 throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
 
-            if (!await _projectRepository.EmployeeExistsAsync(request.ActionByEmployeeId))
+            if (!await _projectRepository.EmployeeExistsAsync(actionByEmployeeId))
                 throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
 
-            if (!await _projectRepository.IsManagerAsync(request.ProjectId, request.ActionByEmployeeId))
+            if (!await _projectRepository.IsManagerAsync(request.ProjectId, actionByEmployeeId))
                 throw new UnauthorizedAccessException(ErrorShared.Project.OnlyManagerCanRemoveMembers);
 
             var project = await _projectRepository.GetByIdAsync(request.ProjectId);
@@ -102,10 +105,13 @@ namespace ApplicationServices.Services
             return true;
         }
 
-        public async Task<bool> SetProjectStatusAsync(Guid projectId, ProjectStatus status)
+        public async Task<bool> SetProjectStatusAsync(Guid projectId, ProjectStatus status, Guid actionByEmployeeId)
         {
             if (!System.Enum.IsDefined(status))
                 throw new ArgumentException(ErrorShared.Project.InvalidStatus);
+
+            if (!await _projectRepository.IsManagerAsync(projectId, actionByEmployeeId))
+                throw new UnauthorizedAccessException(ErrorShared.Project.OnlyManagerCanUpdate);
 
             await _projectRepository.SetProjectStatusAsync(projectId, status);
             return true;

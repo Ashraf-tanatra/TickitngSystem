@@ -11,13 +11,15 @@ namespace Controller
     public class TicketController : ControllerBase
     {
         private readonly ITicketManager _ticketManager;
+        private readonly IAccessControlService _accessControl;
         private readonly string _storageFolder = Path.Combine(Directory.GetCurrentDirectory(), "UploadedFiles");
         private const int MaxAttachmentCount = 5;
         private const long MaxAttachmentSizeInBytes = 10 * 1024 * 1024;
 
-        public TicketController(ITicketManager ticketManager)
+        public TicketController(ITicketManager ticketManager, IAccessControlService accessControl)
         {
             _ticketManager = ticketManager;
+            _accessControl = accessControl;
         }
 
 
@@ -25,6 +27,9 @@ namespace Controller
         [HttpGet("/Project/{projectId:guid}")]
         public async Task<ActionResult<IEnumerable<TicketResponse>>> GetAllTicketsForAProject(Guid projectId)
         {
+            if (!await _accessControl.CanAccessProjectAsync(User.GetEmployeeId(), projectId))
+                return Forbid();
+
             try
             {
                 var tickets = await _ticketManager.GetAllTicketsForAProjectAsync(projectId);
@@ -43,6 +48,9 @@ namespace Controller
         [HttpGet("/Employee/{employeeId:guid}")]
         public async Task<ActionResult<IEnumerable<TicketResponse>>> GetAllTicketsForAnEmployee(Guid employeeId)
         {
+            if (employeeId != User.GetEmployeeId())
+                return Forbid();
+
             try
             {
                 var tickets = await _ticketManager.GetAllTicketsForAnEmployeeAsync(employeeId);
@@ -61,6 +69,9 @@ namespace Controller
         [HttpGet("/Employee/{employeeId:guid}/TicketCount")]
         public async Task<ActionResult<int>> GetTicketTotalCountForAnEmployee(Guid employeeId)
         {
+            if (employeeId != User.GetEmployeeId())
+                return Forbid();
+
             try
             {
                 var count = await _ticketManager.GetTicketTotalCountForAnEmployeeAsync(employeeId);
@@ -77,6 +88,9 @@ namespace Controller
         [HttpGet("{id:guid}")]
         public async Task<ActionResult<TicketResponse>> GetById(Guid id)
         {
+            if (!await _accessControl.CanAccessTicketAsync(User.GetEmployeeId(), id))
+                return Forbid();
+
             var ticket = await _ticketManager.GetByIdAsync(id);
 
             if (ticket == null)
@@ -91,6 +105,9 @@ namespace Controller
         [HttpGet("{ticketId:guid}/History")]
         public async Task<ActionResult<IEnumerable<TicketHistoryResponse>>> GetHistory(Guid ticketId)
         {
+            if (!await _accessControl.CanAccessTicketAsync(User.GetEmployeeId(), ticketId))
+                return Forbid();
+
             try
             {
                 var history = await _ticketManager.GetTicketHistoryAsync(ticketId);
@@ -108,6 +125,9 @@ namespace Controller
         [HttpGet("{ticketId:guid}/Attachments")]
         public async Task<ActionResult<IEnumerable<TicketAttachmentResponse>>> GetAttachments(Guid ticketId)
         {
+            if (!await _accessControl.CanAccessTicketAsync(User.GetEmployeeId(), ticketId))
+                return Forbid();
+
             try
             {
                 var attachments = await _ticketManager.GetTicketAttachmentsAsync(ticketId);
@@ -128,7 +148,7 @@ namespace Controller
         {
             try
             {
-                var ticketId = await _ticketManager.CreateAsync(request);
+                var ticketId = await _ticketManager.CreateAsync(request, User.GetEmployeeId());
 
                 return Ok(ticketId);
             }
@@ -139,12 +159,9 @@ namespace Controller
                     message = ex.Message
                 });
             }
-            catch (UnauthorizedAccessException ex)
+            catch (UnauthorizedAccessException)
             {
-                return Unauthorized(new
-                {
-                    message = ex.Message
-                });
+                return Forbid();
             }
         }
         // PUT: api/Ticket/5
@@ -153,7 +170,7 @@ namespace Controller
         {
             try
             {
-                await _ticketManager.UpdateAsync(id, request);
+                await _ticketManager.UpdateAsync(id, request, User.GetEmployeeId());
                 return NoContent();
             }
             catch (KeyNotFoundException ex)
@@ -169,6 +186,10 @@ namespace Controller
                 {
                     message = ex.Message
                 });
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
             }
             catch (Exception ex)
             {
@@ -184,7 +205,7 @@ namespace Controller
         {
             try
             {
-                if (!await _ticketManager.DeleteAsync(id))
+                if (!await _ticketManager.DeleteAsync(id, User.GetEmployeeId()))
                     return NotFound(new
                     {
                         message = ErrorShared.Ticket.TicketNotFoundMessage
@@ -199,6 +220,10 @@ namespace Controller
                     message = ex.Message
                 });
             }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
         }
 
         [HttpPut("Status/{ticketId:guid}/{status}")]
@@ -207,7 +232,7 @@ namespace Controller
         {
             try
             {
-                await _ticketManager.ChangeTicketStatusAsync(ticketId, status);
+                await _ticketManager.ChangeTicketStatusAsync(ticketId, status, User.GetEmployeeId());
                 return NoContent();
             }
             catch (KeyNotFoundException ex)
@@ -223,6 +248,10 @@ namespace Controller
                 {
                     message = ex.Message
                 });
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
             }
         }
 
@@ -232,7 +261,7 @@ namespace Controller
         {
             try
             {
-                await _ticketManager.ChangeTicketPriorityAsync(ticketId, priority);
+                await _ticketManager.ChangeTicketPriorityAsync(ticketId, priority, User.GetEmployeeId());
                 return NoContent();
             }
             catch (KeyNotFoundException ex)
@@ -249,6 +278,10 @@ namespace Controller
                     message = ex.Message
                 });
             }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
         }
 
         [HttpPut("{ticketId:guid}/SubmitReview")]
@@ -256,7 +289,7 @@ namespace Controller
         {
             try
             {
-                await _ticketManager.SubmitForReviewAsync(ticketId, request);
+                await _ticketManager.SubmitForReviewAsync(ticketId, request, User.GetEmployeeId());
                 return NoContent();
             }
             catch (KeyNotFoundException ex)
@@ -266,12 +299,9 @@ namespace Controller
                     message = ex.Message
                 });
             }
-            catch (UnauthorizedAccessException ex)
+            catch (UnauthorizedAccessException)
             {
-                return Unauthorized(new
-                {
-                    message = ex.Message
-                });
+                return Forbid();
             }
             catch (ArgumentException ex)
             {
@@ -287,7 +317,7 @@ namespace Controller
         {
             try
             {
-                await _ticketManager.ApproveAsync(ticketId, request);
+                await _ticketManager.ApproveAsync(ticketId, request, User.GetEmployeeId());
                 return NoContent();
             }
             catch (KeyNotFoundException ex)
@@ -297,12 +327,9 @@ namespace Controller
                     message = ex.Message
                 });
             }
-            catch (UnauthorizedAccessException ex)
+            catch (UnauthorizedAccessException)
             {
-                return Unauthorized(new
-                {
-                    message = ex.Message
-                });
+                return Forbid();
             }
             catch (ArgumentException ex)
             {
@@ -318,7 +345,7 @@ namespace Controller
         {
             try
             {
-                await _ticketManager.RequestChangesAsync(ticketId, request);
+                await _ticketManager.RequestChangesAsync(ticketId, request, User.GetEmployeeId());
                 return NoContent();
             }
             catch (KeyNotFoundException ex)
@@ -328,12 +355,9 @@ namespace Controller
                     message = ex.Message
                 });
             }
-            catch (UnauthorizedAccessException ex)
+            catch (UnauthorizedAccessException)
             {
-                return Unauthorized(new
-                {
-                    message = ex.Message
-                });
+                return Forbid();
             }
             catch (ArgumentException ex)
             {
@@ -349,7 +373,7 @@ namespace Controller
         {
             try
             {
-                await _ticketManager.ReassignAsync(ticketId, request);
+                await _ticketManager.ReassignAsync(ticketId, request, User.GetEmployeeId());
                 return NoContent();
             }
             catch (KeyNotFoundException ex)
@@ -359,12 +383,9 @@ namespace Controller
                     message = ex.Message
                 });
             }
-            catch (UnauthorizedAccessException ex)
+            catch (UnauthorizedAccessException)
             {
-                return Unauthorized(new
-                {
-                    message = ex.Message
-                });
+                return Forbid();
             }
             catch (ArgumentException ex)
             {
@@ -380,7 +401,7 @@ namespace Controller
         {
             try
             {
-                await _ticketManager.AddCommentAsync(ticketId, request);
+                await _ticketManager.AddCommentAsync(ticketId, request, User.GetEmployeeId());
                 return NoContent();
             }
             catch (KeyNotFoundException ex)
@@ -390,12 +411,9 @@ namespace Controller
                     message = ex.Message
                 });
             }
-            catch (UnauthorizedAccessException ex)
+            catch (UnauthorizedAccessException)
             {
-                return Unauthorized(new
-                {
-                    message = ex.Message
-                });
+                return Forbid();
             }
             catch (ArgumentException ex)
             {
@@ -411,6 +429,9 @@ namespace Controller
         [HttpGet("/Employee/{employeeId:guid}/CompletedCount")]
         public async Task<ActionResult<int>> GetCompletedTicketCountForAnEmployee(Guid employeeId)
         {
+            if (employeeId != User.GetEmployeeId())
+                return Forbid();
+
             try
             {
                 var count = await _ticketManager.GetTicketCompletedCountForAnEmployeeAsync(employeeId);
@@ -429,6 +450,9 @@ namespace Controller
         [HttpGet("/Employee/{employeeId:guid}/InProgressCount")]
         public async Task<ActionResult<int>> GetInProgressTicketCountForAnEmployee(Guid employeeId)
         {
+            if (employeeId != User.GetEmployeeId())
+                return Forbid();
+
             try
             {
                 var count = await _ticketManager.GetTicketInProgressCountForAnEmployeeAsync(employeeId);
@@ -447,6 +471,9 @@ namespace Controller
         [HttpGet("/Employee/{employeeId:guid}/NeedReviewCount")]
         public async Task<ActionResult<int>> GetNeedReviewTicketCountForAnEmployee(Guid employeeId)
         {
+            if (employeeId != User.GetEmployeeId())
+                return Forbid();
+
             try
             {
                 var count = await _ticketManager.GetTicketNeedReviewCountForAnEmployeeAsync(employeeId);
@@ -488,7 +515,8 @@ namespace Controller
                 file.FileName,
                 uploadedFile.FileName,
                 file.ContentType,
-                file.Length);
+                file.Length,
+                User.GetEmployeeId());
 
             return Ok(new
             {
@@ -538,7 +566,8 @@ namespace Controller
                     file.FileName,
                     uploadedFile.FileName,
                     file.ContentType,
-                    file.Length);
+                    file.Length,
+                    User.GetEmployeeId());
 
                 uploadedFiles.Add(new
                 {
@@ -559,13 +588,18 @@ namespace Controller
 
         private async Task<IActionResult?> ValidateTicketForAttachmentAsync(Guid ticketId)
         {
-            if (await _ticketManager.TicketExistsAsync(ticketId))
-                return null;
-
-            return NotFound(new
+            if (!await _ticketManager.TicketExistsAsync(ticketId))
             {
-                message = ErrorShared.Ticket.TicketNotFoundMessage
-            });
+                return NotFound(new
+                {
+                    message = ErrorShared.Ticket.TicketNotFoundMessage
+                });
+            }
+
+            if (!await _accessControl.CanAccessTicketAsync(User.GetEmployeeId(), ticketId))
+                return Forbid();
+
+            return null;
         }
 
         private IActionResult? ValidateAttachment(IFormFile file)
@@ -604,9 +638,17 @@ namespace Controller
         }
 
         [HttpGet("Attachments/download-file/{fileName}")]
-        public IActionResult GetFileByName(string fileName)
+        public async Task<IActionResult> GetFileByName(string fileName)
         {
-            string filePath = Path.Combine(_storageFolder, Path.GetFileName(fileName));
+            var safeFileName = Path.GetFileName(fileName);
+            var ticketId = await _ticketManager.GetAttachmentTicketIdAsync(safeFileName);
+            if (!ticketId.HasValue ||
+                !await _accessControl.CanAccessTicketAsync(User.GetEmployeeId(), ticketId.Value))
+            {
+                return NotFound(new { message = ErrorShared.Ticket.AttachmentNotFound });
+            }
+
+            string filePath = Path.Combine(_storageFolder, safeFileName);
 
             if (!System.IO.File.Exists(filePath))
                 return NotFound(new
@@ -620,9 +662,17 @@ namespace Controller
         }
 
         [HttpGet("Attachments/download/{URL}")]
-        public IActionResult GetFile(string URL)
+        public async Task<IActionResult> GetFile(string URL)
         {
-            var filePath = Path.Combine(_storageFolder, Path.GetFileName(URL));
+            var safeFileName = Path.GetFileName(URL);
+            var ticketId = await _ticketManager.GetAttachmentTicketIdAsync(safeFileName);
+            if (!ticketId.HasValue ||
+                !await _accessControl.CanAccessTicketAsync(User.GetEmployeeId(), ticketId.Value))
+            {
+                return NotFound(new { message = ErrorShared.Ticket.AttachmentNotFound });
+            }
+
+            var filePath = Path.Combine(_storageFolder, safeFileName);
 
             if (!System.IO.File.Exists(filePath))
                 return NotFound(new

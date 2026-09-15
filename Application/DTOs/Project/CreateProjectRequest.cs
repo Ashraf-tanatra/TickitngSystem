@@ -4,7 +4,6 @@ namespace ApplicationServices.DTOs.Project
     {
         public string ProjectName { get; set; } = null!;
         public string? ProjectDescription { get; set; }
-        public Guid ProjectManagerId { get; set; }
         public DateOnly? StartTime { get; set; }
         public DateOnly? EndTime { get; set; }
 

@@ -8,6 +8,7 @@ namespace Domain.Interfaces
         Task<Ticket?> GetByIdAsync(Guid id);
         Task<IEnumerable<TicketHistory>> GetTicketHistoryAsync(Guid ticketId);
         Task<IEnumerable<TicketAttachments>> GetTicketAttachmentsAsync(Guid ticketId);
+        Task<TicketAttachments?> GetAttachmentByStoredFileNameAsync(string storedFileName);
         Task<IEnumerable<Ticket>> GetAllTicketsForAProjectAsync(Guid projectId);
         Task<IEnumerable<Ticket>> GetAllTicketsForAnEmployeeAsync(Guid employeeId);
 

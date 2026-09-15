@@ -1,10 +1,14 @@
 ﻿using ApplicationServices.DTOs.Account;
 using ApplicationServices.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Controller
 {
     [ApiController]
+    [AllowAnonymous]
+    [EnableRateLimiting("auth")]
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {

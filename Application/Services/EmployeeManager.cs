@@ -22,12 +22,18 @@ namespace ApplicationServices.Services
         // GET ALL
         // =========================================================
 
-        public async Task<IEnumerable<EmployeeResponse>> GetAllAsync()
+        public async Task<IEnumerable<EmployeeSummaryResponse>> GetAllAsync()
         {
             var employees =
                 await _employeeRepository.GetAllAsync();
 
-            return employees.Select(MapToResponse);
+            return employees.Select(employee => new EmployeeSummaryResponse
+            {
+                Id = employee.Id,
+                FName = employee.FName,
+                LName = employee.LName,
+                ProfileImageUrl = employee.ProfileImageUrl
+            });
         }
 
         // =========================================================

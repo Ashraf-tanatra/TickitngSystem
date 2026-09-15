@@ -62,6 +62,13 @@ namespace Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        public async Task<TicketAttachments?> GetAttachmentByStoredFileNameAsync(string storedFileName)
+        {
+            return await _context.Attachments
+                .AsNoTracking()
+                .FirstOrDefaultAsync(attachment => attachment.StoredFileName == storedFileName);
+        }
+
         public async Task CreateAsync(Ticket ticket)
         {
             await _context.Tickets.AddAsync(ticket);

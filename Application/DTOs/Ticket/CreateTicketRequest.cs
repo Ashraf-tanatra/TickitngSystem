@@ -12,7 +12,5 @@ public class CreateTicketRequest
 
     public string? Description { get; set; }
     public Guid EmployeeId { get; set; }
-    public Guid TicketCreatedById { get; set; }
-
     public Guid ProjectId { get; set; }
 }
