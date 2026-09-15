@@ -84,17 +84,62 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddRateLimiter(options =>
 {
+    var apiRequestsPerMinute = Math.Max(
+        1,
+        builder.Configuration.GetValue("RateLimit:ApiRequestsPerMinute", 120));
+    var anonymousRequestsPerMinute = Math.Max(
+        1,
+        builder.Configuration.GetValue("RateLimit:AnonymousRequestsPerMinute", 30));
+    var authRequestsPerMinute = Math.Max(
+        1,
+        builder.Configuration.GetValue("RateLimit:AuthRequestsPerMinute", 10));
+
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+    {
+        var employeeId = httpContext.User.FindFirst(JwtClaimNames.EmployeeId)?.Value;
+        var isAuthenticated = httpContext.User.Identity?.IsAuthenticated == true &&
+            !string.IsNullOrWhiteSpace(employeeId);
+        var partitionKey = isAuthenticated
+            ? $"user:{employeeId}"
+            : $"ip:{httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown"}";
+
+        return RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey,
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = isAuthenticated
+                    ? apiRequestsPerMinute
+                    : anonymousRequestsPerMinute,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            });
+    });
+
     options.AddPolicy("auth", httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(
             httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             _ => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = 10,
+                PermitLimit = authRequestsPerMinute,
                 Window = TimeSpan.FromMinutes(1),
                 QueueLimit = 0,
                 AutoReplenishment = true
             }));
+
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+        {
+            context.HttpContext.Response.Headers.RetryAfter =
+                Math.Ceiling(retryAfter.TotalSeconds).ToString();
+        }
+
+        await context.HttpContext.Response.WriteAsJsonAsync(
+            new { message = "Too many requests. Please try again later." },
+            cancellationToken);
+    };
 });
 
 var defaultAllowedOrigins = new[]
@@ -228,8 +273,8 @@ builder.Services.AddOpenApi("v1");
 var app = builder.Build();
 
 app.UseCors(CorsPolicy);
-app.UseRateLimiter();
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 
 app.MapOpenApi(); // /openapi/v1.json
