@@ -411,7 +411,7 @@ namespace ApplicationServices.Services
                     : $"{ticket.Employee.FName} {ticket.Employee.LName}",
                 ProjectId = ticket.ProjectId,
                 ProjectName = ticket.Project?.ProjectName,
-                Attachments = ticket.AttachmentURL.Select(MapAttachmentToResponse)
+                Attachments = ticket.AttachmentURL.Select(MapAttachmentToResponse).ToArray()
             };
         }
 
@@ -450,7 +450,6 @@ namespace ApplicationServices.Services
                 Id = attachment.Id,
                 TicketId = attachment.TicketId,
                 OriginalFileName = attachment.OriginalFileName,
-                StoredFileName = attachment.StoredFileName,
                 ContentType = attachment.ContentType,
                 SizeInBytes = attachment.SizeInBytes,
                 Url = attachment.URL

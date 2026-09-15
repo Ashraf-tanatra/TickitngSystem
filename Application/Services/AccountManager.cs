@@ -21,44 +21,6 @@ namespace ApplicationServices.Services
         }
 
         // =========================================================
-        // CREATE ACCOUNT
-        // =========================================================
-
-        public async Task<AccountResponse> CreateAccountAsync(
-            CreateAccountRequest request)
-        {
-            if (request == null)
-                throw new ArgumentNullException(nameof(request));
-
-            if (string.IsNullOrWhiteSpace(request.Email))
-                throw new ArgumentException(
-                    ErrorShared.Account.EmailRequired);
-
-            if (!ValidEmailFormat(request.Email))
-                throw new ArgumentException(
-                    ErrorShared.Account.InvalidEmail);
-
-            if (string.IsNullOrWhiteSpace(request.Password))
-                throw new ArgumentException(
-                    ErrorShared.Account.PasswordRequired);
-
-            if (!PasswordFormat(request.Password))
-                throw new ArgumentException(
-                    ErrorShared.Account.InvalidPassword);
-
-            // Check duplicate email
-            if (await _accountRepository
-                .GetByEmailAsync(request.Email) != null)
-            {
-                throw new InvalidOperationException(
-                    ErrorShared.Account.EmailAlreadyExists);
-            }
-
-            throw new InvalidOperationException(
-                ErrorShared.Account.CreateAccountThroughSignup);
-        }
-
-        // =========================================================
         // VALIDATE EMAIL
         // =========================================================
 

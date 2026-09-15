@@ -23,7 +23,7 @@ namespace ApplicationServices.DTOs.Ticket
         public string? ProjectName { get; set; } 
         public string? EmployeeName { get; set; }
 
-        public IEnumerable<TicketAttachmentResponse> Attachments { get; set; } =
-            Enumerable.Empty<TicketAttachmentResponse>();
+        public IReadOnlyCollection<TicketAttachmentResponse> Attachments { get; set; } =
+            Array.Empty<TicketAttachmentResponse>();
     }
 }

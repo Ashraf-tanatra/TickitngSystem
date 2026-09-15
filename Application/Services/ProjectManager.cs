@@ -1,3 +1,4 @@
+using ApplicationServices.DTOs.Employee;
 using ApplicationServices.DTOs.Project;
 using ApplicationServices.Interfaces;
 using Domain.Entities;
@@ -152,7 +153,9 @@ namespace ApplicationServices.Services
                 FName = employee.FName,
                 LName = employee.LName,
                 Phone = employee.Phone,
-                Gender = employee.Gender
+                Gender = employee.Gender,
+                ProfileImageUrl = employee.ProfileImageUrl,
+                IsDeleted = employee.IsDeleted
             });
         }
         public async Task<IEnumerable<ProjectResponse>>? GetAllProjectWorkedByEmployeeAsync(Guid employeeId)

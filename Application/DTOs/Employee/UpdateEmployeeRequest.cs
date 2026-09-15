@@ -4,11 +4,11 @@ namespace ApplicationServices.DTOs.Employee
 {
     public class UpdateEmployeeRequest
     {
-        public string? FName { get; set; }
+        public string FName { get; set; } = string.Empty;
 
-        public string? LName { get; set; }
+        public string LName { get; set; } = string.Empty;
 
-        public string? Phone { get; set; }
+        public string Phone { get; set; } = string.Empty;
 
         public Gender Gender { get; set; }
     }

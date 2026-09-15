@@ -1,6 +1,6 @@
 namespace ApplicationServices.DTOs.Account
 {
-    public class AccountResponse //?
+    public class AccountResponse
     {
         public Guid Id { get; set; }
 

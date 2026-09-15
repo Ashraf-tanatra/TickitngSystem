@@ -1,5 +1,7 @@
 using Domain.Enum;
 
+namespace ApplicationServices.DTOs.Employee;
+
 public class EmployeeResponse
 {
     public Guid Id { get; set; }
@@ -13,8 +15,6 @@ public class EmployeeResponse
     public Gender Gender { get; set; }
 
     public string? ProfileImageUrl { get; set; }
-
-    //public string Role { get; set; }
 
     public bool IsDeleted { get; set; }
 }

@@ -1,3 +1,5 @@
+namespace ApplicationServices.DTOs.Ticket;
+
 public class UpdateTicketRequest
 {
     public string TicketTitle { get; set; } = string.Empty;

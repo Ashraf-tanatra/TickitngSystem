@@ -1,5 +1,4 @@
 ﻿using ApplicationServices.DTOs.Account;
-using ApplicationServices.DTOs.ApplicationServices.DTOs;
 using ApplicationServices.Interfaces;
 using Domain.Entities;
 using System.Security.Cryptography;
@@ -241,7 +240,8 @@ namespace ApplicationServices.Services
                 EmployeeId = account.EmployeeId,
                 Email = account.Email,
                 FName = account.Employee.FName,
-                LName = account.Employee.LName
+                LName = account.Employee.LName,
+                ProfileImageUrl = account.Employee.ProfileImageUrl
             };
         }
 

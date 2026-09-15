@@ -1,5 +1,4 @@
 ﻿using ApplicationServices.DTOs.Account;
-using ApplicationServices.DTOs.ApplicationServices.DTOs;
 
 namespace ApplicationServices.Interfaces
 {

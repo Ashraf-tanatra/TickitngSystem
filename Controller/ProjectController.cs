@@ -1,3 +1,4 @@
+using ApplicationServices.DTOs.Employee;
 using ApplicationServices.DTOs.Project;
 using ApplicationServices.Interfaces;
 using Domain.Enum;
@@ -210,12 +211,12 @@ namespace Controller
         }
 
         [HttpPost("AddEmployee")]
-        public async Task<ActionResult<ProjectEmployeeRequest>> AddEmployeeToProject([FromBody] ProjectEmployeeRequest request)
+        public async Task<IActionResult> AddEmployeeToProject([FromBody] ProjectEmployeeRequest request)
         {
             try
             {
                 await _projectManager.ProjectAddEmployeeAsync(request);
-                return Ok(request);
+                return NoContent();
             }
             catch (ArgumentException ex)
             {
