@@ -291,8 +291,11 @@ namespace ApplicationServices.Services
         public bool ValidPhoneNumberFormat(string phone)
         {
             return !string.IsNullOrWhiteSpace(phone)
-                   && phone.Length == 10
-                   && phone.All(char.IsDigit);
+                   && phone.Length >= ErrorShared.Employee.MinimumPhoneNumberLength
+                   && phone.Length <= ErrorShared.Employee.MaximumPhoneNumberLength
+                   && phone[0] == '+'
+                   && phone[1] is >= '1' and <= '9'
+                   && phone.AsSpan(2).IndexOfAnyExceptInRange('0', '9') == -1;
         }
 
         // =========================================================

@@ -32,7 +32,7 @@ namespace Infrastructure.Database.Configuration
 
             // Phone
             builder.Property(e => e.Phone)
-                   .HasMaxLength(10)
+                   .HasMaxLength(16)
                    .IsRequired();
 
             // Gender

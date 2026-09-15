@@ -103,9 +103,9 @@ namespace Domain.Entities
 
             FName = ErrorShared.Employee.AnonymousFirstName;
             LName = $"{ErrorShared.Employee.AnonymousLastNamePrefix} {Id}";
-            Phone = BitConverter
+            Phone = "+999" + BitConverter
                 .ToUInt32(Id.ToByteArray(), 0)
-                .ToString("D10");
+                .ToString("D12");
             ProfileImageUrl = null;
             Touch();
         }
