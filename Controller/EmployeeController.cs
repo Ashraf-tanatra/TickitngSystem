@@ -1,4 +1,4 @@
-﻿using ApplicationServices.DTOs.Employee;
+using ApplicationServices.DTOs.Employee;
 using ApplicationServices.DTOs.Project;
 using ApplicationServices.Interfaces;
 using Microsoft.AspNetCore.Http;
@@ -44,9 +44,9 @@ namespace Controller
         // GET BY ID
         // =========================================================
 
-        [HttpGet("{id}")]
+        [HttpGet("{id:guid}")]
         public async Task<ActionResult<EmployeeResponse>>
-            GetById(int id)
+            GetById(Guid id)
         {
             var employee =
                 await _employeeManager.GetByIdAsync(id);
@@ -64,10 +64,10 @@ namespace Controller
         // GET PROJECTS
         // =========================================================
 
-        [HttpGet("{id}/projects")]
+        [HttpGet("{id:guid}/projects")]
         public async Task<
             ActionResult<IEnumerable<EmployeeProjectResponse>>>
-            GetProjects(int id)
+            GetProjects(Guid id)
         {
             try
             {
@@ -89,10 +89,10 @@ namespace Controller
         // UPDATE
         // =========================================================
 
-        [HttpPut("{id}")]
+        [HttpPut("{id:guid}")]
         public async Task<ActionResult<EmployeeResponse>>
             Update(
-                int id,
+                Guid id,
                 [FromBody] UpdateEmployeeRequest request)
         {
             try
@@ -127,9 +127,9 @@ namespace Controller
             }
         }
 
-        [HttpPost("{id:int}/ProfilePhoto")]
+        [HttpPost("{id:guid}/ProfilePhoto")]
         public async Task<ActionResult<EmployeeResponse>> UploadProfilePhoto(
-            int id,
+            Guid id,
             [FromForm] IFormFile file)
         {
             if (file == null || file.Length == 0)
@@ -187,8 +187,8 @@ namespace Controller
             }
         }
 
-        [HttpGet("{id:int}/ProfilePhoto/{fileName}")]
-        public IActionResult GetProfilePhoto(int id, string fileName)
+        [HttpGet("{id:guid}/ProfilePhoto/{fileName}")]
+        public IActionResult GetProfilePhoto(Guid id, string fileName)
         {
             var filePath = Path.Combine(_profileImagesFolder, fileName);
 
@@ -220,8 +220,8 @@ namespace Controller
         // DELETE
         // =========================================================
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        [HttpDelete("{id:guid}")]
+        public async Task<IActionResult> Delete(Guid id)
         {
             try
             {
@@ -255,8 +255,8 @@ namespace Controller
         // REACTIVATE EMPLOYEE
         // =========================================================
 
-        [HttpPost("reactivate/{id}")]
-        public async Task<IActionResult> Reactivate(int id)
+        [HttpPost("reactivate/{id:guid}")]
+        public async Task<IActionResult> Reactivate(Guid id)
         {
             try
             {

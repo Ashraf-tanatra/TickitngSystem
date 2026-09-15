@@ -1,4 +1,4 @@
-﻿using ApplicationServices.DTOs.Account;
+using ApplicationServices.DTOs.Account;
 using ApplicationServices.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -103,9 +103,9 @@ namespace Controller
         // UPDATE ACCOUNT
         // =========================================================
 
-        [HttpPut("{id}")]
+        [HttpPut("{id:guid}")]
         public async Task<ActionResult<AccountResponse>> Update(
-            int id,
+            Guid id,
             [FromBody] UpdateAccountRequest request)
         {
             try

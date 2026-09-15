@@ -18,7 +18,7 @@ namespace Domain.Entities
         public ProjectStatus ProjectStatus { get; private set; } = ProjectStatus.Active;
 
         //Relationship for EF_core
-        public int ProjectManagerId { get; private set; }
+        public Guid ProjectManagerId { get; private set; }
         public Employee ProjectManager { get; private set; } = null!;
         public IReadOnlyCollection<Ticket> ProjectTickets => _projectTickets;
         public IReadOnlyCollection<ProjectEmployee> ProjectEmployees => _projectEmployees;
@@ -26,11 +26,11 @@ namespace Domain.Entities
         public static Project Create(
             string projectName,
             string? projectDescription,
-            int projectManagerId,
+            Guid projectManagerId,
             DateOnly? startedAt,
             DateOnly? endAt)
         {
-            if (projectManagerId <= 0)
+            if (projectManagerId == Guid.Empty)
                 throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
 
             var project = new Project

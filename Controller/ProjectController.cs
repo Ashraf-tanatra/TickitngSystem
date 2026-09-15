@@ -1,4 +1,4 @@
-﻿using ApplicationServices.DTOs.Project;
+using ApplicationServices.DTOs.Project;
 using ApplicationServices.Interfaces;
 using Domain.Enum;
 using Microsoft.AspNetCore.Mvc;
@@ -17,9 +17,9 @@ namespace Controller
         }
 
         // DELETE: api/Project/Delete/5/1
-        [HttpDelete("{id:int}/{empId:int}")]
-        [HttpDelete("Delete/{id}/{empId}")]
-        public async Task<IActionResult> Delete(int id, int empId)
+        [HttpDelete("{id:guid}/{empId:guid}")]
+        [HttpDelete("Delete/{id:guid}/{empId:guid}")]
+        public async Task<IActionResult> Delete(Guid id, Guid empId)
         {
             try
             {
@@ -43,8 +43,8 @@ namespace Controller
         }
 
         //GET api/ProjectCount/1 
-        [HttpGet("ProjectCount/{employeeId:int}")]
-        public async Task<ActionResult<int>> ProjectCount(int employeeId)
+        [HttpGet("ProjectCount/{employeeId:guid}")]
+        public async Task<ActionResult<int>> ProjectCount(Guid employeeId)
         {
             try
             {
@@ -61,7 +61,7 @@ namespace Controller
 
         // POST: api/Project
         [HttpPost]
-        public async Task<ActionResult<int>> Create([FromBody] CreateProjectRequest request)
+        public async Task<ActionResult<Guid>> Create([FromBody] CreateProjectRequest request)
         {
             try
             {
@@ -76,8 +76,8 @@ namespace Controller
                 });
             }
         }
-        [HttpPut("UpdateStatus/{id:int}/{status:int}")]
-        public async Task<IActionResult> UpdateStatus(int id, ProjectStatus status)
+        [HttpPut("UpdateStatus/{id:guid}/{status:int}")]
+        public async Task<IActionResult> UpdateStatus(Guid id, ProjectStatus status)
         {
             try
             {
@@ -94,8 +94,8 @@ namespace Controller
         }
 
         // GET: api/Project/1
-        [HttpGet("{id:int}")]
-        public async Task<ActionResult<ProjectResponse>> GetByIdAsync(int id)
+        [HttpGet("{id:guid}")]
+        public async Task<ActionResult<ProjectResponse>> GetByIdAsync(Guid id)
         {
             try
             {
@@ -127,8 +127,8 @@ namespace Controller
         }
 
         //Get api/project/Employees/1
-        [HttpGet("Employees/{projectId:int}")]
-        public async Task<ActionResult<IEnumerable<EmployeeResponse>>> GetEmployees(int projectId)
+        [HttpGet("Employees/{projectId:guid}")]
+        public async Task<ActionResult<IEnumerable<EmployeeResponse>>> GetEmployees(Guid projectId)
         {
             try
             {
@@ -145,8 +145,8 @@ namespace Controller
         }
 
         // PUT: api/Project/5
-        [HttpPut("Update/{id}/{empId}")]
-        public async Task<IActionResult> Update(int id, int empId, [FromBody] UpdateProjectRequest request)
+        [HttpPut("Update/{id:guid}/{empId:guid}")]
+        public async Task<IActionResult> Update(Guid id, Guid empId, [FromBody] UpdateProjectRequest request)
         {
             try
             {
@@ -184,9 +184,9 @@ namespace Controller
         }
 
         //GET api/Project/Employee/1
-        [HttpGet("Employee/{employeeId:int}")]
-        [HttpGet("employeeId = {employeeId:int}")]
-        public async Task<ActionResult<IEnumerable<ProjectResponse>>> GetProjectsWorkedByEmployee(int employeeId)
+        [HttpGet("Employee/{employeeId:guid}")]
+        [HttpGet("employeeId = {employeeId:guid}")]
+        public async Task<ActionResult<IEnumerable<ProjectResponse>>> GetProjectsWorkedByEmployee(Guid employeeId)
         {
             try
             {
@@ -258,8 +258,8 @@ namespace Controller
         }
 
         //GET api/project/TopThree/1
-        [HttpGet("Dashboard/{employeeId:int}")]
-        public async Task<ActionResult<IEnumerable<string[]>>> GetProjectsWorkedByEmployeeTopThree(int employeeId)
+        [HttpGet("Dashboard/{employeeId:guid}")]
+        public async Task<ActionResult<IEnumerable<string[]>>> GetProjectsWorkedByEmployeeTopThree(Guid employeeId)
         {
             try
             {
@@ -282,8 +282,8 @@ namespace Controller
             }
         }
 
-        [HttpGet("Dashboard/{employeeId:int}/Projects")]
-        public async Task<ActionResult<IEnumerable<ProjectResponse>>> GetDashboardProjects(int employeeId)
+        [HttpGet("Dashboard/{employeeId:guid}/Projects")]
+        public async Task<ActionResult<IEnumerable<ProjectResponse>>> GetDashboardProjects(Guid employeeId)
         {
             try
             {
@@ -307,8 +307,8 @@ namespace Controller
         }
 
         // GET: api/Project/RecentActive/1
-        [HttpGet("RecentActive/{employeeId:int}")]
-        public async Task<ActionResult<IEnumerable<RecentActivityResponse>>> GetRecentActiveProjects(int employeeId)
+        [HttpGet("RecentActive/{employeeId:guid}")]
+        public async Task<ActionResult<IEnumerable<RecentActivityResponse>>> GetRecentActiveProjects(Guid employeeId)
         {
             try
             {
@@ -324,9 +324,9 @@ namespace Controller
             }
         }
 
-        [HttpGet("Employee/{employeeId:int}/Filter")]
-        [HttpGet("employeeId = {employeeId:int}/[controller]")]
-        public async Task<ActionResult<IEnumerable<ProjectResponse>>> GetProjectsWorkedByEmployeeWithFilter(int employeeId,
+        [HttpGet("Employee/{employeeId:guid}/Filter")]
+        [HttpGet("employeeId = {employeeId:guid}/[controller]")]
+        public async Task<ActionResult<IEnumerable<ProjectResponse>>> GetProjectsWorkedByEmployeeWithFilter(Guid employeeId,
             [FromQuery] ProjectStatus filterStatus)
         {
             try

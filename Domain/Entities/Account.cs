@@ -7,7 +7,7 @@ namespace Domain.Entities
         }
 
         public string Email { get; private set; } = string.Empty;
-        public int EmployeeId { get; private set; }
+        public Guid EmployeeId { get; private set; }
         public Employee Employee { get; private set; } = null!;
         public DateTime? DeletedAt { get; private set; }
         public string PasswordHash { get; private set; } = string.Empty;

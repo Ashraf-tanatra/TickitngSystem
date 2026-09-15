@@ -1,4 +1,4 @@
-﻿using ApplicationServices.DTOs.Ticket;
+using ApplicationServices.DTOs.Ticket;
 using ApplicationServices.Interfaces;
 using Domain.Enum;
 using Microsoft.AspNetCore.Http;
@@ -21,9 +21,9 @@ namespace Controller
         }
 
 
-        [HttpGet("Project/{projectId:int}")]
-        [HttpGet("/Project/{projectId:int}")]
-        public async Task<ActionResult<IEnumerable<TicketResponse>>> GetAllTicketsForAProject(int projectId)
+        [HttpGet("Project/{projectId:guid}")]
+        [HttpGet("/Project/{projectId:guid}")]
+        public async Task<ActionResult<IEnumerable<TicketResponse>>> GetAllTicketsForAProject(Guid projectId)
         {
             try
             {
@@ -39,9 +39,9 @@ namespace Controller
             }
         }
 
-        [HttpGet("Employee/{employeeId:int}")]
-        [HttpGet("/Employee/{employeeId:int}")]
-        public async Task<ActionResult<IEnumerable<TicketResponse>>> GetAllTicketsForAnEmployee(int employeeId)
+        [HttpGet("Employee/{employeeId:guid}")]
+        [HttpGet("/Employee/{employeeId:guid}")]
+        public async Task<ActionResult<IEnumerable<TicketResponse>>> GetAllTicketsForAnEmployee(Guid employeeId)
         {
             try
             {
@@ -57,9 +57,9 @@ namespace Controller
             }
         }
 
-        [HttpGet("Employee/{employeeId:int}/TicketCount")]
-        [HttpGet("/Employee/{employeeId:int}/TicketCount")]
-        public async Task<ActionResult<int>> GetTicketTotalCountForAnEmployee(int employeeId)
+        [HttpGet("Employee/{employeeId:guid}/TicketCount")]
+        [HttpGet("/Employee/{employeeId:guid}/TicketCount")]
+        public async Task<ActionResult<int>> GetTicketTotalCountForAnEmployee(Guid employeeId)
         {
             try
             {
@@ -74,8 +74,8 @@ namespace Controller
                 });
             }
         }
-        [HttpGet("{id}")]
-        public async Task<ActionResult<TicketResponse>> GetById(int id)
+        [HttpGet("{id:guid}")]
+        public async Task<ActionResult<TicketResponse>> GetById(Guid id)
         {
             var ticket = await _ticketManager.GetByIdAsync(id);
 
@@ -88,8 +88,8 @@ namespace Controller
             return Ok(ticket);
         }
 
-        [HttpGet("{ticketId:int}/History")]
-        public async Task<ActionResult<IEnumerable<TicketHistoryResponse>>> GetHistory(int ticketId)
+        [HttpGet("{ticketId:guid}/History")]
+        public async Task<ActionResult<IEnumerable<TicketHistoryResponse>>> GetHistory(Guid ticketId)
         {
             try
             {
@@ -105,8 +105,8 @@ namespace Controller
             }
         }
 
-        [HttpGet("{ticketId:int}/Attachments")]
-        public async Task<ActionResult<IEnumerable<TicketAttachmentResponse>>> GetAttachments(int ticketId)
+        [HttpGet("{ticketId:guid}/Attachments")]
+        public async Task<ActionResult<IEnumerable<TicketAttachmentResponse>>> GetAttachments(Guid ticketId)
         {
             try
             {
@@ -148,8 +148,8 @@ namespace Controller
             }
         }
         // PUT: api/Ticket/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] UpdateTicketRequest request)
+        [HttpPut("{id:guid}")]
+        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateTicketRequest request)
         {
             try
             {
@@ -179,8 +179,8 @@ namespace Controller
             }
         }
         // DELETE: api/Ticket/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        [HttpDelete("{id:guid}")]
+        public async Task<IActionResult> Delete(Guid id)
         {
             try
             {
@@ -201,9 +201,9 @@ namespace Controller
             }
         }
 
-        [HttpPut("Status/{ticketId:int}/{status}")]
-        [HttpPut("/Status/{ticketId:int}/{status}")]
-        public async Task<IActionResult> ChangeTicketStatus(int ticketId, TicketStatus status)
+        [HttpPut("Status/{ticketId:guid}/{status}")]
+        [HttpPut("/Status/{ticketId:guid}/{status}")]
+        public async Task<IActionResult> ChangeTicketStatus(Guid ticketId, TicketStatus status)
         {
             try
             {
@@ -226,9 +226,9 @@ namespace Controller
             }
         }
 
-        [HttpPut("Priority/{ticketId:int}/{priority}")]
-        [HttpPut("/Priority/{ticketId:int}/{priority}")]
-        public async Task<IActionResult> ChangeTicketPriority(int ticketId, TicketPriority priority)
+        [HttpPut("Priority/{ticketId:guid}/{priority}")]
+        [HttpPut("/Priority/{ticketId:guid}/{priority}")]
+        public async Task<IActionResult> ChangeTicketPriority(Guid ticketId, TicketPriority priority)
         {
             try
             {
@@ -251,8 +251,8 @@ namespace Controller
             }
         }
 
-        [HttpPut("{ticketId:int}/SubmitReview")]
-        public async Task<IActionResult> SubmitForReview(int ticketId, [FromBody] TicketActionRequest request)
+        [HttpPut("{ticketId:guid}/SubmitReview")]
+        public async Task<IActionResult> SubmitForReview(Guid ticketId, [FromBody] TicketActionRequest request)
         {
             try
             {
@@ -282,8 +282,8 @@ namespace Controller
             }
         }
 
-        [HttpPut("{ticketId:int}/Review/Approve")]
-        public async Task<IActionResult> Approve(int ticketId, [FromBody] TicketActionRequest request)
+        [HttpPut("{ticketId:guid}/Review/Approve")]
+        public async Task<IActionResult> Approve(Guid ticketId, [FromBody] TicketActionRequest request)
         {
             try
             {
@@ -313,8 +313,8 @@ namespace Controller
             }
         }
 
-        [HttpPut("{ticketId:int}/Review/RequestChanges")]
-        public async Task<IActionResult> RequestChanges(int ticketId, [FromBody] TicketActionRequest request)
+        [HttpPut("{ticketId:guid}/Review/RequestChanges")]
+        public async Task<IActionResult> RequestChanges(Guid ticketId, [FromBody] TicketActionRequest request)
         {
             try
             {
@@ -344,8 +344,8 @@ namespace Controller
             }
         }
 
-        [HttpPut("{ticketId:int}/Review/Reassign")]
-        public async Task<IActionResult> Reassign(int ticketId, [FromBody] TicketReassignRequest request)
+        [HttpPut("{ticketId:guid}/Review/Reassign")]
+        public async Task<IActionResult> Reassign(Guid ticketId, [FromBody] TicketReassignRequest request)
         {
             try
             {
@@ -375,8 +375,8 @@ namespace Controller
             }
         }
 
-        [HttpPost("{ticketId:int}/Comments")]
-        public async Task<IActionResult> AddComment(int ticketId, [FromBody] TicketActionRequest request)
+        [HttpPost("{ticketId:guid}/Comments")]
+        public async Task<IActionResult> AddComment(Guid ticketId, [FromBody] TicketActionRequest request)
         {
             try
             {
@@ -407,9 +407,9 @@ namespace Controller
         }
 
 
-        [HttpGet("Employee/{employeeId:int}/CompletedCount")]
-        [HttpGet("/Employee/{employeeId:int}/CompletedCount")]
-        public async Task<ActionResult<int>> GetCompletedTicketCountForAnEmployee(int employeeId)
+        [HttpGet("Employee/{employeeId:guid}/CompletedCount")]
+        [HttpGet("/Employee/{employeeId:guid}/CompletedCount")]
+        public async Task<ActionResult<int>> GetCompletedTicketCountForAnEmployee(Guid employeeId)
         {
             try
             {
@@ -425,9 +425,9 @@ namespace Controller
             }
         }
 
-        [HttpGet("Employee/{employeeId:int}/InProgressCount")]
-        [HttpGet("/Employee/{employeeId:int}/InProgressCount")]
-        public async Task<ActionResult<int>> GetInProgressTicketCountForAnEmployee(int employeeId)
+        [HttpGet("Employee/{employeeId:guid}/InProgressCount")]
+        [HttpGet("/Employee/{employeeId:guid}/InProgressCount")]
+        public async Task<ActionResult<int>> GetInProgressTicketCountForAnEmployee(Guid employeeId)
         {
             try
             {
@@ -443,9 +443,9 @@ namespace Controller
             }
         }
 
-        [HttpGet("Employee/{employeeId:int}/NeedReviewCount")]
-        [HttpGet("/Employee/{employeeId:int}/NeedReviewCount")]
-        public async Task<ActionResult<int>> GetNeedReviewTicketCountForAnEmployee(int employeeId)
+        [HttpGet("Employee/{employeeId:guid}/NeedReviewCount")]
+        [HttpGet("/Employee/{employeeId:guid}/NeedReviewCount")]
+        public async Task<ActionResult<int>> GetNeedReviewTicketCountForAnEmployee(Guid employeeId)
         {
             try
             {
@@ -464,8 +464,8 @@ namespace Controller
 
         //Need Enhancement for directory structure.
         //api/Ticket/Attachments/upload/Ticket/{1}
-        [HttpPost("Attachments/upload/Ticket/{ticketId}")]
-        public async Task<IActionResult> UploadFile(int ticketId, [FromForm] IFormFile file)
+        [HttpPost("Attachments/upload/Ticket/{ticketId:guid}")]
+        public async Task<IActionResult> UploadFile(Guid ticketId, [FromForm] IFormFile file)
         {
             if (file == null || file.Length == 0)
                 return BadRequest(new
@@ -501,8 +501,8 @@ namespace Controller
             });
         }
 
-        [HttpPost("Attachments/upload/Ticket/{ticketId}/Multiple")]
-        public async Task<IActionResult> UploadFiles(int ticketId, [FromForm] List<IFormFile> files)
+        [HttpPost("Attachments/upload/Ticket/{ticketId:guid}/Multiple")]
+        public async Task<IActionResult> UploadFiles(Guid ticketId, [FromForm] List<IFormFile> files)
         {
             if (files == null || files.Count == 0)
                 return BadRequest(new
@@ -557,7 +557,7 @@ namespace Controller
             });
         }
 
-        private async Task<IActionResult?> ValidateTicketForAttachmentAsync(int ticketId)
+        private async Task<IActionResult?> ValidateTicketForAttachmentAsync(Guid ticketId)
         {
             if (await _ticketManager.TicketExistsAsync(ticketId))
                 return null;

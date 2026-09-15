@@ -2,10 +2,10 @@ namespace ApplicationServices.DTOs.Project
 {
     public class RemoveProjectEmployeeRequest
     {
-        public int ProjectId { get; set; }
+        public Guid ProjectId { get; set; }
 
-        public int EmployeeId { get; set; }
+        public Guid EmployeeId { get; set; }
 
-        public int ActionByEmployeeId { get; set; }
+        public Guid ActionByEmployeeId { get; set; }
     }
 }

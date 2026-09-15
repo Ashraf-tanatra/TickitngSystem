@@ -1,24 +1,24 @@
-﻿using ApplicationServices.DTOs.Project;
+using ApplicationServices.DTOs.Project;
 using Domain.Enum;
 
 namespace ApplicationServices.Interfaces
 {
     public interface IProjectManager
     {
-        Task<bool> DeleteAsync(int id, int empId);
-        Task<ProjectResponse?> GetByIdAsync(int id);
-        Task<int> GetProjectCountAsync(int employeeId);
-        Task<int> CreateAsync(CreateProjectRequest request);
+        Task<bool> DeleteAsync(Guid id, Guid empId);
+        Task<ProjectResponse?> GetByIdAsync(Guid id);
+        Task<int> GetProjectCountAsync(Guid employeeId);
+        Task<Guid> CreateAsync(CreateProjectRequest request);
         Task<bool> ProjectAddEmployeeAsync(ProjectEmployeeRequest request);
         Task<bool> RemoveEmployeeFromProjectAsync(RemoveProjectEmployeeRequest request);
-        Task<bool> SetProjectStatusAsync(int projectId, ProjectStatus status);
-        Task<bool> UpdateAsync(int projectId, int empId, UpdateProjectRequest request);
-        Task<IEnumerable<EmployeeResponse>>? GetEmployeesWorkOnProjectAsync(int projectId);
-        Task<IEnumerable<ProjectResponse>>? GetAllProjectWorkedByEmployeeAsync(int employeeId);
-        Task<IEnumerable<string[]>>? GetAllProjectWorkedByEmployeeTopThreeAsync(int employeeId);
-        Task<IEnumerable<ProjectResponse>>? GetDashboardProjectsAsync(int employeeId);
-        Task<IEnumerable<ProjectResponse>> GetRecentActiveProjectsAsync(int employeeId);
-        Task<IEnumerable<RecentActivityResponse>> GetRecentActivityAsync(int employeeId);
-        Task<IEnumerable<ProjectResponse>>? GetAllProjectWorkedByEmployeeWithFilterAsync(int employeeId, ProjectStatus FilterByStatus);
+        Task<bool> SetProjectStatusAsync(Guid projectId, ProjectStatus status);
+        Task<bool> UpdateAsync(Guid projectId, Guid empId, UpdateProjectRequest request);
+        Task<IEnumerable<EmployeeResponse>>? GetEmployeesWorkOnProjectAsync(Guid projectId);
+        Task<IEnumerable<ProjectResponse>>? GetAllProjectWorkedByEmployeeAsync(Guid employeeId);
+        Task<IEnumerable<string[]>>? GetAllProjectWorkedByEmployeeTopThreeAsync(Guid employeeId);
+        Task<IEnumerable<ProjectResponse>>? GetDashboardProjectsAsync(Guid employeeId);
+        Task<IEnumerable<ProjectResponse>> GetRecentActiveProjectsAsync(Guid employeeId);
+        Task<IEnumerable<RecentActivityResponse>> GetRecentActivityAsync(Guid employeeId);
+        Task<IEnumerable<ProjectResponse>>? GetAllProjectWorkedByEmployeeWithFilterAsync(Guid employeeId, ProjectStatus FilterByStatus);
     }
 }

@@ -1,14 +1,14 @@
-﻿using Domain.Entities;
+using Domain.Entities;
 
 namespace Domain.Interfaces
 {
     public interface IAccountRepository
     {
         Task<Account?> GetByEmailAsync(string email);
-        Task<Account?> GetByIdAsync(int id);
+        Task<Account?> GetByIdAsync(Guid id);
 
         Task<bool> EmailExistsAsync(string email);
-        Task<bool> EmployeeExistsAsync(int employeeId);
+        Task<bool> EmployeeExistsAsync(Guid employeeId);
 
         Task AddAsync(Account account);
         Task UpdateAsync(Account account);

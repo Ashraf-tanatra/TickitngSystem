@@ -7,20 +7,20 @@ namespace Domain.Entities
         }
 
         public string? Role { get; private set; }
-        public int ProjectId { get; private set; }
-        public int EmployeeId { get; private set; }
+        public Guid ProjectId { get; private set; }
+        public Guid EmployeeId { get; private set; }
         public Project Project { get; private set; } = null!;
         public Employee Employee { get; private set; } = null!;
 
         public static ProjectEmployee Create(
-            int projectId,
-            int employeeId,
+            Guid projectId,
+            Guid employeeId,
             string? role)
         {
-            if (projectId <= 0)
+            if (projectId == Guid.Empty)
                 throw new ArgumentException(ErrorShared.Project.ProjectNotFound);
 
-            if (employeeId <= 0)
+            if (employeeId == Guid.Empty)
                 throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
 
             return new ProjectEmployee

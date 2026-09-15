@@ -1,4 +1,4 @@
-﻿using ApplicationServices.DTOs.Ticket;
+using ApplicationServices.DTOs.Ticket;
 using ApplicationServices.Interfaces;
 using Domain.Entities;
 using Domain.Enum;
@@ -15,9 +15,9 @@ namespace ApplicationServices.Services
             _ticketRepository = ticketRepository;
         }
 
-        public async Task<TicketResponse?> GetByIdAsync(int id)
+        public async Task<TicketResponse?> GetByIdAsync(Guid id)
         {
-            if (id <= 0)
+            if (id == Guid.Empty)
                 return null;
 
             var ticket = await _ticketRepository.GetByIdAsync(id);
@@ -28,7 +28,7 @@ namespace ApplicationServices.Services
             return MapToResponse(ticket);
         }
 
-        public async Task<IEnumerable<TicketHistoryResponse>> GetTicketHistoryAsync(int ticketId)
+        public async Task<IEnumerable<TicketHistoryResponse>> GetTicketHistoryAsync(Guid ticketId)
         {
             if (!await _ticketRepository.TicketExistsAsync(ticketId))
                 throw new KeyNotFoundException(ErrorShared.Ticket.TicketNotFound);
@@ -37,7 +37,7 @@ namespace ApplicationServices.Services
             return history.Select(MapHistoryToResponse);
         }
 
-        public async Task<IEnumerable<TicketAttachmentResponse>> GetTicketAttachmentsAsync(int ticketId)
+        public async Task<IEnumerable<TicketAttachmentResponse>> GetTicketAttachmentsAsync(Guid ticketId)
         {
             if (!await _ticketRepository.TicketExistsAsync(ticketId))
                 throw new KeyNotFoundException(ErrorShared.Ticket.TicketNotFound);
@@ -46,9 +46,9 @@ namespace ApplicationServices.Services
             return attachments.Select(MapAttachmentToResponse);
         }
 
-        public async Task<IEnumerable<TicketResponse>> GetAllTicketsForAProjectAsync(int projectId)
+        public async Task<IEnumerable<TicketResponse>> GetAllTicketsForAProjectAsync(Guid projectId)
         {
-            if (projectId <= 0)
+            if (projectId == Guid.Empty)
                 throw new ArgumentException(ErrorShared.Ticket.ProjectNotFound);
 
             if (!await _ticketRepository.ProjectExistsAsync(projectId))
@@ -58,9 +58,9 @@ namespace ApplicationServices.Services
             return tickets.Select(MapToResponse);
         }
 
-        public async Task<IEnumerable<TicketResponse>> GetAllTicketsForAnEmployeeAsync(int employeeId)
+        public async Task<IEnumerable<TicketResponse>> GetAllTicketsForAnEmployeeAsync(Guid employeeId)
         {
-            if (employeeId <= 0)
+            if (employeeId == Guid.Empty)
                 throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
 
             if (!await _ticketRepository.EmployeeExistsAsync(employeeId))
@@ -70,7 +70,7 @@ namespace ApplicationServices.Services
             return tickets.Select(MapToResponse);
         }
 
-        public async Task<int> CreateAsync(CreateTicketRequest request)
+        public async Task<Guid> CreateAsync(CreateTicketRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -107,7 +107,7 @@ namespace ApplicationServices.Services
 
         }
 
-        public async Task UpdateAsync(int id, UpdateTicketRequest request)
+        public async Task UpdateAsync(Guid id, UpdateTicketRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -135,7 +135,7 @@ namespace ApplicationServices.Services
             await _ticketRepository.UpdateAsync(ticket);
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(Guid id)
         {
             if (!await _ticketRepository.TicketExistsAsync(id))
                 return false;
@@ -152,7 +152,7 @@ namespace ApplicationServices.Services
             return true;
         }
 
-        public async Task<int> GetTicketTotalCountForAnEmployeeAsync(int employeeId)
+        public async Task<int> GetTicketTotalCountForAnEmployeeAsync(Guid employeeId)
         {
             if (!await _ticketRepository.EmployeeExistsAsync(employeeId))
                 throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
@@ -160,7 +160,7 @@ namespace ApplicationServices.Services
             return await _ticketRepository.GetTicketTotalCountForAnEmployeeAsync(employeeId);
         }
 
-        public async Task<int> GetTicketInProgressCountForAnEmployeeAsync(int employeeId)
+        public async Task<int> GetTicketInProgressCountForAnEmployeeAsync(Guid employeeId)
         {
             if (!await _ticketRepository.EmployeeExistsAsync(employeeId))
                 throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
@@ -168,7 +168,7 @@ namespace ApplicationServices.Services
             return await _ticketRepository.GetTicketInProgressCountForAnEmployeeAsync(employeeId);
         }
 
-        public async Task<int> GetTicketCompletedCountForAnEmployeeAsync(int employeeId)
+        public async Task<int> GetTicketCompletedCountForAnEmployeeAsync(Guid employeeId)
         {
             if (!await _ticketRepository.EmployeeExistsAsync(employeeId))
                 throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
@@ -176,7 +176,7 @@ namespace ApplicationServices.Services
             return await _ticketRepository.GetTicketCompletedCountForAnEmployeeAsync(employeeId);
         }
 
-        public async Task<int> GetTicketNeedReviewCountForAnEmployeeAsync(int employeeId)
+        public async Task<int> GetTicketNeedReviewCountForAnEmployeeAsync(Guid employeeId)
         {
             if (!await _ticketRepository.EmployeeExistsAsync(employeeId))
                 throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
@@ -184,7 +184,7 @@ namespace ApplicationServices.Services
             return await _ticketRepository.GetTicketNeedReviewCountForAnEmployeeAsync(employeeId);
         }
 
-        public async Task ChangeTicketStatusAsync(int ticketId, TicketStatus status)
+        public async Task ChangeTicketStatusAsync(Guid ticketId, TicketStatus status)
         {
             if (!await _ticketRepository.TicketExistsAsync(ticketId))
                 throw new KeyNotFoundException(ErrorShared.Ticket.TicketNotFound);
@@ -192,7 +192,7 @@ namespace ApplicationServices.Services
             await _ticketRepository.ChangeTicketStatusAsync(ticketId, status);
         }
 
-        public async Task ChangeTicketPriorityAsync(int ticketId, TicketPriority priority)
+        public async Task ChangeTicketPriorityAsync(Guid ticketId, TicketPriority priority)
         {
             if (!await _ticketRepository.TicketExistsAsync(ticketId))
                 throw new KeyNotFoundException(ErrorShared.Ticket.TicketNotFound);
@@ -200,7 +200,7 @@ namespace ApplicationServices.Services
             await _ticketRepository.ChangeTicketPriorityAsync(ticketId, priority);
         }
 
-        public async Task SubmitForReviewAsync(int ticketId, TicketActionRequest request)
+        public async Task SubmitForReviewAsync(Guid ticketId, TicketActionRequest request)
         {
             ValidateActionRequest(request);
 
@@ -223,7 +223,7 @@ namespace ApplicationServices.Services
             await _ticketRepository.UpdateWithHistoryAsync(ticket, history);
         }
 
-        public async Task ApproveAsync(int ticketId, TicketActionRequest request)
+        public async Task ApproveAsync(Guid ticketId, TicketActionRequest request)
         {
             ValidateActionRequest(request);
 
@@ -244,7 +244,7 @@ namespace ApplicationServices.Services
             await _ticketRepository.UpdateWithHistoryAsync(ticket, history);
         }
 
-        public async Task RequestChangesAsync(int ticketId, TicketActionRequest request)
+        public async Task RequestChangesAsync(Guid ticketId, TicketActionRequest request)
         {
             ValidateActionRequest(request);
 
@@ -265,15 +265,15 @@ namespace ApplicationServices.Services
             await _ticketRepository.UpdateWithHistoryAsync(ticket, history);
         }
 
-        public async Task ReassignAsync(int ticketId, TicketReassignRequest request)
+        public async Task ReassignAsync(Guid ticketId, TicketReassignRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
-            if (request.ActionByEmployeeId <= 0)
+            if (request.ActionByEmployeeId == Guid.Empty)
                 throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
 
-            if (request.ToEmployeeId <= 0)
+            if (request.ToEmployeeId == Guid.Empty)
                 throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
 
             var ticket = await GetTicketOrThrowAsync(ticketId);
@@ -301,7 +301,7 @@ namespace ApplicationServices.Services
             await _ticketRepository.UpdateWithHistoryAsync(ticket, history);
         }
 
-        public async Task AddCommentAsync(int ticketId, TicketActionRequest request)
+        public async Task AddCommentAsync(Guid ticketId, TicketActionRequest request)
         {
             ValidateActionRequest(request);
 
@@ -321,7 +321,7 @@ namespace ApplicationServices.Services
         }
 
         public async Task AddAttachmentToTicketAsync(
-            int ticketId,
+            Guid ticketId,
             string url,
             string originalFileName,
             string storedFileName,
@@ -340,22 +340,22 @@ namespace ApplicationServices.Services
                 sizeInBytes);
         }
 
-        public async Task<bool> TicketExistsAsync(int ticketId)
+        public async Task<bool> TicketExistsAsync(Guid ticketId)
         {
             return await _ticketRepository.TicketExistsAsync(ticketId);
         }
 
-        public async Task<bool> EmployeeExistsAsync(int employeeId)
+        public async Task<bool> EmployeeExistsAsync(Guid employeeId)
         {
             return await _ticketRepository.EmployeeExistsAsync(employeeId);
         }
 
-        public async Task<bool> ProjectExistsAsync(int projectId)
+        public async Task<bool> ProjectExistsAsync(Guid projectId)
         {
             return await _ticketRepository.ProjectExistsAsync(projectId);
         }
 
-        private async Task<Ticket> GetTicketOrThrowAsync(int ticketId)
+        private async Task<Ticket> GetTicketOrThrowAsync(Guid ticketId)
         {
             var ticket = await _ticketRepository.GetByIdAsync(ticketId);
 
@@ -370,11 +370,11 @@ namespace ApplicationServices.Services
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
-            if (request.ActionByEmployeeId <= 0)
+            if (request.ActionByEmployeeId == Guid.Empty)
                 throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
         }
 
-        private async Task EnsureManagerAsync(int employeeId, int projectId)
+        private async Task EnsureManagerAsync(Guid employeeId, Guid projectId)
         {
             if (!await _ticketRepository.EmployeeExistsAsync(employeeId))
                 throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
@@ -383,7 +383,7 @@ namespace ApplicationServices.Services
                 throw new UnauthorizedAccessException(ErrorShared.Ticket.UnauthorizedTicketReview);
         }
 
-        private async Task EnsureProjectMemberAsync(int employeeId, int projectId)
+        private async Task EnsureProjectMemberAsync(Guid employeeId, Guid projectId)
         {
             if (!await _ticketRepository.EmployeeExistsAsync(employeeId))
                 throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);

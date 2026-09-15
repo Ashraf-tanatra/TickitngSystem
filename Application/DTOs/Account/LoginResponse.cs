@@ -1,10 +1,10 @@
-﻿namespace ApplicationServices.DTOs
+namespace ApplicationServices.DTOs
 {
     namespace ApplicationServices.DTOs
     {
         public class LoginResponse
         {
-            public int EmployeeId { get; set; }
+            public Guid EmployeeId { get; set; }
 
             public string? Email { get; set; }
 

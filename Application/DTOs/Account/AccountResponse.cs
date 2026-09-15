@@ -1,11 +1,11 @@
-﻿namespace ApplicationServices.DTOs.Account
+namespace ApplicationServices.DTOs.Account
 {
     public class AccountResponse //?
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
 
         public string Email { get; set; } = null!;
 
-        public int EmployeeId { get; set; }
+        public Guid EmployeeId { get; set; }
     }
 }

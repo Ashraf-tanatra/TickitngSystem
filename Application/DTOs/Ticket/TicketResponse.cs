@@ -1,8 +1,8 @@
-﻿namespace ApplicationServices.DTOs.Ticket
+namespace ApplicationServices.DTOs.Ticket
 {
     public class TicketResponse
     {
-        public int TicketId { get; set; }
+        public Guid TicketId { get; set; }
 
 
 
@@ -16,9 +16,9 @@
 
         public string? Description { get; set; }
 
-        public int? EmployeeId { get; set; }
+        public Guid? EmployeeId { get; set; }
 
-        public int ProjectId { get; set; }
+        public Guid ProjectId { get; set; }
 
         public string? ProjectName { get; set; } 
         public string? EmployeeName { get; set; }

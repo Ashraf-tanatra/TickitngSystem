@@ -1,4 +1,4 @@
-﻿using ApplicationServices.DTOs.Account;
+using ApplicationServices.DTOs.Account;
 using Domain.Entities;
 
 namespace ApplicationServices.Interfaces
@@ -30,7 +30,7 @@ namespace ApplicationServices.Interfaces
             string email);
 
         Task<AccountResponse?> UpdateAsync(
-            int id,
+            Guid id,
             UpdateAccountRequest request);
 
         // EMAIL VERIFICATION

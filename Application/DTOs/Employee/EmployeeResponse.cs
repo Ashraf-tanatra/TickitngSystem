@@ -1,8 +1,8 @@
-﻿using Domain.Enum;
+using Domain.Enum;
 
 public class EmployeeResponse
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
 
     public string FName { get; set; } = null!;
 

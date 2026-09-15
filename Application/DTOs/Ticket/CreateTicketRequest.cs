@@ -1,4 +1,4 @@
-﻿using Domain.Enum;
+using Domain.Enum;
 
 public class CreateTicketRequest
 {
@@ -11,8 +11,8 @@ public class CreateTicketRequest
     public string? Description { get; set; }
     public string? AttachmentURL { get; set; }
 
-    public int EmployeeId { get; set; }
-    public int TicketCreatedById { get; set; }  
+    public Guid EmployeeId { get; set; }
+    public Guid TicketCreatedById { get; set; }
 
-    public int ProjectId { get; set; }
+    public Guid ProjectId { get; set; }
 }

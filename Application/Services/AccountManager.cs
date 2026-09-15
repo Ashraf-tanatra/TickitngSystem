@@ -1,4 +1,4 @@
-﻿using ApplicationServices.DTOs.Account;
+using ApplicationServices.DTOs.Account;
 using ApplicationServices.Interfaces;
 using Domain.Entities;
 using Domain.Enum;
@@ -146,7 +146,7 @@ namespace ApplicationServices.Services
         // =========================================================
 
         public async Task<AccountResponse?> UpdateAsync(
-            int id,
+            Guid id,
             UpdateAccountRequest request)
         {
             if (request == null)

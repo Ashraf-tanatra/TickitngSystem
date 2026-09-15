@@ -1,4 +1,4 @@
-﻿using ApplicationServices.DTOs.Project;
+using ApplicationServices.DTOs.Project;
 using ApplicationServices.Interfaces;
 using Domain.Entities;
 using Domain.Enum;
@@ -15,7 +15,7 @@ namespace ApplicationServices.Services
             _projectRepository = projectRepository;
         }
         // Make send the manager name
-        public async Task<ProjectResponse?> GetByIdAsync(int id)
+        public async Task<ProjectResponse?> GetByIdAsync(Guid id)
         {
             var project = await _projectRepository.GetByIdAsync(id);
 
@@ -25,12 +25,12 @@ namespace ApplicationServices.Services
             return MapToResponse(project);
         }
 
-        public async Task<int> GetProjectCountAsync(int employeeId)
+        public async Task<int> GetProjectCountAsync(Guid employeeId)
         {
             return await _projectRepository.GetProjectCountAsync(employeeId);
         }
 
-        public async Task<int> CreateAsync(CreateProjectRequest request)
+        public async Task<Guid> CreateAsync(CreateProjectRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -101,7 +101,7 @@ namespace ApplicationServices.Services
             return true;
         }
 
-        public async Task<bool> SetProjectStatusAsync(int projectId, ProjectStatus status)
+        public async Task<bool> SetProjectStatusAsync(Guid projectId, ProjectStatus status)
         {
             if (!System.Enum.IsDefined(status))
                 throw new ArgumentException(ErrorShared.Project.InvalidStatus);
@@ -110,7 +110,7 @@ namespace ApplicationServices.Services
             return true;
         }
 
-        public async Task<bool> UpdateAsync(int projectId, int empId, UpdateProjectRequest request)
+        public async Task<bool> UpdateAsync(Guid projectId, Guid empId, UpdateProjectRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -139,7 +139,7 @@ namespace ApplicationServices.Services
             return true;
         }
 
-        public async Task<IEnumerable<EmployeeResponse>>? GetEmployeesWorkOnProjectAsync(int projectId)
+        public async Task<IEnumerable<EmployeeResponse>>? GetEmployeesWorkOnProjectAsync(Guid projectId)
         {
             if (!await _projectRepository.ProjectExistsAsync(projectId))
                 throw new ArgumentException(ErrorShared.Project.ProjectNotFound);
@@ -155,7 +155,7 @@ namespace ApplicationServices.Services
                 Gender = employee.Gender
             });
         }
-        public async Task<IEnumerable<ProjectResponse>>? GetAllProjectWorkedByEmployeeAsync(int employeeId)
+        public async Task<IEnumerable<ProjectResponse>>? GetAllProjectWorkedByEmployeeAsync(Guid employeeId)
         {
             if (!await _projectRepository.EmployeeExistsAsync(employeeId))
                 throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
@@ -164,7 +164,7 @@ namespace ApplicationServices.Services
             return project!.Select(project => MapToResponse(project, employeeId));
         }
 
-        public async Task<IEnumerable<string[]>>? GetAllProjectWorkedByEmployeeTopThreeAsync(int employeeId)
+        public async Task<IEnumerable<string[]>>? GetAllProjectWorkedByEmployeeTopThreeAsync(Guid employeeId)
         {
             if (!await _projectRepository.EmployeeExistsAsync(employeeId))
                 throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
@@ -173,7 +173,7 @@ namespace ApplicationServices.Services
             return emp ?? Array.Empty<string[]>();
         }
 
-        public async Task<IEnumerable<ProjectResponse>>? GetDashboardProjectsAsync(int employeeId)
+        public async Task<IEnumerable<ProjectResponse>>? GetDashboardProjectsAsync(Guid employeeId)
         {
             if (!await _projectRepository.EmployeeExistsAsync(employeeId))
                 throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
@@ -182,7 +182,7 @@ namespace ApplicationServices.Services
             return projects!.Select(project => MapToResponse(project, employeeId));
         }
 
-        public async Task<IEnumerable<ProjectResponse>> GetRecentActiveProjectsAsync(int employeeId)
+        public async Task<IEnumerable<ProjectResponse>> GetRecentActiveProjectsAsync(Guid employeeId)
         {
             if (!await _projectRepository.EmployeeExistsAsync(employeeId))
                 throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
@@ -191,7 +191,7 @@ namespace ApplicationServices.Services
             return projects.Select(project => MapToResponse(project, employeeId));
         }
 
-        public async Task<IEnumerable<RecentActivityResponse>> GetRecentActivityAsync(int employeeId)
+        public async Task<IEnumerable<RecentActivityResponse>> GetRecentActivityAsync(Guid employeeId)
         {
             if (!await _projectRepository.EmployeeExistsAsync(employeeId))
                 throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
@@ -203,11 +203,11 @@ namespace ApplicationServices.Services
                 .ToList();
         }
 
-        public async Task<bool> DeleteAsync(int projectId, int empId) => await _projectRepository.DeleteAsync(projectId, empId);
+        public async Task<bool> DeleteAsync(Guid projectId, Guid empId) => await _projectRepository.DeleteAsync(projectId, empId);
 
-        public async Task<bool> ProjectExistsAsync(int projectId) => await _projectRepository.ProjectExistsAsync(projectId);
+        public async Task<bool> ProjectExistsAsync(Guid projectId) => await _projectRepository.ProjectExistsAsync(projectId);
 
-        public async Task<IEnumerable<ProjectResponse>>? GetAllProjectWorkedByEmployeeWithFilterAsync(int employeeId,
+        public async Task<IEnumerable<ProjectResponse>>? GetAllProjectWorkedByEmployeeWithFilterAsync(Guid employeeId,
             ProjectStatus FilterByStatus)
         {
             if (!await _projectRepository.EmployeeExistsAsync(employeeId))
@@ -220,7 +220,7 @@ namespace ApplicationServices.Services
             return project!.Select(project => MapToResponse(project, employeeId));
         }
 
-        private static ProjectResponse MapToResponse(Project project, int? employeeId = null)
+        private static ProjectResponse MapToResponse(Project project, Guid? employeeId = null)
         {
             var ticketCount = project.ProjectTickets.Count;
             var doneTicketCount = project.ProjectTickets.Count(ticket =>
@@ -402,9 +402,9 @@ namespace ApplicationServices.Services
             return result.ToString();
         }
 
-        private sealed record ActivityCandidate(string Description, DateTime OccurredAt, int? TicketId);
+        private sealed record ActivityCandidate(string Description, DateTime OccurredAt, Guid? TicketId);
 
-        private static string? GetEmployeeRole(Project project, int employeeId)
+        private static string? GetEmployeeRole(Project project, Guid employeeId)
         {
             if (project.ProjectManagerId == employeeId)
                 return ErrorShared.Project.ManagerRole;

@@ -1,4 +1,4 @@
-﻿using ApplicationServices.DTOs.Employee;
+using ApplicationServices.DTOs.Employee;
 using ApplicationServices.DTOs.Project;
 using ApplicationServices.Interfaces;
 using Domain.Entities;
@@ -34,7 +34,7 @@ namespace ApplicationServices.Services
         // GET BY ID
         // =========================================================
 
-        public async Task<EmployeeResponse?> GetByIdAsync(int id)
+        public async Task<EmployeeResponse?> GetByIdAsync(Guid id)
         {
             var employee =
                 await _employeeRepository.GetByIdAsync(id);
@@ -50,7 +50,7 @@ namespace ApplicationServices.Services
         // =========================================================
 
         public async Task<EmployeeResponse?> UpdateAsync(
-            int id,
+            Guid id,
             UpdateEmployeeRequest request)
         {
             if (request == null)
@@ -115,7 +115,7 @@ namespace ApplicationServices.Services
         }
 
         public async Task<EmployeeResponse?> UpdateProfileImageAsync(
-            int id,
+            Guid id,
             string profileImageUrl)
         {
             var employee =
@@ -138,7 +138,7 @@ namespace ApplicationServices.Services
         //// =========================================================
         //// ACTIVE PROJECTS FOR EMPLOYEE
         //// =========================================================
-        //public async Task<IEnumerable<ProjectResponse>>GetActiveProjectsAsync(int employeeId)
+        //public async Task<IEnumerable<ProjectResponse>>GetActiveProjectsAsync(Guid employeeId)
         //{
         //    var employee =
         //        await _employeeRepository.GetByIdAsync(employeeId);
@@ -162,7 +162,7 @@ namespace ApplicationServices.Services
         // SOFT DELETE
         // =========================================================
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(Guid id)
         {
             var employee =
                 await _employeeRepository.GetByIdAsync(id);
@@ -229,7 +229,7 @@ namespace ApplicationServices.Services
         // =========================================================
 
         public async Task<IEnumerable<EmployeeProjectResponse>>
-            GetProjectsAsync(int employeeId)
+            GetProjectsAsync(Guid employeeId)
         {
             var employee =
                 await _employeeRepository.GetByIdAsync(employeeId);
@@ -332,7 +332,7 @@ namespace ApplicationServices.Services
         // REACTIVE EMPLOYEE
         // =========================================================
 
-        public async Task<bool> ReactivateAsync(int id)
+        public async Task<bool> ReactivateAsync(Guid id)
         {
             var employee = await _employeeRepository.GetByIdAsync(id);
 

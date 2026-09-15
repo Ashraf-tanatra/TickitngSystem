@@ -11,7 +11,7 @@ namespace Domain.Entities
         {
         }
 
-        public int TicketId { get; private set; }
+        public Guid TicketId { get; private set; } = Guid.NewGuid();
         public DateOnly? DueTo { get; private set; }
         public string? Description { get; private set; }
         public TicketPriority Priority { get; private set; }
@@ -22,15 +22,15 @@ namespace Domain.Entities
 
         // RelationShips for EF_Core
         // Project
-        public int ProjectId { get; private set; }
+        public Guid ProjectId { get; private set; }
         public Project Project { get; private set; } = null!;
 
         // Current assigned Employee
-        public int? EmployeeId { get; private set; }
+        public Guid? EmployeeId { get; private set; }
         public Employee? Employee { get; private set; }
 
         // Employee who created the ticket
-        public int TicketCreatedById { get; private set; }
+        public Guid TicketCreatedById { get; private set; }
         public Employee TicketCreatedBy { get; private set; } = null!;
 
         // Ticket History
@@ -44,14 +44,14 @@ namespace Domain.Entities
             DateOnly? dueTo,
             string? description,
             TicketPriority priority,
-            int projectId,
-            int employeeId,
-            int ticketCreatedById)
+            Guid projectId,
+            Guid employeeId,
+            Guid ticketCreatedById)
         {
-            if (employeeId <= 0 || ticketCreatedById <= 0)
+            if (employeeId == Guid.Empty || ticketCreatedById == Guid.Empty)
                 throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
 
-            if (projectId <= 0)
+            if (projectId == Guid.Empty)
                 throw new ArgumentException(ErrorShared.Ticket.ProjectNotFound);
 
             var ticket = new Ticket
@@ -72,12 +72,12 @@ namespace Domain.Entities
             string ticketTitle,
             DateOnly? dueTo,
             string? description,
-            int employeeId)
+            Guid employeeId)
         {
             if (string.IsNullOrWhiteSpace(ticketTitle))
                 throw new ArgumentException(ErrorShared.Ticket.TicketTitleRequired);
 
-            if (employeeId <= 0)
+            if (employeeId == Guid.Empty)
                 throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
 
             TicketTitle = ticketTitle.Trim();
@@ -116,9 +116,9 @@ namespace Domain.Entities
             Touch();
         }
 
-        public void Reassign(int employeeId)
+        public void Reassign(Guid employeeId)
         {
-            if (employeeId <= 0)
+            if (employeeId == Guid.Empty)
                 throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
 
             EmployeeId = employeeId;

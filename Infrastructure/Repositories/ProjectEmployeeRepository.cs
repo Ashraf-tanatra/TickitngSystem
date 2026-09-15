@@ -21,7 +21,7 @@ namespace Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<ProjectEmployee>> GetByProjectIdAsync(int projectId)
+        public async Task<IEnumerable<ProjectEmployee>> GetByProjectIdAsync(Guid projectId)
         {
             return await _context.ProjectEmployees
                 .Where(pe => pe.ProjectId == projectId)
@@ -29,7 +29,7 @@ namespace Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<ProjectEmployee>> GetByEmployeeIdAsync(int employeeId)
+        public async Task<IEnumerable<ProjectEmployee>> GetByEmployeeIdAsync(Guid employeeId)
         {
             return await _context.ProjectEmployees
                 .Where(pe => pe.EmployeeId == employeeId)
@@ -37,7 +37,7 @@ namespace Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task<ProjectEmployee?> GetAsync(int projectId, int employeeId)
+        public async Task<ProjectEmployee?> GetAsync(Guid projectId, Guid employeeId)
         {
             return await _context.ProjectEmployees
                 .Include(pe => pe.Project)
@@ -47,7 +47,7 @@ namespace Infrastructure.Repositories
                     pe.EmployeeId == employeeId);
         }
 
-        public async Task<bool> ExistsAsync(int projectId, int employeeId)
+        public async Task<bool> ExistsAsync(Guid projectId, Guid employeeId)
         {
             return await _context.ProjectEmployees
                 .AnyAsync(pe =>

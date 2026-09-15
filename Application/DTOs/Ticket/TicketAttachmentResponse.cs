@@ -2,9 +2,9 @@ namespace ApplicationServices.DTOs.Ticket
 {
     public class TicketAttachmentResponse
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
 
-        public int TicketId { get; set; }
+        public Guid TicketId { get; set; }
 
         public string OriginalFileName { get; set; } = string.Empty;
 

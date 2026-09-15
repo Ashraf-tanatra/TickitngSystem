@@ -1,8 +1,8 @@
-﻿namespace ApplicationServices.DTOs.Project
+namespace ApplicationServices.DTOs.Project
 {
     public class EmployeeProjectResponse
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
 
         public string? ProjectName { get; set; }
 

@@ -1,4 +1,4 @@
-﻿using Domain.Entities;
+using Domain.Entities;
 
 namespace Domain.Interfaces
 {
@@ -6,12 +6,12 @@ namespace Domain.Interfaces
     public interface IProjectEmployeeRepository
     {
         Task<IEnumerable<ProjectEmployee>> GetAllAsync();
-        Task<IEnumerable<ProjectEmployee>> GetByProjectIdAsync(int projectId);
-        Task<IEnumerable<ProjectEmployee>> GetByEmployeeIdAsync(int employeeId);
+        Task<IEnumerable<ProjectEmployee>> GetByProjectIdAsync(Guid projectId);
+        Task<IEnumerable<ProjectEmployee>> GetByEmployeeIdAsync(Guid employeeId);
 
-        Task<ProjectEmployee?> GetAsync(int projectId, int employeeId);
+        Task<ProjectEmployee?> GetAsync(Guid projectId, Guid employeeId);
 
-        Task<bool> ExistsAsync(int projectId, int employeeId);
+        Task<bool> ExistsAsync(Guid projectId, Guid employeeId);
 
         Task AddAsync(ProjectEmployee projectEmployee);
 
