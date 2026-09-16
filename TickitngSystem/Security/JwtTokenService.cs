@@ -1,6 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text;
 using ApplicationServices.DTOs.Account;
 using ApplicationServices.Interfaces;
 using Domain.Entities;
@@ -17,9 +16,7 @@ public sealed class JwtTokenService : IAuthTokenService
 
     public JwtTokenService(IConfiguration configuration)
     {
-        var key = configuration["Jwt:Key"];
-        if (string.IsNullOrWhiteSpace(key) || Encoding.UTF8.GetByteCount(key) < 32)
-            throw new InvalidOperationException("Jwt:Key must contain at least 32 bytes.");
+        var key = JwtSigningKey.Decode(configuration["Jwt:Key"]);
 
         _issuer = configuration["Jwt:Issuer"] ?? "TaskFlow.Api";
         _audience = configuration["Jwt:Audience"] ?? "TaskFlow.Frontend";
@@ -27,7 +24,7 @@ public sealed class JwtTokenService : IAuthTokenService
         var lifetimeMinutes = configuration.GetValue("Jwt:AccessTokenMinutes", 60);
         _lifetime = TimeSpan.FromMinutes(Math.Clamp(lifetimeMinutes, 5, 120));
         _signingCredentials = new SigningCredentials(
-            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
+            new SymmetricSecurityKey(key),
             SecurityAlgorithms.HmacSha256);
     }
 

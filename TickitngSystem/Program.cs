@@ -11,7 +11,6 @@ using Microsoft.AspNetCore.RateLimiting;
 using Resend;
 using Scalar.AspNetCore;
 using System.Threading.RateLimiting;
-using System.Text;
 using TickitngSystem.Security;
 
 const string CorsPolicy = "Frontend";
@@ -35,9 +34,7 @@ builder.Services.AddHsts(options =>
     options.IncludeSubDomains = true;
 });
 
-var jwtKey = builder.Configuration["Jwt:Key"];
-if (string.IsNullOrWhiteSpace(jwtKey) || Encoding.UTF8.GetByteCount(jwtKey) < 32)
-    throw new InvalidOperationException("Jwt:Key must contain at least 32 bytes.");
+var jwtKey = JwtSigningKey.Decode(builder.Configuration["Jwt:Key"]);
 
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "TaskFlow.Api";
 var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "TaskFlow.Frontend";
@@ -54,7 +51,7 @@ builder.Services
             ValidateAudience = true,
             ValidAudience = jwtAudience,
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            IssuerSigningKey = new SymmetricSecurityKey(jwtKey),
             ValidateLifetime = true,
             ClockSkew = TimeSpan.FromSeconds(30),
             NameClaimType = "email"
