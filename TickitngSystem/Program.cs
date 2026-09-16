@@ -20,6 +20,21 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddHostedService<DeletedAccountCleanupService>();
 
+var enforceHttps = builder.Configuration.GetValue("Https:Enforce", false);
+var httpsPort = builder.Configuration.GetValue("Https:Port", 443);
+
+builder.Services.AddHttpsRedirection(options =>
+{
+    options.HttpsPort = httpsPort;
+    options.RedirectStatusCode = StatusCodes.Status308PermanentRedirect;
+});
+
+builder.Services.AddHsts(options =>
+{
+    options.MaxAge = TimeSpan.FromDays(365);
+    options.IncludeSubDomains = true;
+});
+
 var jwtKey = builder.Configuration["Jwt:Key"];
 if (string.IsNullOrWhiteSpace(jwtKey) || Encoding.UTF8.GetByteCount(jwtKey) < 32)
     throw new InvalidOperationException("Jwt:Key must contain at least 32 bytes.");
@@ -145,12 +160,8 @@ builder.Services.AddRateLimiter(options =>
 var defaultAllowedOrigins = new[]
 {
     "http://localhost:5173",
-    "http://13.140.154.75:8081",
-    "http://taskflow-pal.xyz",
     "https://taskflow-pal.xyz",
-    "http://www.taskflow-pal.xyz",
-    "https://www.taskflow-pal.xyz",
-    "http://taskflow-pal.xyz:8081"
+    "https://www.taskflow-pal.xyz"
 };
 
 var configuredAllowedOrigins =
@@ -271,6 +282,14 @@ builder.Services.AddOpenApi("v1");
 
 
 var app = builder.Build();
+
+if (enforceHttps)
+{
+    if (!app.Environment.IsDevelopment())
+        app.UseHsts();
+
+    app.UseHttpsRedirection();
+}
 
 app.UseCors(CorsPolicy);
 app.UseAuthentication();
