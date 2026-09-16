@@ -3,6 +3,7 @@ using ApplicationServices.Interfaces;
 using Domain.Enum;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 
 namespace Controller
 {
@@ -12,14 +13,21 @@ namespace Controller
     {
         private readonly ITicketManager _ticketManager;
         private readonly IAccessControlService _accessControl;
-        private readonly string _storageFolder = Path.Combine(Directory.GetCurrentDirectory(), "UploadedFiles");
+        private readonly string _storageFolder;
         private const int MaxAttachmentCount = 5;
         private const long MaxAttachmentSizeInBytes = 10 * 1024 * 1024;
 
-        public TicketController(ITicketManager ticketManager, IAccessControlService accessControl)
+        public TicketController(
+            ITicketManager ticketManager,
+            IAccessControlService accessControl,
+            IConfiguration configuration)
         {
             _ticketManager = ticketManager;
             _accessControl = accessControl;
+            var storageRoot = configuration["FileStorage:RootPath"];
+            _storageFolder = string.IsNullOrWhiteSpace(storageRoot)
+                ? Path.Combine(Directory.GetCurrentDirectory(), "UploadedFiles")
+                : Path.GetFullPath(storageRoot);
         }
 
 
@@ -464,15 +472,23 @@ namespace Controller
             if (fileValidationResult != null)
                 return fileValidationResult;
 
-            var uploadedFile = await SaveAttachmentAsync(file);
-            await _ticketManager.AddAttachmentToTicketAsync(
-                ticketId,
-                uploadedFile.Url,
-                file.FileName,
-                uploadedFile.FileName,
-                file.ContentType,
-                file.Length,
-                User.GetEmployeeId());
+            var uploadedFile = await SaveAttachmentAsync(file, HttpContext.RequestAborted);
+            try
+            {
+                await _ticketManager.AddAttachmentToTicketAsync(
+                    ticketId,
+                    uploadedFile.Url,
+                    Path.GetFileName(file.FileName),
+                    uploadedFile.FileName,
+                    file.ContentType,
+                    file.Length,
+                    User.GetEmployeeId());
+            }
+            catch
+            {
+                System.IO.File.Delete(uploadedFile.FilePath);
+                throw;
+            }
 
             return Ok(new
             {
@@ -515,15 +531,23 @@ namespace Controller
 
             foreach (var file in files)
             {
-                var uploadedFile = await SaveAttachmentAsync(file);
-                await _ticketManager.AddAttachmentToTicketAsync(
-                    ticketId,
-                    uploadedFile.Url,
-                    file.FileName,
-                    uploadedFile.FileName,
-                    file.ContentType,
-                    file.Length,
-                    User.GetEmployeeId());
+                var uploadedFile = await SaveAttachmentAsync(file, HttpContext.RequestAborted);
+                try
+                {
+                    await _ticketManager.AddAttachmentToTicketAsync(
+                        ticketId,
+                        uploadedFile.Url,
+                        Path.GetFileName(file.FileName),
+                        uploadedFile.FileName,
+                        file.ContentType,
+                        file.Length,
+                        User.GetEmployeeId());
+                }
+                catch
+                {
+                    System.IO.File.Delete(uploadedFile.FilePath);
+                    throw;
+                }
 
                 uploadedFiles.Add(new
                 {
@@ -576,18 +600,20 @@ namespace Controller
             return null;
         }
 
-        private async Task<(string FileName, string FilePath, string Url)> SaveAttachmentAsync(IFormFile file)
+        private async Task<(string FileName, string FilePath, string Url)> SaveAttachmentAsync(
+            IFormFile file,
+            CancellationToken cancellationToken)
         {
             if (!Directory.Exists(_storageFolder))
                 Directory.CreateDirectory(_storageFolder);
 
-            string uniqueName = $"{Guid.NewGuid()}_{Path.GetFileName(file.FileName)}";
+            string uniqueName = UploadedFileSecurity.CreateStoredFileName(file.FileName);
             string filePath = Path.Combine(_storageFolder, uniqueName);
             string url = $"/api/Ticket/Attachments/download-file/{uniqueName}";
 
             using (var stream = new FileStream(filePath, FileMode.Create))
             {
-                await file.CopyToAsync(stream);
+                await file.CopyToAsync(stream, cancellationToken);
             }
 
             return (uniqueName, filePath, url);
@@ -638,7 +664,7 @@ namespace Controller
 
             string contentType = GetMimeType(filePath);
             var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-            return File(fileStream, contentType);
+            return File(fileStream, contentType, safeFileName);
         }
         private string GetMimeType(string filePath)
         {

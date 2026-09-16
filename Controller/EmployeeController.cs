@@ -3,6 +3,7 @@ using ApplicationServices.DTOs.Project;
 using ApplicationServices.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 
 namespace Controller
 {
@@ -11,7 +12,7 @@ namespace Controller
     public class EmployeeController : ControllerBase
     {
         private readonly IEmployeeManager _employeeManager;
-        private readonly string _profileImagesFolder = Path.Combine(Directory.GetCurrentDirectory(), "UploadedFiles", "ProfileImages");
+        private readonly string _profileImagesFolder;
         private const long MaxProfileImageSizeInBytes = 5 * 1024 * 1024;
         private static readonly string[] AllowedProfileImageContentTypes =
         {
@@ -21,9 +22,17 @@ namespace Controller
             "image/webp"
         };
 
-        public EmployeeController(IEmployeeManager employeeManager)
+        public EmployeeController(
+            IEmployeeManager employeeManager,
+            IConfiguration configuration)
         {
             _employeeManager = employeeManager;
+            var storageRoot = configuration["FileStorage:RootPath"];
+            _profileImagesFolder = Path.Combine(
+                string.IsNullOrWhiteSpace(storageRoot)
+                    ? Path.Combine(Directory.GetCurrentDirectory(), "UploadedFiles")
+                    : Path.GetFullPath(storageRoot),
+                "ProfileImages");
         }
 
         // =========================================================
@@ -139,7 +148,8 @@ namespace Controller
         [HttpPost("{id:guid}/ProfilePhoto")]
         public async Task<ActionResult<EmployeeResponse>> UploadProfilePhoto(
             Guid id,
-            [FromForm] IFormFile file)
+            [FromForm] IFormFile file,
+            CancellationToken cancellationToken)
         {
             if (id != User.GetEmployeeId())
                 return Forbid();
@@ -163,6 +173,19 @@ namespace Controller
                     message = ErrorShared.Employee.InvalidProfileImageType
                 });
 
+            if (!await UploadedFileSecurity.HasValidImageSignatureAsync(file, cancellationToken))
+                return BadRequest(new
+                {
+                    message = ErrorShared.Employee.InvalidProfileImageType
+                });
+
+            var previousEmployee = await _employeeManager.GetByIdAsync(id);
+            if (previousEmployee == null)
+                return NotFound(new
+                {
+                    message = ErrorShared.Employee.EmployeeNotFound
+                });
+
             if (!Directory.Exists(_profileImagesFolder))
                 Directory.CreateDirectory(_profileImagesFolder);
 
@@ -172,7 +195,7 @@ namespace Controller
 
             using (var stream = new FileStream(filePath, FileMode.Create))
             {
-                await file.CopyToAsync(stream);
+                await file.CopyToAsync(stream, cancellationToken);
             }
 
             var profileImageUrl = $"/api/Employee/{id}/ProfilePhoto/{fileName}";
@@ -183,28 +206,78 @@ namespace Controller
                     await _employeeManager.UpdateProfileImageAsync(id, profileImageUrl);
 
                 if (employee == null)
+                {
+                    System.IO.File.Delete(filePath);
                     return NotFound(new
                     {
                         message = ErrorShared.Employee.EmployeeNotFound
                     });
+                }
+
+                DeletePreviousProfileImage(previousEmployee.ProfileImageUrl, fileName);
 
                 return Ok(employee);
             }
             catch (InvalidOperationException ex)
             {
+                System.IO.File.Delete(filePath);
                 return BadRequest(new
                 {
                     message = ex.Message
                 });
             }
+            catch
+            {
+                System.IO.File.Delete(filePath);
+                throw;
+            }
+        }
+
+        private void DeletePreviousProfileImage(string? profileImageUrl, string currentFileName)
+        {
+            if (string.IsNullOrWhiteSpace(profileImageUrl))
+                return;
+
+            var previousFileName = Path.GetFileName(profileImageUrl);
+            if (string.IsNullOrWhiteSpace(previousFileName) ||
+                string.Equals(previousFileName, currentFileName, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            var previousFilePath = Path.Combine(_profileImagesFolder, previousFileName);
+            try
+            {
+                if (System.IO.File.Exists(previousFilePath))
+                    System.IO.File.Delete(previousFilePath);
+            }
+            catch (IOException)
+            {
+                // The profile update succeeded; stale-file cleanup can be retried later.
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // The profile update succeeded; stale-file cleanup can be retried later.
+            }
         }
 
         [HttpGet("{id:guid}/ProfilePhoto/{fileName}")]
-        public IActionResult GetProfilePhoto(Guid id, string fileName)
+        public async Task<IActionResult> GetProfilePhoto(Guid id, string fileName)
         {
             var safeFileName = Path.GetFileName(fileName);
             if (!string.Equals(fileName, safeFileName, StringComparison.Ordinal))
                 return BadRequest();
+
+            var employee = await _employeeManager.GetByIdAsync(id);
+            var expectedFileName = Path.GetFileName(employee?.ProfileImageUrl);
+            if (employee == null ||
+                !string.Equals(expectedFileName, safeFileName, StringComparison.OrdinalIgnoreCase))
+            {
+                return NotFound(new
+                {
+                    message = ErrorShared.Employee.ProfileImageNotFound
+                });
+            }
 
             var filePath = Path.Combine(_profileImagesFolder, safeFileName);
 
