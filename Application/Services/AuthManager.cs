@@ -146,9 +146,7 @@ namespace ApplicationServices.Services
 
             return new AccountResponse
             {
-                Id = account.Id,
-                Email = account.Email,
-                EmployeeId = employee.Id
+                Email = account.Email
             };
         }
 

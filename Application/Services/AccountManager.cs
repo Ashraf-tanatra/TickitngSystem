@@ -257,21 +257,18 @@ namespace ApplicationServices.Services
         }
 
         public async Task<bool> SoftDeleteAsync(
+            Guid accountId,
             DeactivateAccountRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
-
-            if (string.IsNullOrWhiteSpace(request.Email))
-                throw new ArgumentException(
-                    ErrorShared.Account.EmailRequired);
 
             if (string.IsNullOrWhiteSpace(request.CurrentPassword))
                 throw new ArgumentException(
                     ErrorShared.Account.CurrentPasswordRequired);
 
             var account =
-                await _accountRepository.GetByEmailAsync(request.Email);
+                await _accountRepository.GetByIdAsync(accountId);
 
             if (account == null)
                 return false;
@@ -428,9 +425,7 @@ namespace ApplicationServices.Services
         {
             return new AccountResponse
             {
-                Id = account.Id,
-                Email = account.Email,
-                EmployeeId = account.EmployeeId
+                Email = account.Email
             };
         }
     }

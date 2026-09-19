@@ -241,7 +241,6 @@ namespace ApplicationServices.Services
                 ProjectName = project.ProjectName,
                 ProjectDescription = project.ProjectDescription,
                 ProjectStatus = project.ProjectStatus.ToString(),
-                ProjectManagerId = project.ProjectManagerId,
                 StartDate = project.StartedAt,
                 EndDate = project.EndAt,
                 EmployeeRole = employeeId.HasValue
@@ -275,7 +274,6 @@ namespace ApplicationServices.Services
                 TicketId = activity.TicketId,
                 ProjectName = project.ProjectName,
                 Activity = activity.Description,
-                OccurredAt = activity.OccurredAt,
                 TimeAgo = FormatTimeAgo(activity.OccurredAt)
             };
         }

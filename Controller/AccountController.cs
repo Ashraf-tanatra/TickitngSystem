@@ -110,14 +110,11 @@ namespace Controller
         public async Task<IActionResult> SoftDelete(
             [FromBody] DeactivateAccountRequest request)
         {
-            if (!string.Equals(request.Email, User.GetEmail(), StringComparison.OrdinalIgnoreCase))
-                return Forbid();
-
             try
             {
                 var result =
                     await _accountManager
-                        .SoftDeleteAsync(request);
+                        .SoftDeleteAsync(User.GetAccountId(), request);
 
                 if (!result)
                 {

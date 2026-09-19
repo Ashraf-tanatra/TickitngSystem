@@ -430,17 +430,12 @@ namespace ApplicationServices.Services
         {
             return new TicketHistoryResponse
             {
-                Id = history.Id,
-                TicketId = history.TicketId,
                 Action = history.Action,
                 OldValue = history.OldValue,
                 NewValue = history.NewValue,
                 Note = history.Note,
-                ActionByEmployeeId = history.ActionByEmployeeId,
                 ActionByEmployeeName = FormatEmployeeName(history.ActionByEmployee),
-                FromEmployeeId = history.FromEmployeeId,
                 FromEmployeeName = FormatEmployeeName(history.FromEmployee),
-                ToEmployeeId = history.ToEmployeeId,
                 ToEmployeeName = FormatEmployeeName(history.ToEmployee),
                 ModifiedAt = history.ModifiedAt
             };
@@ -458,8 +453,6 @@ namespace ApplicationServices.Services
         {
             return new TicketAttachmentResponse
             {
-                Id = attachment.Id,
-                TicketId = attachment.TicketId,
                 OriginalFileName = attachment.OriginalFileName,
                 ContentType = attachment.ContentType,
                 SizeInBytes = attachment.SizeInBytes,

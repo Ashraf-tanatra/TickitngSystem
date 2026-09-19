@@ -21,6 +21,7 @@ namespace ApplicationServices.Interfaces
             string email);
 
         Task<bool> SoftDeleteAsync(
+            Guid accountId,
             DeactivateAccountRequest request);
 
         Task<bool> ReactivateAsync(
