@@ -84,6 +84,10 @@ namespace ApplicationServices.Services
                 throw new ArgumentException(
                     ErrorShared.Employee.PhoneRequired);
 
+            if (!System.Enum.IsDefined(request.Gender))
+                throw new ArgumentException(
+                    ErrorShared.Employee.InvalidGender);
+
             // =====================================================
             // VALIDATE PHONE
             // =====================================================
@@ -254,13 +258,14 @@ namespace ApplicationServices.Services
 
             return projects
                 .Where(project =>
+                    project.ProjectManagerId == employeeId ||
                     project.ProjectEmployees
                         .Any(pe => pe.EmployeeId == employeeId))
                 .Select(project =>
                 {
-                    var projectEmployee =
-                        project.ProjectEmployees
-                            .First(pe => pe.EmployeeId == employeeId);
+                    var isManager = project.ProjectManagerId == employeeId;
+                    var projectEmployee = project.ProjectEmployees
+                        .FirstOrDefault(pe => pe.EmployeeId == employeeId);
 
                     return new EmployeeProjectResponse
                     {
@@ -268,10 +273,12 @@ namespace ApplicationServices.Services
                         ProjectName = project.ProjectName,
                         ProjectDescription =
                             project.ProjectDescription,
-                        Role = projectEmployee.Role ?? ErrorShared.Employee.NoRole,
+                        Role = isManager
+                            ? ErrorShared.Project.ManagerRole
+                            : projectEmployee?.Role ?? ErrorShared.Employee.NoRole,
                         EmployeeCount =
                             project.ProjectEmployees.Count(projectEmployee =>
-                                !projectEmployee.Employee.IsDeleted),
+                                !projectEmployee.Employee.IsDeleted) + 1,
                         TicketCount =
                             project.ProjectTickets.Count
                     };

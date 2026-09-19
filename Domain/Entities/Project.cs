@@ -52,6 +52,15 @@ namespace Domain.Entities
             if (string.IsNullOrWhiteSpace(projectName))
                 throw new ArgumentException(ErrorShared.Project.ProjectNameRequired);
 
+            if (projectName.Trim().Length > 125)
+                throw new ArgumentException(ErrorShared.Project.ProjectNameTooLong);
+
+            if (projectDescription?.Trim().Length > 255)
+                throw new ArgumentException(ErrorShared.Project.ProjectDescriptionTooLong);
+
+            if (startedAt.HasValue && endAt.HasValue && endAt.Value < startedAt.Value)
+                throw new ArgumentException(ErrorShared.Project.InvalidDateRange);
+
             ProjectName = projectName.Trim();
             ProjectDescription = string.IsNullOrWhiteSpace(projectDescription)
                 ? null

@@ -93,13 +93,16 @@ namespace Infrastructure.Repositories
             Guid employeeId)
         {
             return await _context.Projects
-                .Where(p => p.ProjectEmployees
-                    .Any(pe =>
+                .Where(p => p.ProjectStatus != ProjectStatus.Cancelled)
+                .Where(p => p.ProjectManagerId == employeeId ||
+                    p.ProjectEmployees.Any(pe =>
                         pe.EmployeeId == employeeId &&
                         !pe.Employee.IsDeleted))
+                .Include(p => p.ProjectManager)
                 .Include(p => p.ProjectEmployees)
                 .ThenInclude(pe => pe.Employee)
                 .Include(p => p.ProjectTickets)
+                .AsSplitQuery()
                 .ToListAsync();
         }
         // =========================================================

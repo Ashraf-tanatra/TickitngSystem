@@ -198,13 +198,6 @@ namespace Controller
             {
                 return Forbid();
             }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    message = ex.Message
-                });
-            }
         }
         // DELETE: api/Ticket/5
         [HttpDelete("{id:guid}")]

@@ -4,6 +4,7 @@ using Domain.Entities;
 using Domain.Enum;
 using Domain.Interfaces;
 using System.Net.Mail;
+using System.Security.Cryptography;
 
 namespace ApplicationServices.Services
 {
@@ -11,13 +12,16 @@ namespace ApplicationServices.Services
     {
         private readonly IAccountRepository _accountRepository;
         private readonly IEmployeeRepository _employeeRepository;
+        private readonly IEmailService _emailService;
 
         public AccountManager(
             IAccountRepository accountRepository,
-            IEmployeeRepository employeeRepository)
+            IEmployeeRepository employeeRepository,
+            IEmailService emailService)
         {
             _accountRepository = accountRepository;
             _employeeRepository = employeeRepository;
+            _emailService = emailService;
         }
 
         // =========================================================
@@ -145,7 +149,9 @@ namespace ApplicationServices.Services
             // UPDATE EMAIL
             // =====================================================
 
-            if (!string.IsNullOrWhiteSpace(request.Email))
+            string? verificationCode = null;
+            if (!string.IsNullOrWhiteSpace(request.Email) &&
+                !string.Equals(request.Email.Trim(), account.Email, StringComparison.OrdinalIgnoreCase))
             {
                 if (!ValidEmailFormat(request.Email))
                 {
@@ -153,15 +159,19 @@ namespace ApplicationServices.Services
                         ErrorShared.Account.InvalidEmail);
                 }
 
-                if (request.Email != account.Email &&
-                    await _accountRepository
-                        .EmailExistsAsync(request.Email))
+                if (await _accountRepository.EmailExistsAsync(request.Email.Trim()))
                 {
                     throw new InvalidOperationException(
                         ErrorShared.Account.EmailAlreadyExists);
                 }
 
                 account.ChangeEmail(request.Email);
+                verificationCode = RandomNumberGenerator
+                    .GetInt32(100000, 1000000)
+                    .ToString();
+                account.SetVerificationCode(
+                    verificationCode,
+                    DateTime.UtcNow.AddMinutes(10));
             }
 
             // =====================================================
@@ -189,6 +199,13 @@ namespace ApplicationServices.Services
             }
 
             await _accountRepository.UpdateAsync(account);
+
+            if (verificationCode != null)
+            {
+                await _emailService.SendVerificationCodeAsync(
+                    account.Email,
+                    verificationCode);
+            }
 
             return MapToResponse(account);
         }

@@ -55,6 +55,9 @@ namespace Domain.Entities
             if (string.IsNullOrWhiteSpace(action))
                 throw new ArgumentException(ErrorShared.Ticket.HistoryActionRequired);
 
+            if (note?.Trim().Length > ErrorShared.Ticket.DescriptionMaxLength)
+                throw new ArgumentException(ErrorShared.Ticket.NoteTooLong);
+
             return new TicketHistory
             {
                 TicketId = ticketId,

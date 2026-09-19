@@ -73,6 +73,9 @@ namespace Domain.Entities
                 throw new ArgumentException(ErrorShared.Account.EmailRequired);
 
             Email = email.Trim();
+            IsEmailVerified = false;
+            VerificationCode = null;
+            VerificationCodeExpiresAt = null;
             Touch();
         }
 

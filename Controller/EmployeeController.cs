@@ -1,6 +1,7 @@
 using ApplicationServices.DTOs.Employee;
 using ApplicationServices.DTOs.Project;
 using ApplicationServices.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -261,6 +262,7 @@ namespace Controller
             }
         }
 
+        [AllowAnonymous]
         [HttpGet("{id:guid}/ProfilePhoto/{fileName}")]
         public async Task<IActionResult> GetProfilePhoto(Guid id, string fileName)
         {
@@ -289,7 +291,7 @@ namespace Controller
 
             var contentType = GetImageContentType(filePath);
             var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-            return File(fileStream, contentType, fileName);
+            return File(fileStream, contentType);
         }
 
         private static string GetImageContentType(string filePath)

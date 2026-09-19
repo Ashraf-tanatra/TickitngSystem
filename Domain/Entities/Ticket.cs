@@ -54,6 +54,9 @@ namespace Domain.Entities
             if (projectId == Guid.Empty)
                 throw new ArgumentException(ErrorShared.Ticket.ProjectNotFound);
 
+            if (!System.Enum.IsDefined(priority))
+                throw new ArgumentException(ErrorShared.Ticket.InvalidPriority);
+
             var ticket = new Ticket
             {
                 Priority = priority,
@@ -76,6 +79,12 @@ namespace Domain.Entities
         {
             if (string.IsNullOrWhiteSpace(ticketTitle))
                 throw new ArgumentException(ErrorShared.Ticket.TicketTitleRequired);
+
+            if (ticketTitle.Trim().Length > ErrorShared.Ticket.TicketTitleMaxLength)
+                throw new ArgumentException(ErrorShared.Ticket.TicketTitleTooLong);
+
+            if (description?.Trim().Length > ErrorShared.Ticket.DescriptionMaxLength)
+                throw new ArgumentException(ErrorShared.Ticket.DescriptionTooLong);
 
             if (employeeId == Guid.Empty)
                 throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);

@@ -4,6 +4,7 @@ namespace ApplicationServices.DTOs.Project
     {
         public Guid ProjectId { get; set; }
         public Guid EmployeeId { get; set; }
+        [System.ComponentModel.DataAnnotations.StringLength(50)]
         public string? Role { get; set; }
     }
 }

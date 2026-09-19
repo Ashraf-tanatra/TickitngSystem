@@ -89,6 +89,9 @@ namespace ApplicationServices.Services
             if (string.IsNullOrWhiteSpace(request.TicketTitle))
                 throw new ArgumentException(ErrorShared.Ticket.TicketTitleRequired);
 
+            if (!System.Enum.IsDefined(request.Priority))
+                throw new ArgumentException(ErrorShared.Ticket.InvalidPriority);
+
             if (!await _ticketRepository.EmployeeExistsAsync(request.EmployeeId))
                 throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
 
@@ -383,6 +386,8 @@ namespace ApplicationServices.Services
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
+            if (request.Note?.Trim().Length > ErrorShared.Ticket.DescriptionMaxLength)
+                throw new ArgumentException(ErrorShared.Ticket.NoteTooLong);
         }
 
         private async Task EnsureManagerAsync(Guid employeeId, Guid projectId)

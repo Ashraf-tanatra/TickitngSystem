@@ -110,6 +110,12 @@ public static class ErrorShared
 
             public const string InvalidPhoneNumber ="Phone number must use E.164 format, for example +970590000000.";
 
+            public const string InvalidGender = "Invalid gender.";
+
+            public const string FirstNameTooLong = "First name must be 50 characters or fewer.";
+
+            public const string LastNameTooLong = "Last name must be 50 characters or fewer.";
+
             public const string PhoneAlreadyExists ="This phone number is already in use.";
 
             public const string EmployeeAlreadyDeleted ="Employee is already deleted.";
@@ -149,6 +155,14 @@ public static class ErrorShared
             public const string ProjectNotFound ="Project not found.";
 
             public const string ProjectNameRequired ="Project name is required.";
+
+            public const string ProjectNameTooLong = "Project name must be 125 characters or fewer.";
+
+            public const string ProjectDescriptionTooLong = "Project description must be 255 characters or fewer.";
+
+            public const string InvalidDateRange = "Project end date cannot be before the start date.";
+
+            public const string RoleTooLong = "Project role must be 50 characters or fewer.";
 
             public const string ProjectDescriptionRequired ="Project description is required.";
 
@@ -223,6 +237,12 @@ public static class ErrorShared
             public const string TicketNotFound ="Ticket not found.";
 
             public const string TicketTitleRequired ="Ticket title is required.";
+
+            public const string TicketTitleTooLong = "Ticket title must be 100 characters or fewer.";
+
+            public const string DescriptionTooLong = "Ticket description must be 2500 characters or fewer.";
+
+            public const string NoteTooLong = "Ticket note must be 2500 characters or fewer.";
 
             public const string ProjectNotFound ="The specified project does not exist.";
 

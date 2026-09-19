@@ -23,6 +23,9 @@ namespace Domain.Entities
             if (employeeId == Guid.Empty)
                 throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
 
+            if (role?.Trim().Length > 50)
+                throw new ArgumentException(ErrorShared.Project.RoleTooLong);
+
             return new ProjectEmployee
             {
                 ProjectId = projectId,
@@ -33,6 +36,9 @@ namespace Domain.Entities
 
         public void ChangeRole(string? role)
         {
+            if (role?.Trim().Length > 50)
+                throw new ArgumentException(ErrorShared.Project.RoleTooLong);
+
             Role = string.IsNullOrWhiteSpace(role) ? null : role.Trim();
         }
     }
