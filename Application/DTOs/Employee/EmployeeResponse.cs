@@ -15,6 +15,4 @@ public class EmployeeResponse
     public Gender Gender { get; set; }
 
     public string? ProfileImageUrl { get; set; }
-
-    public bool IsDeleted { get; set; }
 }

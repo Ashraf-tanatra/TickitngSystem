@@ -331,8 +331,7 @@ namespace ApplicationServices.Services
                 LName = employee.LName,
                 Phone = employee.Phone,
                 Gender = employee.Gender,
-                ProfileImageUrl = employee.ProfileImageUrl,
-                IsDeleted = employee.IsDeleted
+                ProfileImageUrl = employee.ProfileImageUrl
             };
         }
 
