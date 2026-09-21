@@ -1,0 +1,322 @@
+{
+  "info": {
+    "_postman_id": "fbca4d22-ef33-4c9d-8a46-cce3af98c823",
+    "name": "TaskFlow API",
+    "description": "TaskFlow backend API. Login saves accessToken, accountId, employeeId, email, and profileImageUrl as collection variables automatically. Protected requests inherit Bearer authentication. Enum values: Gender: 0=M, 1=F. ProjectStatus: 0=Active, 1=Completed, 2=OnHold, 3=Cancelled. TicketPriority: 0=Low, 1=Medium, 2=High. TicketStatus: 0=Pending, 1=InProgress, 2=InReview, 3=NeedReview, 4=Completed, 5=Cancelled, 6=Reopened, 7=Done.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://13.140.154.75:8080", "type": "string" },
+    { "key": "accessToken", "value": "", "type": "string" },
+    { "key": "accountId", "value": "", "type": "string" },
+    { "key": "employeeId", "value": "", "type": "string" },
+    { "key": "email", "value": "user@example.com", "type": "string" },
+    { "key": "password", "value": "ChangeMe1@", "type": "string" },
+    { "key": "projectId", "value": "", "type": "string" },
+    { "key": "ticketId", "value": "", "type": "string" },
+    { "key": "memberId", "value": "", "type": "string" },
+    { "key": "fileName", "value": "", "type": "string" },
+    { "key": "profileImageUrl", "value": "", "type": "string" },
+    { "key": "verificationCode", "value": "000000", "type": "string" },
+    { "key": "resetCode", "value": "000000", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Sign Up",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fName\": \"Test\",\n  \"lName\": \"User\",\n  \"email\": \"{{email}}\",\n  \"phone\": \"+970590000000\",\n  \"gender\": 0,\n  \"password\": \"{{password}}\",\n  \"confirmPassword\": \"{{password}}\",\n  \"acceptTerms\": true\n}"
+            },
+            "url": "{{baseUrl}}/api/Auth/signup"
+          }
+        },
+        {
+          "name": "Verify Email",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{email}}\",\n  \"code\": \"{{verificationCode}}\"\n}" },
+            "url": "{{baseUrl}}/api/Auth/verify-email"
+          }
+        },
+        {
+          "name": "Resend Verification Code",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{email}}\"\n}" },
+            "url": "{{baseUrl}}/api/Auth/resend-verification-code"
+          }
+        },
+        {
+          "name": "Login and Save JWT",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Login succeeded', function () { pm.response.to.have.status(200); });",
+                  "if (pm.response.code === 200) {",
+                  "  const data = pm.response.json();",
+                  "  pm.collectionVariables.set('accessToken', data.accessToken);",
+                  "  pm.collectionVariables.set('accountId', data.accountId);",
+                  "  pm.collectionVariables.set('employeeId', data.employeeId);",
+                  "  pm.collectionVariables.set('email', data.email);",
+                  "  pm.collectionVariables.set('profileImageUrl', data.profileImageUrl || '');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}" },
+            "url": "{{baseUrl}}/api/Auth/login",
+            "description": "The response contains accessToken. The test script saves it automatically and every protected request sends Authorization: Bearer {{accessToken}}."
+          }
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{email}}\"\n}" },
+            "url": "{{baseUrl}}/api/Auth/forgot-password"
+          }
+        },
+        {
+          "name": "Verify Reset Code",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{email}}\",\n  \"code\": \"{{resetCode}}\"\n}" },
+            "url": "{{baseUrl}}/api/Auth/verify-reset-code"
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{email}}\",\n  \"code\": \"{{resetCode}}\",\n  \"newPassword\": \"NewPassword1@\",\n  \"confirmPassword\": \"NewPassword1@\"\n}" },
+            "url": "{{baseUrl}}/api/Auth/reset-password"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Account",
+      "item": [
+        {
+          "name": "Get My Account",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/Account/{{email}}" }
+        },
+        {
+          "name": "Update My Account",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{email}}\",\n  \"currentPassword\": \"{{password}}\",\n  \"newPassword\": null,\n  \"confirmNewPassword\": null\n}" },
+            "url": "{{baseUrl}}/api/Account/{{accountId}}",
+            "description": "Changing email invalidates the current JWT and requires verification of the new email."
+          }
+        },
+        {
+          "name": "Deactivate My Account",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"currentPassword\": \"{{password}}\"\n}" },
+            "url": "{{baseUrl}}/api/Account/deactivate"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Employees",
+      "item": [
+        { "name": "Get Employee Directory", "request": { "method": "GET", "url": "{{baseUrl}}/api/Employee" } },
+        { "name": "Get My Profile", "request": { "method": "GET", "url": "{{baseUrl}}/api/Employee/{{employeeId}}" } },
+        { "name": "Get My Projects", "request": { "method": "GET", "url": "{{baseUrl}}/api/Employee/{{employeeId}}/projects" } },
+        {
+          "name": "Update My Profile",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"fName\": \"Test\",\n  \"lName\": \"User\",\n  \"phone\": \"+970590000000\",\n  \"gender\": 0\n}" },
+            "url": "{{baseUrl}}/api/Employee/{{employeeId}}"
+          }
+        },
+        {
+          "name": "Upload Profile Photo",
+          "request": {
+            "method": "POST",
+            "body": { "mode": "formdata", "formdata": [{ "key": "file", "type": "file", "src": "" }] },
+            "url": "{{baseUrl}}/api/Employee/{{employeeId}}/ProfilePhoto"
+          }
+        },
+        {
+          "name": "View Profile Photo",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": "{{baseUrl}}{{profileImageUrl}}",
+            "description": "Profile photo GET is public so browsers can render it in an img element."
+          }
+        },
+        { "name": "Delete My Employee", "request": { "method": "DELETE", "url": "{{baseUrl}}/api/Employee/{{employeeId}}" } },
+        { "name": "Reactivate My Employee", "request": { "method": "POST", "url": "{{baseUrl}}/api/Employee/reactivate/{{employeeId}}" } }
+      ]
+    },
+    {
+      "name": "Projects",
+      "item": [
+        {
+          "name": "Create Project and Save ID",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["if (pm.response.code === 200) { pm.collectionVariables.set('projectId', pm.response.json()); }"] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"projectName\": \"Postman Project\",\n  \"projectDescription\": \"Created from the TaskFlow collection\",\n  \"startTime\": \"2026-09-21\",\n  \"endTime\": \"2026-12-31\"\n}" },
+            "url": "{{baseUrl}}/api/Project"
+          }
+        },
+        { "name": "Get Project", "request": { "method": "GET", "url": "{{baseUrl}}/api/Project/{{projectId}}" } },
+        { "name": "Get My Project Count", "request": { "method": "GET", "url": "{{baseUrl}}/api/Project/ProjectCount/{{employeeId}}" } },
+        { "name": "Get Project Employees", "request": { "method": "GET", "url": "{{baseUrl}}/api/Project/Employees/{{projectId}}" } },
+        { "name": "Get My Projects", "request": { "method": "GET", "url": "{{baseUrl}}/api/Project/Employee/{{employeeId}}" } },
+        { "name": "Get Dashboard Summary", "request": { "method": "GET", "url": "{{baseUrl}}/api/Project/Dashboard/{{employeeId}}" } },
+        { "name": "Get Dashboard Projects", "request": { "method": "GET", "url": "{{baseUrl}}/api/Project/Dashboard/{{employeeId}}/Projects" } },
+        { "name": "Get Recent Activity", "request": { "method": "GET", "url": "{{baseUrl}}/api/Project/RecentActive/{{employeeId}}" } },
+        { "name": "Filter My Projects", "request": { "method": "GET", "url": "{{baseUrl}}/api/Project/Employee/{{employeeId}}/Filter?filterStatus=0" } },
+        {
+          "name": "Update Project",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"projectName\": \"Updated Project\",\n  \"projectDescription\": \"Updated from Postman\",\n  \"startDate\": \"2026-09-21\",\n  \"endDate\": \"2026-12-31\"\n}" },
+            "url": "{{baseUrl}}/api/Project/Update/{{projectId}}/{{employeeId}}"
+          }
+        },
+        { "name": "Update Project Status", "request": { "method": "PUT", "url": "{{baseUrl}}/api/Project/UpdateStatus/{{projectId}}/0" } },
+        {
+          "name": "Add Employee",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"projectId\": \"{{projectId}}\",\n  \"employeeId\": \"{{memberId}}\",\n  \"role\": \"Developer\"\n}" },
+            "url": "{{baseUrl}}/api/Project/AddEmployee"
+          }
+        },
+        {
+          "name": "Remove Employee",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"projectId\": \"{{projectId}}\",\n  \"employeeId\": \"{{memberId}}\"\n}" },
+            "url": "{{baseUrl}}/api/Project/RemoveEmployee"
+          }
+        },
+        { "name": "Cancel Project", "request": { "method": "DELETE", "url": "{{baseUrl}}/api/Project/{{projectId}}/{{employeeId}}" } }
+      ]
+    },
+    {
+      "name": "Tickets",
+      "item": [
+        {
+          "name": "Create Ticket and Save ID",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["if (pm.response.code === 200) { pm.collectionVariables.set('ticketId', pm.response.json()); }"] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"ticketTitle\": \"Postman Ticket\",\n  \"dueTo\": \"2026-12-01\",\n  \"priority\": 1,\n  \"description\": \"Created from the TaskFlow collection\",\n  \"employeeId\": \"{{memberId}}\",\n  \"projectId\": \"{{projectId}}\"\n}" },
+            "url": "{{baseUrl}}/api/Ticket"
+          }
+        },
+        { "name": "Get Ticket", "request": { "method": "GET", "url": "{{baseUrl}}/api/Ticket/{{ticketId}}" } },
+        { "name": "Get Project Tickets", "request": { "method": "GET", "url": "{{baseUrl}}/api/Ticket/Project/{{projectId}}" } },
+        { "name": "Get My Tickets", "request": { "method": "GET", "url": "{{baseUrl}}/api/Ticket/Employee/{{employeeId}}" } },
+        { "name": "Get My Ticket Counts", "request": { "method": "GET", "url": "{{baseUrl}}/api/Ticket/Employee/{{employeeId}}/Counts" } },
+        { "name": "Get Completed Count", "request": { "method": "GET", "url": "{{baseUrl}}/api/Ticket/Employee/{{employeeId}}/CompletedCount" } },
+        { "name": "Get Ticket History", "request": { "method": "GET", "url": "{{baseUrl}}/api/Ticket/{{ticketId}}/History" } },
+        { "name": "Get Ticket Attachments", "request": { "method": "GET", "url": "{{baseUrl}}/api/Ticket/{{ticketId}}/Attachments" } },
+        {
+          "name": "Update Ticket",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"ticketTitle\": \"Updated Ticket\",\n  \"dueTo\": \"2026-12-15\",\n  \"description\": \"Updated from Postman\",\n  \"employeeId\": \"{{memberId}}\"\n}" },
+            "url": "{{baseUrl}}/api/Ticket/{{ticketId}}"
+          }
+        },
+        { "name": "Change Status", "request": { "method": "PUT", "url": "{{baseUrl}}/api/Ticket/Status/{{ticketId}}/1" } },
+        { "name": "Change Priority", "request": { "method": "PUT", "url": "{{baseUrl}}/api/Ticket/Priority/{{ticketId}}/2" } },
+        {
+          "name": "Submit for Review",
+          "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"note\": \"Ready for review\"\n}" }, "url": "{{baseUrl}}/api/Ticket/{{ticketId}}/SubmitReview" }
+        },
+        {
+          "name": "Approve Ticket",
+          "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"note\": \"Approved\"\n}" }, "url": "{{baseUrl}}/api/Ticket/{{ticketId}}/Review/Approve" }
+        },
+        {
+          "name": "Request Changes",
+          "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"note\": \"Please update the implementation\"\n}" }, "url": "{{baseUrl}}/api/Ticket/{{ticketId}}/Review/RequestChanges" }
+        },
+        {
+          "name": "Reassign Ticket",
+          "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"toEmployeeId\": \"{{memberId}}\",\n  \"note\": \"Reassigned\"\n}" }, "url": "{{baseUrl}}/api/Ticket/{{ticketId}}/Review/Reassign" }
+        },
+        {
+          "name": "Add Comment",
+          "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"note\": \"Comment from Postman\"\n}" }, "url": "{{baseUrl}}/api/Ticket/{{ticketId}}/Comments" }
+        },
+        {
+          "name": "Upload Attachment",
+          "request": { "method": "POST", "body": { "mode": "formdata", "formdata": [{ "key": "file", "type": "file", "src": "" }] }, "url": "{{baseUrl}}/api/Ticket/Attachments/upload/Ticket/{{ticketId}}" }
+        },
+        {
+          "name": "Upload Multiple Attachments",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "files", "type": "file", "src": "" },
+                { "key": "files", "type": "file", "src": "" }
+              ]
+            },
+            "url": "{{baseUrl}}/api/Ticket/Attachments/upload/Ticket/{{ticketId}}/Multiple"
+          }
+        },
+        { "name": "Download Attachment", "request": { "method": "GET", "url": "{{baseUrl}}/api/Ticket/Attachments/download-file/{{fileName}}" } },
+        { "name": "Cancel Ticket", "request": { "method": "DELETE", "url": "{{baseUrl}}/api/Ticket/{{ticketId}}" } }
+      ]
+    }
+  ]
+}
