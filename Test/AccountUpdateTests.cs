@@ -12,6 +12,36 @@ namespace Test;
 
 public sealed class AccountUpdateTests
 {
+    [Theory]
+    [InlineData("Valid1%Password")]
+    [InlineData("Valid1^Password")]
+    [InlineData("Valid1_Password")]
+    [InlineData("Valid1+Password")]
+    public async Task PasswordValidationAcceptsAnySpecialCharacter(string password)
+    {
+        await using var context = CreateContext();
+        var manager = new AccountManager(
+            new AccountRepository(context),
+            new EmployeeRepository(context),
+            new RecordingEmailService());
+
+        Assert.True(manager.PasswordFormat(password));
+    }
+
+    [Theory]
+    [InlineData("Password123")]
+    [InlineData("Valid1 Password")]
+    public async Task PasswordValidationRejectsMissingSpecialCharacterOrWhitespace(string password)
+    {
+        await using var context = CreateContext();
+        var manager = new AccountManager(
+            new AccountRepository(context),
+            new EmployeeRepository(context),
+            new RecordingEmailService());
+
+        Assert.False(manager.PasswordFormat(password));
+    }
+
     [Fact]
     public async Task ChangingEmailRequiresVerificationOfNewAddress()
     {

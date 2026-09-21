@@ -66,7 +66,10 @@ namespace ApplicationServices.Services
             if (!password.Any(char.IsDigit))
                 return false;
 
-            if (!password.Any(c => "@#$!".Contains(c)))
+            if (password.Any(char.IsWhiteSpace))
+                return false;
+
+            if (!password.Any(c => char.IsPunctuation(c) || char.IsSymbol(c)))
                 return false;
 
             return true;
