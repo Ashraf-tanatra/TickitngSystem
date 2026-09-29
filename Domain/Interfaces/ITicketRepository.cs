@@ -11,6 +11,7 @@ namespace Domain.Interfaces
         Task<TicketAttachments?> GetAttachmentByStoredFileNameAsync(string storedFileName);
         Task<IEnumerable<Ticket>> GetAllTicketsForAProjectAsync(Guid projectId);
         Task<IEnumerable<Ticket>> GetAllTicketsForAnEmployeeAsync(Guid employeeId);
+        Task<IEnumerable<Ticket>> GetRecentTicketsWithActivityAsync(Guid employeeId);
 
         Task<(int TicketCount, int InProgressCount, int NeedReviewCount)>
             GetTicketCountsForAnEmployeeAsync(Guid employeeId);

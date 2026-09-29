@@ -81,6 +81,18 @@ namespace ApplicationServices.Services
             return tickets.Select(MapToResponse);
         }
 
+        public async Task<IEnumerable<TicketResponse>> GetRecentTicketsWithActivityAsync(Guid employeeId)
+        {
+            if (employeeId == Guid.Empty ||
+                !await _ticketRepository.EmployeeExistsAsync(employeeId))
+            {
+                throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
+            }
+
+            var tickets = await _ticketRepository.GetRecentTicketsWithActivityAsync(employeeId);
+            return tickets.Select(MapToResponse);
+        }
+
         public async Task<Guid> CreateAsync(CreateTicketRequest request, Guid actionByEmployeeId)
         {
             if (request == null)

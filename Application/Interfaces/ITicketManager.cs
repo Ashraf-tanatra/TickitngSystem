@@ -12,6 +12,7 @@ namespace ApplicationServices.Interfaces
 
         Task<IEnumerable<TicketResponse>> GetAllTicketsForAProjectAsync(Guid projectId);
         Task<IEnumerable<TicketResponse>> GetAllTicketsForAnEmployeeAsync(Guid employeeId);
+        Task<IEnumerable<TicketResponse>> GetRecentTicketsWithActivityAsync(Guid employeeId);
 
         Task<Guid> CreateAsync(CreateTicketRequest request, Guid actionByEmployeeId);
         Task UpdateAsync(Guid id, UpdateTicketRequest request, Guid actionByEmployeeId);

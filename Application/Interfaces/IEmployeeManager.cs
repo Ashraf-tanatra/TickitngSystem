@@ -27,7 +27,6 @@ namespace ApplicationServices.Interfaces
 
         bool ValidPhoneNumberFormat(string phone);
 
-        Task<bool> ReactivateAsync(Guid id);
         Task<bool> ExistsByPhoneAsync(string phone);
         //Task<IEnumerable<ProjectResponse>>GetActiveProjectsAsync(Guid employeeId);
     }

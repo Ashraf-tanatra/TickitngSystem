@@ -289,6 +289,8 @@ public static class ErrorShared
             public const string AttachmentSizeInvalid = "Attachment size must be greater than zero.";
             public static string TooManyAttachments(int maxCount) => $"You can upload up to {maxCount} files at a time.";
             public static string AttachmentTooLarge(int maxSizeMb) => $"Each attachment must be {maxSizeMb}MB or smaller.";
+            public static string InvalidAttachmentType(string allowedExtensions) =>
+                $"This file type is not allowed. Allowed types: {allowedExtensions}.";
         }
 
         public static class System

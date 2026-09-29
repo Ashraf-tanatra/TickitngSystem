@@ -341,44 +341,5 @@ namespace ApplicationServices.Services
                 ProfileImageUrl = employee.ProfileImageUrl
             };
         }
-
-
-        // =========================================================
-        // REACTIVE EMPLOYEE
-        // =========================================================
-
-        public async Task<bool> ReactivateAsync(Guid id)
-        {
-            var employee = await _employeeRepository.GetByIdAsync(id);
-
-            if (employee == null)
-                return false;
-
-            if (!employee.IsDeleted)
-                throw new InvalidOperationException(
-                    ErrorShared.Employee.EmployeeAlreadyActive);
-
-            if (!employee.DeletedAt.HasValue)
-                throw new InvalidOperationException(
-                    ErrorShared.Employee.EmployeeDeletionDateMissing);
-
-            if (employee.DeletedAt.Value.AddDays(ErrorShared.Employee.ReactivationPeriodDays) <
-                DateOnly.FromDateTime(DateTime.UtcNow))
-                throw new InvalidOperationException(
-                    ErrorShared.Employee.EmployeeReactivationPeriodExpired);
-
-            employee.Reactivate();
-
-            var account = employee.Account;
-
-            if (account != null && account.IsDeleted)
-            {
-                await _accountRepository.ReactivateAsync(account);
-            }
-
-            await _employeeRepository.UpdateAsync(employee);
-
-            return true;
-        }
     }
 }

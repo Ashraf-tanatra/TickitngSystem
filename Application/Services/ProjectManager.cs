@@ -172,22 +172,14 @@ namespace ApplicationServices.Services
             return project!.Select(project => MapToResponse(project, employeeId));
         }
 
-        public async Task<IEnumerable<string[]>>? GetAllProjectWorkedByEmployeeTopThreeAsync(Guid employeeId)
-        {
-            if (!await _projectRepository.EmployeeExistsAsync(employeeId))
-                throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
-
-            var emp = await _projectRepository.GetAllProjectWorkedByEmployeeTopThreeAsync(employeeId);
-            return emp ?? Array.Empty<string[]>();
-        }
-
-        public async Task<IEnumerable<ProjectResponse>>? GetDashboardProjectsAsync(Guid employeeId)
+        public async Task<IEnumerable<ProjectResponse>> GetDashboardProjectsAsync(Guid employeeId)
         {
             if (!await _projectRepository.EmployeeExistsAsync(employeeId))
                 throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
 
             var projects = await _projectRepository.GetDashboardProjectsAsync(employeeId);
-            return projects!.Select(project => MapToResponse(project, employeeId));
+            return projects?.Select(project => MapToResponse(project, employeeId))
+                ?? Array.Empty<ProjectResponse>();
         }
 
         public async Task<IEnumerable<ProjectResponse>> GetRecentActiveProjectsAsync(Guid employeeId)

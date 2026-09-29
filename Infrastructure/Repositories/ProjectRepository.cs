@@ -220,23 +220,6 @@ namespace Infrastructure.Repositories
                         p.ProjectEmployees.Any(pe => pe.EmployeeId == employeeId))
                         .ToListAsync();
         }
-        // last three projects that the employee added to works on
-        public async Task<IEnumerable<String[]>?> GetAllProjectWorkedByEmployeeTopThreeAsync(Guid employeeId)
-        {
-            var projects = await GetRecentActiveProjectsAsync(employeeId);
-
-            return projects
-                .Select(p => new string[2]
-                {
-                    p.ProjectName,
-                    p.ProjectEmployees
-                        .Where(pe => pe.EmployeeId == employeeId)
-                        .Select(pe => pe.Role)
-                        .FirstOrDefault() ?? ErrorShared.Project.ManagerOrNoRole
-                })
-                .ToList();
-        }
-
         public async Task<IEnumerable<Project>?> GetDashboardProjectsAsync(Guid employeeId)
         {
             if (!await EmployeeExistsAsync(employeeId))

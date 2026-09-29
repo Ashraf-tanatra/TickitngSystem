@@ -250,8 +250,6 @@ namespace ApplicationServices.Services
 
             return new LoginResponse
             {
-                AccountId = account.Id,
-                EmployeeId = account.EmployeeId,
                 Email = account.Email,
                 FName = account.Employee.FName,
                 LName = account.Employee.LName,

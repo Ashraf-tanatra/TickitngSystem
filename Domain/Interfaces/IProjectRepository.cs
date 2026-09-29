@@ -16,7 +16,6 @@ namespace Domain.Interfaces
         Task<bool> EmployeeHasActiveTicketsInProjectAsync(Guid projectId, Guid employeeId);
         Task<bool> SetProjectStatusAsync(Guid projectId, ProjectStatus status);
         Task<IEnumerable<Project>?> GetAllProjectWorkedByEmployeeAsync(Guid employeeId);
-        Task<IEnumerable<String[]>?> GetAllProjectWorkedByEmployeeTopThreeAsync(Guid employeeId);
         Task<IEnumerable<Project>?> GetDashboardProjectsAsync(Guid employeeId);
         Task<IEnumerable<Project>> GetRecentActiveProjectsAsync(Guid employeeId);
         Task<IEnumerable<Project>?> GetAllProjectWorkedByEmployeeWithFilterAsync(Guid employeeId, ProjectStatus FilterByStatus);

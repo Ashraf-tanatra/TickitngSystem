@@ -19,14 +19,10 @@ namespace Controller
             _accessControl = accessControl;
         }
 
-        // DELETE: api/Project/Delete/5/1
-        [HttpDelete("{id:guid}/{empId:guid}")]
-        [HttpDelete("Delete/{id:guid}/{empId:guid}")]
-        public async Task<IActionResult> Delete(Guid id, Guid empId)
+        [HttpDelete("{id:guid}")]
+        public async Task<IActionResult> Delete(Guid id)
         {
             var currentEmployeeId = User.GetEmployeeId();
-            if (empId != currentEmployeeId)
-                return Forbid();
 
             try
             {
@@ -36,26 +32,6 @@ namespace Controller
             catch (UnauthorizedAccessException)
             {
                 return Forbid();
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    message = ex.Message
-                });
-            }
-        }
-
-        //GET api/ProjectCount/1 
-        [HttpGet("ProjectCount/{employeeId:guid}")]
-        public async Task<ActionResult<int>> ProjectCount(Guid employeeId)
-        {
-            if (employeeId != User.GetEmployeeId())
-                return Forbid();
-
-            try
-            {
-                return Ok(await _projectManager.GetProjectCountAsync(employeeId));
             }
             catch (ArgumentException ex)
             {
@@ -168,12 +144,10 @@ namespace Controller
         }
 
         // PUT: api/Project/5
-        [HttpPut("Update/{id:guid}/{empId:guid}")]
-        public async Task<IActionResult> Update(Guid id, Guid empId, [FromBody] UpdateProjectRequest request)
+        [HttpPut("{id:guid}")]
+        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateProjectRequest request)
         {
             var currentEmployeeId = User.GetEmployeeId();
-            if (empId != currentEmployeeId)
-                return Forbid();
 
             try
             {
@@ -207,17 +181,19 @@ namespace Controller
             }
         }
 
-        //GET api/Project/Employee/1
-        [HttpGet("Employee/{employeeId:guid}")]
-        [HttpGet("employeeId = {employeeId:guid}")]
-        public async Task<ActionResult<IEnumerable<ProjectResponse>>> GetProjectsWorkedByEmployee(Guid employeeId)
+        [HttpGet("me")]
+        public async Task<ActionResult<IEnumerable<ProjectResponse>>> GetMyProjects(
+            [FromQuery] ProjectStatus? filterStatus)
         {
-            if (employeeId != User.GetEmployeeId())
-                return Forbid();
+            var employeeId = User.GetEmployeeId();
 
             try
             {
-                var projects = await _projectManager.GetAllProjectWorkedByEmployeeAsync(employeeId)!;
+                var projects = filterStatus.HasValue
+                    ? await _projectManager.GetAllProjectWorkedByEmployeeWithFilterAsync(
+                        employeeId,
+                        filterStatus.Value)!
+                    : await _projectManager.GetAllProjectWorkedByEmployeeAsync(employeeId)!;
                 return Ok(projects);
             }
             catch (NullReferenceException ex)
@@ -285,115 +261,5 @@ namespace Controller
             }
         }
 
-        //GET api/project/TopThree/1
-        [HttpGet("Dashboard/{employeeId:guid}")]
-        public async Task<ActionResult<IEnumerable<string[]>>> GetProjectsWorkedByEmployeeTopThree(Guid employeeId)
-        {
-            if (employeeId != User.GetEmployeeId())
-                return Forbid();
-
-            try
-            {
-                var projects = await _projectManager.GetAllProjectWorkedByEmployeeTopThreeAsync(employeeId)!;
-                return Ok(projects);
-            }
-            catch (NullReferenceException ex)
-            {
-                return NotFound(new
-                {
-                    message = ex.Message
-                });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    message = ex.Message
-                });
-            }
-        }
-
-        [HttpGet("Dashboard/{employeeId:guid}/Projects")]
-        public async Task<ActionResult<IEnumerable<ProjectResponse>>> GetDashboardProjects(Guid employeeId)
-        {
-            if (employeeId != User.GetEmployeeId())
-                return Forbid();
-
-            try
-            {
-                var projects = await _projectManager.GetDashboardProjectsAsync(employeeId)!;
-                return Ok(projects);
-            }
-            catch (NullReferenceException ex)
-            {
-                return NotFound(new
-                {
-                    message = ex.Message
-                });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    message = ex.Message
-                });
-            }
-        }
-
-        // GET: api/Project/RecentActive/1
-        [HttpGet("RecentActive/{employeeId:guid}")]
-        public async Task<ActionResult<IEnumerable<RecentActivityResponse>>> GetRecentActiveProjects(Guid employeeId)
-        {
-            if (employeeId != User.GetEmployeeId())
-                return Forbid();
-
-            try
-            {
-                var activities = await _projectManager.GetRecentActivityAsync(employeeId);
-                return Ok(activities);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    message = ex.Message
-                });
-            }
-        }
-
-        [HttpGet("Employee/{employeeId:guid}/Filter")]
-        [HttpGet("employeeId = {employeeId:guid}/[controller]")]
-        public async Task<ActionResult<IEnumerable<ProjectResponse>>> GetProjectsWorkedByEmployeeWithFilter(Guid employeeId,
-            [FromQuery] ProjectStatus filterStatus)
-        {
-            if (employeeId != User.GetEmployeeId())
-                return Forbid();
-
-            try
-            {
-                var projects = await _projectManager.GetAllProjectWorkedByEmployeeWithFilterAsync(employeeId, filterStatus)!;
-
-                if (projects == null)
-                    return NotFound(new
-                    {
-                        message = ErrorShared.Project.ProjectsNotFound
-                    });
-                return Ok(projects);
-            }
-            catch (NullReferenceException ex)
-            {
-                return NotFound(new
-                {
-                    message = ex.Message
-                });
-            }
-            catch (ArgumentException ex)
-            {
-                return NotFound(new
-                {
-                    message = ex.Message
-                });
-            }
-        }
     }
 }

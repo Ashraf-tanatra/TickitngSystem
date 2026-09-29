@@ -17,15 +17,13 @@ namespace Controller
         }
 
         // =========================================================
-        // GET ACCOUNT BY EMAIL
+        // GET CURRENT ACCOUNT
         // =========================================================
 
-        [HttpGet("{email}")]
-        public async Task<ActionResult<AccountResponse>> GetByEmail(
-            string email)
+        [HttpGet("me")]
+        public async Task<ActionResult<AccountResponse>> GetMyAccount()
         {
-            if (!string.Equals(email, User.GetEmail(), StringComparison.OrdinalIgnoreCase))
-                return Forbid();
+            var email = User.GetEmail();
 
             try
             {
@@ -55,13 +53,11 @@ namespace Controller
         // UPDATE ACCOUNT
         // =========================================================
 
-        [HttpPut("{id:guid}")]
-        public async Task<ActionResult<AccountResponse>> Update(
-            Guid id,
+        [HttpPut("me")]
+        public async Task<ActionResult<AccountResponse>> UpdateMyAccount(
             [FromBody] UpdateAccountRequest request)
         {
-            if (id != User.GetAccountId())
-                return Forbid();
+            var id = User.GetAccountId();
 
             try
             {

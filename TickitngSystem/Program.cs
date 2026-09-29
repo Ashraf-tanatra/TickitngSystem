@@ -5,10 +5,9 @@ using Infrastructure;
 using Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.AspNetCore.Diagnostics;
 using Resend;
 using Scalar.AspNetCore;
 using System.Threading.RateLimiting;
@@ -40,9 +39,7 @@ var jwtKey = JwtSigningKey.Decode(builder.Configuration["Jwt:Key"]);
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "TaskFlow.Api";
 var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "TaskFlow.Frontend";
 
-builder.Services
-    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
     {
         options.MapInboundClaims = false;
         options.TokenValidationParameters = new TokenValidationParameters
@@ -255,6 +252,10 @@ builder.Services.AddScoped<
 builder.Services.AddScoped<
     ITicketRepository,
     TicketRepository>();
+
+builder.Services.AddScoped<
+    IDashboardManager,
+    DashboardManager>();
 
 
 // ==============================

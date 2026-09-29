@@ -32,4 +32,16 @@ public sealed class DtoContractTests
 
         Assert.Empty(exposedProperties);
     }
+
+    [Fact]
+    public void LoginResponseDoesNotExposeIdsAlreadyStoredInTheToken()
+    {
+        var propertyNames = typeof(LoginResponse)
+            .GetProperties()
+            .Select(property => property.Name)
+            .ToArray();
+
+        Assert.DoesNotContain("AccountId", propertyNames);
+        Assert.DoesNotContain("EmployeeId", propertyNames);
+    }
 }

@@ -32,7 +32,6 @@ namespace Controller
 
 
         [HttpGet("Project/{projectId:guid}")]
-        [HttpGet("/Project/{projectId:guid}")]
         public async Task<ActionResult<IEnumerable<TicketResponse>>> GetAllTicketsForAProject(Guid projectId)
         {
             if (!await _accessControl.CanAccessProjectAsync(User.GetEmployeeId(), projectId))
@@ -52,12 +51,10 @@ namespace Controller
             }
         }
 
-        [HttpGet("Employee/{employeeId:guid}")]
-        [HttpGet("/Employee/{employeeId:guid}")]
-        public async Task<ActionResult<IEnumerable<TicketResponse>>> GetAllTicketsForAnEmployee(Guid employeeId)
+        [HttpGet("me")]
+        public async Task<ActionResult<IEnumerable<TicketResponse>>> GetMyTickets()
         {
-            if (employeeId != User.GetEmployeeId())
-                return Forbid();
+            var employeeId = User.GetEmployeeId();
 
             try
             {
@@ -73,25 +70,6 @@ namespace Controller
             }
         }
 
-        [HttpGet("Employee/{employeeId:guid}/Counts")]
-        public async Task<ActionResult<TicketCountsResponse>> GetTicketCountsForAnEmployee(Guid employeeId)
-        {
-            if (employeeId != User.GetEmployeeId())
-                return Forbid();
-
-            try
-            {
-                var counts = await _ticketManager.GetTicketCountsForAnEmployeeAsync(employeeId);
-                return Ok(counts);
-            }
-            catch (ArgumentException ex)
-            {
-                return NotFound(new
-                {
-                    message = ex.Message
-                });
-            }
-        }
         [HttpGet("{id:guid}")]
         public async Task<ActionResult<TicketResponse>> GetById(Guid id)
         {
@@ -227,7 +205,6 @@ namespace Controller
         }
 
         [HttpPut("Status/{ticketId:guid}/{status}")]
-        [HttpPut("/Status/{ticketId:guid}/{status}")]
         public async Task<IActionResult> ChangeTicketStatus(Guid ticketId, TicketStatus status)
         {
             try
@@ -256,7 +233,6 @@ namespace Controller
         }
 
         [HttpPut("Priority/{ticketId:guid}/{priority}")]
-        [HttpPut("/Priority/{ticketId:guid}/{priority}")]
         public async Task<IActionResult> ChangeTicketPriority(Guid ticketId, TicketPriority priority)
         {
             try
@@ -425,27 +401,6 @@ namespace Controller
         }
 
 
-        [HttpGet("Employee/{employeeId:guid}/CompletedCount")]
-        [HttpGet("/Employee/{employeeId:guid}/CompletedCount")]
-        public async Task<ActionResult<int>> GetCompletedTicketCountForAnEmployee(Guid employeeId)
-        {
-            if (employeeId != User.GetEmployeeId())
-                return Forbid();
-
-            try
-            {
-                var count = await _ticketManager.GetTicketCompletedCountForAnEmployeeAsync(employeeId);
-                return Ok(count);
-            }
-            catch (ArgumentException ex)
-            {
-                return NotFound(new
-                {
-                    message = ex.Message
-                });
-            }
-        }
-
         //Need Enhancement for directory structure.
         //api/Ticket/Attachments/upload/Ticket/{1}
         [HttpPost("Attachments/upload/Ticket/{ticketId:guid}")]
@@ -461,7 +416,9 @@ namespace Controller
             if (ticketValidationResult != null)
                 return ticketValidationResult;
 
-            var fileValidationResult = ValidateAttachment(file);
+            var fileValidationResult = await ValidateAttachmentAsync(
+                file,
+                HttpContext.RequestAborted);
             if (fileValidationResult != null)
                 return fileValidationResult;
 
@@ -515,7 +472,9 @@ namespace Controller
 
             foreach (var file in files)
             {
-                var fileValidationResult = ValidateAttachment(file);
+                var fileValidationResult = await ValidateAttachmentAsync(
+                    file,
+                    HttpContext.RequestAborted);
                 if (fileValidationResult != null)
                     return fileValidationResult;
             }
@@ -575,7 +534,9 @@ namespace Controller
             return null;
         }
 
-        private IActionResult? ValidateAttachment(IFormFile file)
+        private async Task<IActionResult?> ValidateAttachmentAsync(
+            IFormFile file,
+            CancellationToken cancellationToken)
         {
             if (file == null || file.Length == 0)
                 return BadRequest(new
@@ -588,6 +549,13 @@ namespace Controller
                 {
                     message = ErrorShared.Ticket.AttachmentTooLarge(
                         (int)(MaxAttachmentSizeInBytes / 1024 / 1024))
+                });
+
+            if (!await UploadedFileSecurity.IsSafeAttachmentAsync(file, cancellationToken))
+                return BadRequest(new
+                {
+                    message = ErrorShared.Ticket.InvalidAttachmentType(
+                        UploadedFileSecurity.AllowedAttachmentExtensions)
                 });
 
             return null;
@@ -667,9 +635,12 @@ namespace Controller
                 ".jpg" or ".jpeg" => "image/jpeg",
                 ".png" => "image/png",
                 ".gif" => "image/gif",
-                ".mp4" => "video/mp4",
-                ".avi" => "video/x-msvideo",
-                ".mkv" => "video/x-matroska",
+                ".webp" => "image/webp",
+                ".pdf" => "application/pdf",
+                ".txt" => "text/plain",
+                ".csv" => "text/csv",
+                ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                ".xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 _ => "application/octet-stream",
             };
         }

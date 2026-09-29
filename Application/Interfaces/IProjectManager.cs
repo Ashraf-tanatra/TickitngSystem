@@ -16,8 +16,7 @@ namespace ApplicationServices.Interfaces
         Task<bool> UpdateAsync(Guid projectId, Guid empId, UpdateProjectRequest request);
         Task<IEnumerable<EmployeeResponse>>? GetEmployeesWorkOnProjectAsync(Guid projectId);
         Task<IEnumerable<ProjectResponse>>? GetAllProjectWorkedByEmployeeAsync(Guid employeeId);
-        Task<IEnumerable<string[]>>? GetAllProjectWorkedByEmployeeTopThreeAsync(Guid employeeId);
-        Task<IEnumerable<ProjectResponse>>? GetDashboardProjectsAsync(Guid employeeId);
+        Task<IEnumerable<ProjectResponse>> GetDashboardProjectsAsync(Guid employeeId);
         Task<IEnumerable<ProjectResponse>> GetRecentActiveProjectsAsync(Guid employeeId);
         Task<IEnumerable<RecentActivityResponse>> GetRecentActivityAsync(Guid employeeId);
         Task<IEnumerable<ProjectResponse>>? GetAllProjectWorkedByEmployeeWithFilterAsync(Guid employeeId, ProjectStatus FilterByStatus);

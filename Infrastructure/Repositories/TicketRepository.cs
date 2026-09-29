@@ -34,6 +34,46 @@ namespace Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        public async Task<IEnumerable<Ticket>> GetRecentTicketsWithActivityAsync(Guid employeeId)
+        {
+            var tickets = await _context.Tickets
+                .AsNoTracking()
+                .Where(t => t.EmployeeId == employeeId
+                    && t.TicketStatus != TicketStatus.Done
+                    && t.TicketStatus != TicketStatus.Cancelled)
+                .Include(t => t.Employee)
+                .Include(t => t.Project)
+                .Include(t => t.TicketHistories)
+                .Include(t => t.AttachmentURL)
+                .AsSplitQuery()
+                .ToListAsync();
+
+            return tickets
+                .OrderByDescending(GetLastActivityAt)
+                .ThenByDescending(t => t.TicketId)
+                .Take(3)
+                .ToList();
+        }
+
+        private static DateTime GetLastActivityAt(Ticket ticket)
+        {
+            var lastActivityAt = ticket.UpdatedAt ?? ticket.CreatedAt;
+
+            foreach (var history in ticket.TicketHistories)
+            {
+                if (history.ModifiedAt > lastActivityAt)
+                    lastActivityAt = history.ModifiedAt;
+            }
+
+            foreach (var attachment in ticket.AttachmentURL)
+            {
+                if (attachment.CreatedAt > lastActivityAt)
+                    lastActivityAt = attachment.CreatedAt;
+            }
+
+            return lastActivityAt;
+        }
+
         public async Task<Ticket?> GetByIdAsync(Guid id)
         {
             return await _context.Tickets
@@ -132,7 +172,9 @@ namespace Infrastructure.Repositories
 
         public async Task<int> GetTicketCompletedCountForAnEmployeeAsync(Guid employeeId)
         {
-            return await _context.Tickets.CountAsync(t => t.EmployeeId == employeeId && t.TicketStatus == TicketStatus.Completed);
+            return await _context.Tickets.CountAsync(ticket =>
+                ticket.EmployeeId == employeeId &&
+                ticket.TicketStatus == TicketStatus.Completed);
         }
 
         public async Task ChangeTicketStatusAsync(Guid ticketId, TicketStatus status)

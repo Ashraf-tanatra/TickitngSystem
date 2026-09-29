@@ -51,15 +51,14 @@ namespace Controller
         }
 
         // =========================================================
-        // GET BY ID
+        // GET CURRENT EMPLOYEE
         // =========================================================
 
-        [HttpGet("{id:guid}")]
+        [HttpGet("me")]
         public async Task<ActionResult<EmployeeResponse>>
-            GetById(Guid id)
+            GetMe()
         {
-            if (id != User.GetEmployeeId())
-                return Forbid();
+            var id = User.GetEmployeeId();
 
             var employee =
                 await _employeeManager.GetByIdAsync(id);
@@ -74,16 +73,15 @@ namespace Controller
         }
 
         // =========================================================
-        // GET PROJECTS
+        // GET CURRENT EMPLOYEE PROJECTS
         // =========================================================
 
-        [HttpGet("{id:guid}/projects")]
+        [HttpGet("me/projects")]
         public async Task<
             ActionResult<IEnumerable<EmployeeProjectResponse>>>
-            GetProjects(Guid id)
+            GetMyProjects()
         {
-            if (id != User.GetEmployeeId())
-                return Forbid();
+            var id = User.GetEmployeeId();
 
             try
             {
@@ -105,14 +103,11 @@ namespace Controller
         // UPDATE
         // =========================================================
 
-        [HttpPut("{id:guid}")]
+        [HttpPut("me")]
         public async Task<ActionResult<EmployeeResponse>>
-            Update(
-                Guid id,
-                [FromBody] UpdateEmployeeRequest request)
+            UpdateMe([FromBody] UpdateEmployeeRequest request)
         {
-            if (id != User.GetEmployeeId())
-                return Forbid();
+            var id = User.GetEmployeeId();
 
             try
             {
@@ -146,14 +141,12 @@ namespace Controller
             }
         }
 
-        [HttpPost("{id:guid}/ProfilePhoto")]
+        [HttpPost("me/ProfilePhoto")]
         public async Task<ActionResult<EmployeeResponse>> UploadProfilePhoto(
-            Guid id,
             [FromForm] IFormFile file,
             CancellationToken cancellationToken)
         {
-            if (id != User.GetEmployeeId())
-                return Forbid();
+            var id = User.GetEmployeeId();
 
             if (file == null || file.Length == 0)
                 return BadRequest(new
@@ -320,11 +313,10 @@ namespace Controller
         // DELETE
         // =========================================================
 
-        [HttpDelete("{id:guid}")]
-        public async Task<IActionResult> Delete(Guid id)
+        [HttpDelete("me")]
+        public async Task<IActionResult> DeleteMe()
         {
-            if (id != User.GetEmployeeId())
-                return Forbid();
+            var id = User.GetEmployeeId();
 
             try
             {
@@ -354,45 +346,5 @@ namespace Controller
             }
         }
 
-        // =========================================================
-        // REACTIVATE EMPLOYEE
-        // =========================================================
-
-        [HttpPost("reactivate/{id:guid}")]
-        public async Task<IActionResult> Reactivate(Guid id)
-        {
-            if (id != User.GetEmployeeId())
-                return Forbid();
-
-            try
-            {
-                var result =
-                    await _employeeManager.ReactivateAsync(id);
-
-                if (!result)
-                {
-                    return NotFound(new
-                    {
-                        message = ErrorShared.Employee.EmployeeNotFound
-                    });
-                }
-
-                return Ok(new
-                {
-                    message =
-                        ErrorShared.Employee.EmployeeReactivatedSuccessfully
-                });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new
-                {
-                    message = ex.Message
-                });
-            }
-        }
-
-        
-        
     }
 }
