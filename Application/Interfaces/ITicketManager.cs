@@ -1,45 +1,46 @@
-﻿using ApplicationServices.DTOs.Ticket;
+using ApplicationServices.DTOs.Ticket;
 using Domain.Enum;
 
 namespace ApplicationServices.Interfaces
 {
     public interface ITicketManager
     {
-        Task<TicketResponse?> GetByIdAsync(int id);
-        Task<IEnumerable<TicketHistoryResponse>> GetTicketHistoryAsync(int ticketId);
-        Task<IEnumerable<TicketAttachmentResponse>> GetTicketAttachmentsAsync(int ticketId);
+        Task<TicketResponse?> GetByIdAsync(Guid id);
+        Task<IEnumerable<TicketHistoryResponse>> GetTicketHistoryAsync(Guid ticketId);
+        Task<IEnumerable<TicketAttachmentResponse>> GetTicketAttachmentsAsync(Guid ticketId);
+        Task<Guid?> GetAttachmentTicketIdAsync(string storedFileName);
 
-        Task<IEnumerable<TicketResponse>> GetAllTicketsForAProjectAsync(int projectId);
-        Task<IEnumerable<TicketResponse>> GetAllTicketsForAnEmployeeAsync(int employeeId);
+        Task<IEnumerable<TicketResponse>> GetAllTicketsForAProjectAsync(Guid projectId);
+        Task<IEnumerable<TicketResponse>> GetAllTicketsForAnEmployeeAsync(Guid employeeId);
+        Task<IEnumerable<TicketResponse>> GetRecentTicketsWithActivityAsync(Guid employeeId);
 
-        Task<int> CreateAsync(CreateTicketRequest request);
-        Task UpdateAsync(int id, UpdateTicketRequest request);
-        Task<bool> DeleteAsync(int id);
+        Task<Guid> CreateAsync(CreateTicketRequest request, Guid actionByEmployeeId);
+        Task UpdateAsync(Guid id, UpdateTicketRequest request, Guid actionByEmployeeId);
+        Task<bool> DeleteAsync(Guid id, Guid actionByEmployeeId);
 
 
-        Task<int> GetTicketTotalCountForAnEmployeeAsync(int employeeId);
-        Task<int> GetTicketInProgressCountForAnEmployeeAsync(int employeeId);
-        Task<int> GetTicketCompletedCountForAnEmployeeAsync(int employeeId);
-        Task<int> GetTicketNeedReviewCountForAnEmployeeAsync(int employeeId);
+        Task<TicketCountsResponse> GetTicketCountsForAnEmployeeAsync(Guid employeeId);
+        Task<int> GetTicketCompletedCountForAnEmployeeAsync(Guid employeeId);
 
-        Task ChangeTicketStatusAsync(int ticketId, TicketStatus status);
-        Task ChangeTicketPriorityAsync(int ticketId, TicketPriority priority);
-        Task SubmitForReviewAsync(int ticketId, TicketActionRequest request);
-        Task ApproveAsync(int ticketId, TicketActionRequest request);
-        Task RequestChangesAsync(int ticketId, TicketActionRequest request);
-        Task ReassignAsync(int ticketId, TicketReassignRequest request);
-        Task AddCommentAsync(int ticketId, TicketActionRequest request);
+        Task ChangeTicketStatusAsync(Guid ticketId, TicketStatus status, Guid actionByEmployeeId);
+        Task ChangeTicketPriorityAsync(Guid ticketId, TicketPriority priority, Guid actionByEmployeeId);
+        Task SubmitForReviewAsync(Guid ticketId, TicketActionRequest request, Guid actionByEmployeeId);
+        Task ApproveAsync(Guid ticketId, TicketActionRequest request, Guid actionByEmployeeId);
+        Task RequestChangesAsync(Guid ticketId, TicketActionRequest request, Guid actionByEmployeeId);
+        Task ReassignAsync(Guid ticketId, TicketReassignRequest request, Guid actionByEmployeeId);
+        Task AddCommentAsync(Guid ticketId, TicketActionRequest request, Guid actionByEmployeeId);
 
         Task AddAttachmentToTicketAsync(
-            int ticketId,
+            Guid ticketId,
             string url,
             string originalFileName,
             string storedFileName,
             string contentType,
-            long sizeInBytes);
+            long sizeInBytes,
+            Guid actionByEmployeeId);
 
-        Task<bool> TicketExistsAsync(int ticketId);
-        Task<bool> EmployeeExistsAsync(int employeeId);
-        Task<bool> ProjectExistsAsync(int projectId);
+        Task<bool> TicketExistsAsync(Guid ticketId);
+        Task<bool> EmployeeExistsAsync(Guid employeeId);
+        Task<bool> ProjectExistsAsync(Guid projectId);
     }
 }

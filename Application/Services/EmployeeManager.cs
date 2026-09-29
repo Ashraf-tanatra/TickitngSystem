@@ -1,4 +1,4 @@
-﻿using ApplicationServices.DTOs.Employee;
+using ApplicationServices.DTOs.Employee;
 using ApplicationServices.DTOs.Project;
 using ApplicationServices.Interfaces;
 using Domain.Entities;
@@ -22,19 +22,25 @@ namespace ApplicationServices.Services
         // GET ALL
         // =========================================================
 
-        public async Task<IEnumerable<EmployeeResponse>> GetAllAsync()
+        public async Task<IEnumerable<EmployeeSummaryResponse>> GetAllAsync()
         {
             var employees =
                 await _employeeRepository.GetAllAsync();
 
-            return employees.Select(MapToResponse);
+            return employees.Select(employee => new EmployeeSummaryResponse
+            {
+                Id = employee.Id,
+                FName = employee.FName,
+                LName = employee.LName,
+                ProfileImageUrl = employee.ProfileImageUrl
+            });
         }
 
         // =========================================================
         // GET BY ID
         // =========================================================
 
-        public async Task<EmployeeResponse?> GetByIdAsync(int id)
+        public async Task<EmployeeResponse?> GetByIdAsync(Guid id)
         {
             var employee =
                 await _employeeRepository.GetByIdAsync(id);
@@ -50,7 +56,7 @@ namespace ApplicationServices.Services
         // =========================================================
 
         public async Task<EmployeeResponse?> UpdateAsync(
-            int id,
+            Guid id,
             UpdateEmployeeRequest request)
         {
             if (request == null)
@@ -77,6 +83,10 @@ namespace ApplicationServices.Services
             if (string.IsNullOrWhiteSpace(request.Phone))
                 throw new ArgumentException(
                     ErrorShared.Employee.PhoneRequired);
+
+            if (!System.Enum.IsDefined(request.Gender))
+                throw new ArgumentException(
+                    ErrorShared.Employee.InvalidGender);
 
             // =====================================================
             // VALIDATE PHONE
@@ -115,7 +125,7 @@ namespace ApplicationServices.Services
         }
 
         public async Task<EmployeeResponse?> UpdateProfileImageAsync(
-            int id,
+            Guid id,
             string profileImageUrl)
         {
             var employee =
@@ -138,7 +148,7 @@ namespace ApplicationServices.Services
         //// =========================================================
         //// ACTIVE PROJECTS FOR EMPLOYEE
         //// =========================================================
-        //public async Task<IEnumerable<ProjectResponse>>GetActiveProjectsAsync(int employeeId)
+        //public async Task<IEnumerable<ProjectResponse>>GetActiveProjectsAsync(Guid employeeId)
         //{
         //    var employee =
         //        await _employeeRepository.GetByIdAsync(employeeId);
@@ -162,7 +172,7 @@ namespace ApplicationServices.Services
         // SOFT DELETE
         // =========================================================
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(Guid id)
         {
             var employee =
                 await _employeeRepository.GetByIdAsync(id);
@@ -229,7 +239,7 @@ namespace ApplicationServices.Services
         // =========================================================
 
         public async Task<IEnumerable<EmployeeProjectResponse>>
-            GetProjectsAsync(int employeeId)
+            GetProjectsAsync(Guid employeeId)
         {
             var employee =
                 await _employeeRepository.GetByIdAsync(employeeId);
@@ -248,13 +258,14 @@ namespace ApplicationServices.Services
 
             return projects
                 .Where(project =>
+                    project.ProjectManagerId == employeeId ||
                     project.ProjectEmployees
                         .Any(pe => pe.EmployeeId == employeeId))
                 .Select(project =>
                 {
-                    var projectEmployee =
-                        project.ProjectEmployees
-                            .First(pe => pe.EmployeeId == employeeId);
+                    var isManager = project.ProjectManagerId == employeeId;
+                    var projectEmployee = project.ProjectEmployees
+                        .FirstOrDefault(pe => pe.EmployeeId == employeeId);
 
                     return new EmployeeProjectResponse
                     {
@@ -262,10 +273,12 @@ namespace ApplicationServices.Services
                         ProjectName = project.ProjectName,
                         ProjectDescription =
                             project.ProjectDescription,
-                        Role = projectEmployee.Role ?? ErrorShared.Employee.NoRole,
+                        Role = isManager
+                            ? ErrorShared.Project.ManagerRole
+                            : projectEmployee?.Role ?? ErrorShared.Employee.NoRole,
                         EmployeeCount =
                             project.ProjectEmployees.Count(projectEmployee =>
-                                !projectEmployee.Employee.IsDeleted),
+                                !projectEmployee.Employee.IsDeleted) + 1,
                         TicketCount =
                             project.ProjectTickets.Count
                     };
@@ -291,8 +304,11 @@ namespace ApplicationServices.Services
         public bool ValidPhoneNumberFormat(string phone)
         {
             return !string.IsNullOrWhiteSpace(phone)
-                   && phone.Length == 10
-                   && phone.All(char.IsDigit);
+                   && phone.Length >= ErrorShared.Employee.MinimumPhoneNumberLength
+                   && phone.Length <= ErrorShared.Employee.MaximumPhoneNumberLength
+                   && phone[0] == '+'
+                   && phone[1] is >= '1' and <= '9'
+                   && phone.AsSpan(2).IndexOfAnyExceptInRange('0', '9') == -1;
         }
 
         // =========================================================
@@ -322,48 +338,8 @@ namespace ApplicationServices.Services
                 LName = employee.LName,
                 Phone = employee.Phone,
                 Gender = employee.Gender,
-                ProfileImageUrl = employee.ProfileImageUrl,
-                IsDeleted = employee.IsDeleted
+                ProfileImageUrl = employee.ProfileImageUrl
             };
-        }
-
-
-        // =========================================================
-        // REACTIVE EMPLOYEE
-        // =========================================================
-
-        public async Task<bool> ReactivateAsync(int id)
-        {
-            var employee = await _employeeRepository.GetByIdAsync(id);
-
-            if (employee == null)
-                return false;
-
-            if (!employee.IsDeleted)
-                throw new InvalidOperationException(
-                    ErrorShared.Employee.EmployeeAlreadyActive);
-
-            if (!employee.DeletedAt.HasValue)
-                throw new InvalidOperationException(
-                    ErrorShared.Employee.EmployeeDeletionDateMissing);
-
-            if (employee.DeletedAt.Value.AddDays(ErrorShared.Employee.ReactivationPeriodDays) <
-                DateOnly.FromDateTime(DateTime.UtcNow))
-                throw new InvalidOperationException(
-                    ErrorShared.Employee.EmployeeReactivationPeriodExpired);
-
-            employee.Reactivate();
-
-            var account = employee.Account;
-
-            if (account != null && account.IsDeleted)
-            {
-                await _accountRepository.ReactivateAsync(account);
-            }
-
-            await _employeeRepository.UpdateAsync(employee);
-
-            return true;
         }
     }
 }

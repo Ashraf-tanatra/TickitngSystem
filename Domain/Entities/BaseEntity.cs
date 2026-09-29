@@ -2,15 +2,15 @@ namespace Domain.Entities
 {
     public abstract class BaseEntity
     {
-        public int Id { get; private set; }
+        public Guid Id { get; private set; } = Guid.NewGuid();
 
-        public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
+        public DateTime CreatedAt { get; private set; } = DateTime.Now;
 
         public DateTime? UpdatedAt { get; private set; }
 
         protected void Touch()
         {
-            UpdatedAt = DateTime.UtcNow;
+            UpdatedAt = DateTime.Now;
         }
     }
 }

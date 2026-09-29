@@ -11,25 +11,26 @@ namespace Domain.Entities
         {
         }
 
-        public int TicketId { get; private set; }
+        public Guid TicketId { get; private set; } = Guid.NewGuid();
         public DateOnly? DueTo { get; private set; }
         public string? Description { get; private set; }
         public TicketPriority Priority { get; private set; }
         public string TicketTitle { get; private set; } = string.Empty;
         public TicketStatus TicketStatus { get; private set; } = TicketStatus.Pending;
-        public DateOnly CreatedAt { get; private set; } = DateOnly.FromDateTime(DateTime.Now);
+        public DateTime CreatedAt { get; private set; } = DateTime.Now;
+        public DateTime? UpdatedAt { get; private set; }
 
         // RelationShips for EF_Core
         // Project
-        public int ProjectId { get; private set; }
+        public Guid ProjectId { get; private set; }
         public Project Project { get; private set; } = null!;
 
         // Current assigned Employee
-        public int? EmployeeId { get; private set; }
+        public Guid? EmployeeId { get; private set; }
         public Employee? Employee { get; private set; }
 
         // Employee who created the ticket
-        public int TicketCreatedById { get; private set; }
+        public Guid TicketCreatedById { get; private set; }
         public Employee TicketCreatedBy { get; private set; } = null!;
 
         // Ticket History
@@ -43,15 +44,18 @@ namespace Domain.Entities
             DateOnly? dueTo,
             string? description,
             TicketPriority priority,
-            int projectId,
-            int employeeId,
-            int ticketCreatedById)
+            Guid projectId,
+            Guid employeeId,
+            Guid ticketCreatedById)
         {
-            if (employeeId <= 0 || ticketCreatedById <= 0)
+            if (employeeId == Guid.Empty || ticketCreatedById == Guid.Empty)
                 throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
 
-            if (projectId <= 0)
+            if (projectId == Guid.Empty)
                 throw new ArgumentException(ErrorShared.Ticket.ProjectNotFound);
+
+            if (!System.Enum.IsDefined(priority))
+                throw new ArgumentException(ErrorShared.Ticket.InvalidPriority);
 
             var ticket = new Ticket
             {
@@ -63,6 +67,7 @@ namespace Domain.Entities
             };
 
             ticket.UpdateDetails(ticketTitle, dueTo, description, employeeId);
+            ticket.UpdatedAt = null;
             return ticket;
         }
 
@@ -70,12 +75,18 @@ namespace Domain.Entities
             string ticketTitle,
             DateOnly? dueTo,
             string? description,
-            int employeeId)
+            Guid employeeId)
         {
             if (string.IsNullOrWhiteSpace(ticketTitle))
                 throw new ArgumentException(ErrorShared.Ticket.TicketTitleRequired);
 
-            if (employeeId <= 0)
+            if (ticketTitle.Trim().Length > ErrorShared.Ticket.TicketTitleMaxLength)
+                throw new ArgumentException(ErrorShared.Ticket.TicketTitleTooLong);
+
+            if (description?.Trim().Length > ErrorShared.Ticket.DescriptionMaxLength)
+                throw new ArgumentException(ErrorShared.Ticket.DescriptionTooLong);
+
+            if (employeeId == Guid.Empty)
                 throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
 
             TicketTitle = ticketTitle.Trim();
@@ -84,6 +95,7 @@ namespace Domain.Entities
                 ? null
                 : description.Trim();
             EmployeeId = employeeId;
+            Touch();
         }
 
         public void ChangeStatus(TicketStatus status)
@@ -92,29 +104,34 @@ namespace Domain.Entities
                 throw new ArgumentException(ErrorShared.Ticket.InvalidStatus);
 
             TicketStatus = status;
+            Touch();
         }
 
         public void SubmitForReview()
         {
             TicketStatus = TicketStatus.NeedReview;
+            Touch();
         }
 
         public void Approve()
         {
             TicketStatus = TicketStatus.Done;
+            Touch();
         }
 
         public void RequestChanges()
         {
             TicketStatus = TicketStatus.InProgress;
+            Touch();
         }
 
-        public void Reassign(int employeeId)
+        public void Reassign(Guid employeeId)
         {
-            if (employeeId <= 0)
+            if (employeeId == Guid.Empty)
                 throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
 
             EmployeeId = employeeId;
+            Touch();
         }
 
         public void UnassignAndResetToPending()
@@ -122,6 +139,7 @@ namespace Domain.Entities
             EmployeeId = null;
             Employee = null;
             TicketStatus = TicketStatus.Pending;
+            Touch();
         }
 
         public void ChangePriority(TicketPriority priority)
@@ -130,6 +148,12 @@ namespace Domain.Entities
                 throw new ArgumentException(ErrorShared.Ticket.InvalidPriority);
 
             Priority = priority;
+            Touch();
+        }
+
+        private void Touch()
+        {
+            UpdatedAt = DateTime.Now;
         }
 
         public override string ToString() =>

@@ -1,5 +1,4 @@
 ﻿using ApplicationServices.DTOs.Account;
-using ApplicationServices.DTOs.ApplicationServices.DTOs;
 using ApplicationServices.Interfaces;
 using Domain.Entities;
 using System.Security.Cryptography;
@@ -9,18 +8,24 @@ namespace ApplicationServices.Services
 {
     public class AuthManager : IAuthManager
     {
+        private static readonly string DummyPasswordHash =
+            BCrypt.Net.BCrypt.HashPassword(Guid.NewGuid().ToString("N"));
+
         private readonly IEmployeeManager _employeeManager;
         private readonly IAccountManager _accountManager;
         private readonly IEmailService _emailService;
+        private readonly IAuthTokenService _authTokenService;
 
         public AuthManager(
             IAccountManager accountManager,
             IEmployeeManager employeeManager,
-            IEmailService emailService)
+            IEmailService emailService,
+            IAuthTokenService authTokenService)
         {
             _accountManager = accountManager;
             _employeeManager = employeeManager;
             _emailService = emailService;
+            _authTokenService = authTokenService;
         }
 
         // =========================================================
@@ -63,6 +68,10 @@ namespace ApplicationServices.Services
             if (!request.AcceptTerms)
                 throw new ArgumentException(
                     ErrorShared.Account.TermsNotAccepted);
+
+            if (!System.Enum.IsDefined(request.Gender))
+                throw new ArgumentException(
+                    ErrorShared.Employee.InvalidGender);
 
             // =====================================================
             // FORMAT VALIDATION
@@ -144,9 +153,7 @@ namespace ApplicationServices.Services
 
             return new AccountResponse
             {
-                Id = account.Id,
-                Email = account.Email,
-                EmployeeId = employee.Id
+                Email = account.Email
             };
         }
 
@@ -180,8 +187,11 @@ namespace ApplicationServices.Services
             // =====================================================
 
             if (account == null)
+            {
+                BCrypt.Net.BCrypt.Verify(request.Password, DummyPasswordHash);
                 throw new UnauthorizedAccessException(
                     ErrorShared.Account.InvalidCredentials);
+            }
 
             // Validate the password before revealing the account state.
             if (!BCrypt.Net.BCrypt.Verify(
@@ -236,12 +246,16 @@ namespace ApplicationServices.Services
             // LOGIN RESPONSE
             // =====================================================
 
+            var token = _authTokenService.Create(account);
+
             return new LoginResponse
             {
-                EmployeeId = account.EmployeeId,
                 Email = account.Email,
                 FName = account.Employee.FName,
-                LName = account.Employee.LName
+                LName = account.Employee.LName,
+                ProfileImageUrl = account.Employee.ProfileImageUrl,
+                AccessToken = token.Value,
+                AccessTokenExpiresAtUtc = token.ExpiresAtUtc
             };
         }
 
@@ -274,17 +288,14 @@ namespace ApplicationServices.Services
                 await _accountManager
                     .GetEntityByEmailAsync(request.Email);
 
-            if (account == null)
-                throw new KeyNotFoundException(
-                    ErrorShared.Account.AccountNotFound);
+            // Keep the response identical so this endpoint cannot be used
+            // to discover which email addresses have accounts.
+            if (account == null || account.IsDeleted)
+                return;
 
             // =====================================================
             // CHECK ACCOUNT STATUS
             // =====================================================
-
-            if (account.IsDeleted)
-                throw new InvalidOperationException(
-                    ErrorShared.Account.AccountDeactivated);
 
             // =====================================================
             // GENERATE RESET CODE
@@ -370,17 +381,13 @@ namespace ApplicationServices.Services
                 await _accountManager
                     .GetEntityByEmailAsync(request.Email);
 
-            if (account == null)
-                throw new KeyNotFoundException(
-                    ErrorShared.Account.AccountNotFound);
+            if (account == null || account.IsDeleted)
+                throw new InvalidOperationException(
+                    ErrorShared.Account.InvalidResetCode);
 
             // =====================================================
             // CHECK ACCOUNT STATUS
             // =====================================================
-
-            if (account.IsDeleted)
-                throw new InvalidOperationException(
-                    ErrorShared.Account.AccountDeactivated);
 
             // =====================================================
             // CHECK RESET CODE
@@ -434,17 +441,9 @@ namespace ApplicationServices.Services
                 await _accountManager
                     .GetEntityByEmailAsync(request.Email);
 
-            if (account == null)
-                throw new KeyNotFoundException(
-                    ErrorShared.Account.AccountNotFound);
-
-            if (account.IsDeleted)
-                throw new InvalidOperationException(
-                    ErrorShared.Account.AccountDeactivated);
-
-            if (account.IsEmailVerified)
-                throw new InvalidOperationException(
-                    ErrorShared.Account.EmailAlreadyVerified);
+            // Do not reveal account existence or verification state.
+            if (account == null || account.IsDeleted || account.IsEmailVerified)
+                return;
 
             var verificationCode = GenerateVerificationCode();
             var verificationCodeExpiresAt =
@@ -481,13 +480,9 @@ namespace ApplicationServices.Services
                 await _accountManager
                     .GetEntityByEmailAsync(request.Email);
 
-            if (account == null)
-                throw new KeyNotFoundException(
-                    ErrorShared.Account.AccountNotFound);
-
-            if (account.IsDeleted)
+            if (account == null || account.IsDeleted)
                 throw new InvalidOperationException(
-                    ErrorShared.Account.AccountDeactivated);
+                    ErrorShared.Account.InvalidResetCode);
 
             EnsureValidResetCode(account, request.Code);
         }
@@ -504,14 +499,8 @@ namespace ApplicationServices.Services
 
             var account = await _accountManager.GetEntityByEmailAsync(email);
 
-            if (account == null)
-                throw new KeyNotFoundException(ErrorShared.Account.AccountNotFound);
-
-            if (account.IsDeleted)
-                throw new InvalidOperationException(ErrorShared.Account.AccountDeactivated);
-
-            if (account.IsEmailVerified)
-                throw new InvalidOperationException(ErrorShared.Account.EmailAlreadyVerified);
+            if (account == null || account.IsDeleted || account.IsEmailVerified)
+                throw new InvalidOperationException(ErrorShared.Account.InvalidVerificationCode);
 
             if (string.IsNullOrWhiteSpace(account.VerificationCode) ||
                 account.VerificationCode != token)

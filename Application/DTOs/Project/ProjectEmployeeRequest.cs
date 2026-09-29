@@ -1,9 +1,10 @@
-﻿namespace ApplicationServices.DTOs.Project
+namespace ApplicationServices.DTOs.Project
 {
     public class ProjectEmployeeRequest
     {
-        public int ProjectId { get; set; }
-        public int EmployeeId { get; set; }
+        public Guid ProjectId { get; set; }
+        public Guid EmployeeId { get; set; }
+        [System.ComponentModel.DataAnnotations.StringLength(50)]
         public string? Role { get; set; }
     }
 }

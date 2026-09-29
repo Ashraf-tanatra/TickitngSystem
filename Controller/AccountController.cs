@@ -1,4 +1,4 @@
-﻿using ApplicationServices.DTOs.Account;
+using ApplicationServices.DTOs.Account;
 using ApplicationServices.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,13 +17,14 @@ namespace Controller
         }
 
         // =========================================================
-        // GET ACCOUNT BY EMAIL
+        // GET CURRENT ACCOUNT
         // =========================================================
 
-        [HttpGet("{email}")]
-        public async Task<ActionResult<AccountResponse>> GetByEmail(
-            string email)
+        [HttpGet("me")]
+        public async Task<ActionResult<AccountResponse>> GetMyAccount()
         {
+            var email = User.GetEmail();
+
             try
             {
                 var account =
@@ -49,65 +50,15 @@ namespace Controller
         }
 
         // =========================================================
-        // REACTIVATE ACCOUNT
-        // =========================================================
-
-        [HttpPost("reactivate/{email}")]
-        public async Task<IActionResult> Reactivate(
-            string email)
-        {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(email))
-                {
-                    return BadRequest(new
-                    {
-                        message = ErrorShared.Account.EmailRequired
-                    });
-                }
-
-                var result =
-                    await _accountManager
-                        .ReactivateAsync(email);
-
-                if (!result)
-                {
-                    return NotFound(new
-                    {
-                        message = ErrorShared.Account.AccountNotFound
-                    });
-                }
-
-                return Ok(new
-                {
-                    message = ErrorShared.Account.AccountReactivatedSuccessfully
-                });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new
-                {
-                    message = ex.Message
-                });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new
-                {
-                    message = ex.Message
-                });
-            }
-        }
-
-        // =========================================================
         // UPDATE ACCOUNT
         // =========================================================
 
-        [HttpPut("{id}")]
-        public async Task<ActionResult<AccountResponse>> Update(
-            int id,
+        [HttpPut("me")]
+        public async Task<ActionResult<AccountResponse>> UpdateMyAccount(
             [FromBody] UpdateAccountRequest request)
         {
+            var id = User.GetAccountId();
+
             try
             {
                 var account =
@@ -159,7 +110,7 @@ namespace Controller
             {
                 var result =
                     await _accountManager
-                        .SoftDeleteAsync(request);
+                        .SoftDeleteAsync(User.GetAccountId(), request);
 
                 if (!result)
                 {

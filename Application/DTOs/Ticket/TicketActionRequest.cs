@@ -2,8 +2,7 @@ namespace ApplicationServices.DTOs.Ticket
 {
     public class TicketActionRequest
     {
-        public int ActionByEmployeeId { get; set; }
-
+        [System.ComponentModel.DataAnnotations.StringLength(ErrorShared.Ticket.DescriptionMaxLength)]
         public string? Note { get; set; }
     }
 }

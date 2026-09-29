@@ -7,19 +7,19 @@ namespace Domain.Entities
         }
 
         // Ticket
-        public int TicketId { get; private set; }
+        public Guid TicketId { get; private set; }
         public Ticket Ticket { get; private set; } = null!;
 
         // Employee who performed the action
-        public int ActionByEmployeeId { get; private set; }
+        public Guid ActionByEmployeeId { get; private set; }
         public Employee ActionByEmployee { get; private set; } = null!;
 
         // Previous assigned employee
-        public int? FromEmployeeId { get; private set; }
+        public Guid? FromEmployeeId { get; private set; }
         public Employee? FromEmployee { get; private set; }
 
         // New assigned employee
-        public int? ToEmployeeId { get; private set; }
+        public Guid? ToEmployeeId { get; private set; }
         public Employee? ToEmployee { get; private set; }
 
         // What happened
@@ -37,23 +37,26 @@ namespace Domain.Entities
         public DateTime ModifiedAt { get; private set; } = DateTime.Now;
 
         public static TicketHistory Create(
-            int ticketId,
-            int actionByEmployeeId,
+            Guid ticketId,
+            Guid actionByEmployeeId,
             string action,
             string? oldValue = null,
             string? newValue = null,
-            int? fromEmployeeId = null,
-            int? toEmployeeId = null,
+            Guid? fromEmployeeId = null,
+            Guid? toEmployeeId = null,
             string? note = null)
         {
-            if (ticketId <= 0)
+            if (ticketId == Guid.Empty)
                 throw new ArgumentException(ErrorShared.Ticket.TicketNotFound);
 
-            if (actionByEmployeeId <= 0)
+            if (actionByEmployeeId == Guid.Empty)
                 throw new ArgumentException(ErrorShared.Ticket.EmployeeNotFound);
 
             if (string.IsNullOrWhiteSpace(action))
                 throw new ArgumentException(ErrorShared.Ticket.HistoryActionRequired);
+
+            if (note?.Trim().Length > ErrorShared.Ticket.DescriptionMaxLength)
+                throw new ArgumentException(ErrorShared.Ticket.NoteTooLong);
 
             return new TicketHistory
             {

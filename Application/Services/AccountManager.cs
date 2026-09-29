@@ -1,9 +1,10 @@
-﻿using ApplicationServices.DTOs.Account;
+using ApplicationServices.DTOs.Account;
 using ApplicationServices.Interfaces;
 using Domain.Entities;
 using Domain.Enum;
 using Domain.Interfaces;
 using System.Net.Mail;
+using System.Security.Cryptography;
 
 namespace ApplicationServices.Services
 {
@@ -11,51 +12,16 @@ namespace ApplicationServices.Services
     {
         private readonly IAccountRepository _accountRepository;
         private readonly IEmployeeRepository _employeeRepository;
+        private readonly IEmailService _emailService;
 
         public AccountManager(
             IAccountRepository accountRepository,
-            IEmployeeRepository employeeRepository)
+            IEmployeeRepository employeeRepository,
+            IEmailService emailService)
         {
             _accountRepository = accountRepository;
             _employeeRepository = employeeRepository;
-        }
-
-        // =========================================================
-        // CREATE ACCOUNT
-        // =========================================================
-
-        public async Task<AccountResponse> CreateAccountAsync(
-            CreateAccountRequest request)
-        {
-            if (request == null)
-                throw new ArgumentNullException(nameof(request));
-
-            if (string.IsNullOrWhiteSpace(request.Email))
-                throw new ArgumentException(
-                    ErrorShared.Account.EmailRequired);
-
-            if (!ValidEmailFormat(request.Email))
-                throw new ArgumentException(
-                    ErrorShared.Account.InvalidEmail);
-
-            if (string.IsNullOrWhiteSpace(request.Password))
-                throw new ArgumentException(
-                    ErrorShared.Account.PasswordRequired);
-
-            if (!PasswordFormat(request.Password))
-                throw new ArgumentException(
-                    ErrorShared.Account.InvalidPassword);
-
-            // Check duplicate email
-            if (await _accountRepository
-                .GetByEmailAsync(request.Email) != null)
-            {
-                throw new InvalidOperationException(
-                    ErrorShared.Account.EmailAlreadyExists);
-            }
-
-            throw new InvalidOperationException(
-                ErrorShared.Account.CreateAccountThroughSignup);
+            _emailService = emailService;
         }
 
         // =========================================================
@@ -100,7 +66,10 @@ namespace ApplicationServices.Services
             if (!password.Any(char.IsDigit))
                 return false;
 
-            if (!password.Any(c => "@#$!".Contains(c)))
+            if (password.Any(char.IsWhiteSpace))
+                return false;
+
+            if (!password.Any(c => char.IsPunctuation(c) || char.IsSymbol(c)))
                 return false;
 
             return true;
@@ -146,7 +115,7 @@ namespace ApplicationServices.Services
         // =========================================================
 
         public async Task<AccountResponse?> UpdateAsync(
-            int id,
+            Guid id,
             UpdateAccountRequest request)
         {
             if (request == null)
@@ -183,7 +152,9 @@ namespace ApplicationServices.Services
             // UPDATE EMAIL
             // =====================================================
 
-            if (!string.IsNullOrWhiteSpace(request.Email))
+            string? verificationCode = null;
+            if (!string.IsNullOrWhiteSpace(request.Email) &&
+                !string.Equals(request.Email.Trim(), account.Email, StringComparison.OrdinalIgnoreCase))
             {
                 if (!ValidEmailFormat(request.Email))
                 {
@@ -191,15 +162,19 @@ namespace ApplicationServices.Services
                         ErrorShared.Account.InvalidEmail);
                 }
 
-                if (request.Email != account.Email &&
-                    await _accountRepository
-                        .EmailExistsAsync(request.Email))
+                if (await _accountRepository.EmailExistsAsync(request.Email.Trim()))
                 {
                     throw new InvalidOperationException(
                         ErrorShared.Account.EmailAlreadyExists);
                 }
 
                 account.ChangeEmail(request.Email);
+                verificationCode = RandomNumberGenerator
+                    .GetInt32(100000, 1000000)
+                    .ToString();
+                account.SetVerificationCode(
+                    verificationCode,
+                    DateTime.UtcNow.AddMinutes(10));
             }
 
             // =====================================================
@@ -227,6 +202,13 @@ namespace ApplicationServices.Services
             }
 
             await _accountRepository.UpdateAsync(account);
+
+            if (verificationCode != null)
+            {
+                await _emailService.SendVerificationCodeAsync(
+                    account.Email,
+                    verificationCode);
+            }
 
             return MapToResponse(account);
         }
@@ -295,21 +277,18 @@ namespace ApplicationServices.Services
         }
 
         public async Task<bool> SoftDeleteAsync(
+            Guid accountId,
             DeactivateAccountRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
-
-            if (string.IsNullOrWhiteSpace(request.Email))
-                throw new ArgumentException(
-                    ErrorShared.Account.EmailRequired);
 
             if (string.IsNullOrWhiteSpace(request.CurrentPassword))
                 throw new ArgumentException(
                     ErrorShared.Account.CurrentPasswordRequired);
 
             var account =
-                await _accountRepository.GetByEmailAsync(request.Email);
+                await _accountRepository.GetByIdAsync(accountId);
 
             if (account == null)
                 return false;
@@ -466,9 +445,7 @@ namespace ApplicationServices.Services
         {
             return new AccountResponse
             {
-                Id = account.Id,
-                Email = account.Email,
-                EmployeeId = account.EmployeeId
+                Email = account.Email
             };
         }
     }

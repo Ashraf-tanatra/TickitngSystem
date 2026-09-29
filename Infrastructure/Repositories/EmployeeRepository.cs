@@ -1,4 +1,4 @@
-﻿using Domain.Entities;
+using Domain.Entities;
 using Domain.Enum;
 using Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -29,7 +29,7 @@ namespace Infrastructure.Repositories
         // GET BY ID
         // =========================================================
 
-        public async Task<Employee?> GetByIdAsync(int id)
+        public async Task<Employee?> GetByIdAsync(Guid id)
         {
             return await _context.Employees
                 .Include(e => e.Account)
@@ -76,7 +76,7 @@ namespace Infrastructure.Repositories
 
         public async Task<bool> ExistsByPhoneExceptAsync(
             string phone,
-            int employeeId)
+            Guid employeeId)
         {
             return await _context.Employees
                 .AnyAsync(e =>
@@ -90,22 +90,25 @@ namespace Infrastructure.Repositories
         // =========================================================
 
         public async Task<IEnumerable<Project>> GetProjectsAsync(
-            int employeeId)
+            Guid employeeId)
         {
             return await _context.Projects
-                .Where(p => p.ProjectEmployees
-                    .Any(pe =>
+                .Where(p => p.ProjectStatus != ProjectStatus.Cancelled)
+                .Where(p => p.ProjectManagerId == employeeId ||
+                    p.ProjectEmployees.Any(pe =>
                         pe.EmployeeId == employeeId &&
                         !pe.Employee.IsDeleted))
+                .Include(p => p.ProjectManager)
                 .Include(p => p.ProjectEmployees)
                 .ThenInclude(pe => pe.Employee)
                 .Include(p => p.ProjectTickets)
+                .AsSplitQuery()
                 .ToListAsync();
         }
         // =========================================================
         // GET ACTIVE PROJECTS
         // =========================================================
-        public async Task<IEnumerable<Project>> GetActiveProjectsAsync(int employeeId)
+        public async Task<IEnumerable<Project>> GetActiveProjectsAsync(Guid employeeId)
         {
             return await _context.Projects
                 .Where(p =>
@@ -120,7 +123,7 @@ namespace Infrastructure.Repositories
         // GET Employee Tickets
         // =========================================================
 
-        public async Task<IEnumerable<Ticket>> GetEmployeeTicketsAsync(int employeeId)
+        public async Task<IEnumerable<Ticket>> GetEmployeeTicketsAsync(Guid employeeId)
         {
             return await _context.Tickets.Where(t => t.EmployeeId == employeeId).ToListAsync();
 

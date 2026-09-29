@@ -1,4 +1,4 @@
-﻿using Domain.Entities;
+using Domain.Entities;
 using Domain.Enum;
 using Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -14,7 +14,7 @@ namespace Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<Project?> GetByIdAsync(int id)
+        public async Task<Project?> GetByIdAsync(Guid id)
         {
             return await _context.Projects
                 .Include(p => p.ProjectManager)
@@ -46,7 +46,7 @@ namespace Infrastructure.Repositories
             return true;
         }
         //Number of projects that the employee works on
-        public async Task<int> GetProjectCountAsync(int employeeId)
+        public async Task<int> GetProjectCountAsync(Guid employeeId)
         {
             if (!await EmployeeExistsAsync(employeeId))
                 throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
@@ -58,24 +58,68 @@ namespace Infrastructure.Repositories
                         .CountAsync();
         }
         // Delete
-        public async Task<bool> DeleteAsync(int projectId, int employeeId)
+        public async Task<bool> DeleteAsync(Guid projectId, Guid employeeId)
         {
-            if (!await ProjectExistsAsync(projectId))
-                throw new ArgumentException(ErrorShared.Project.ProjectNotFound);
-            if (!await EmployeeExistsAsync(employeeId))
-                throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
-            if (!await IsManagerAsync(projectId, employeeId))
-                throw new UnauthorizedAccessException(ErrorShared.Project.OnlyManagerCanDelete);
+            await using var transaction = await _context.Database.BeginTransactionAsync();
 
-            var project = await GetByIdAsync(projectId);
-            project!.ChangeStatus(ProjectStatus.Cancelled);
+            try
+            {
+                if (!await EmployeeExistsAsync(employeeId))
+                    throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
 
-            _context.Projects.Update(project);
-            await _context.SaveChangesAsync();
-            return true;
+                var project = await _context.Projects
+                    .Include(p => p.ProjectTickets)
+                    .FirstOrDefaultAsync(p =>
+                        p.Id == projectId &&
+                        p.ProjectStatus != ProjectStatus.Cancelled);
+
+                if (project is null)
+                    throw new ArgumentException(ErrorShared.Project.ProjectNotFound);
+
+                if (project.ProjectManagerId != employeeId)
+                    throw new UnauthorizedAccessException(ErrorShared.Project.OnlyManagerCanDelete);
+
+                var activeTickets = project.ProjectTickets
+                    .Where(ticket =>
+                        ticket.TicketStatus != TicketStatus.Done &&
+                        ticket.TicketStatus != TicketStatus.Completed &&
+                        ticket.TicketStatus != TicketStatus.Cancelled)
+                    .ToList();
+
+                var histories = new List<TicketHistory>(activeTickets.Count);
+
+                foreach (var ticket in activeTickets)
+                {
+                    var oldStatus = ticket.TicketStatus.ToString();
+                    ticket.ChangeStatus(TicketStatus.Cancelled);
+
+                    histories.Add(TicketHistory.Create(
+                        ticket.TicketId,
+                        employeeId,
+                        ErrorShared.Ticket.CancelledDueToProjectCancellationAction,
+                        oldValue: oldStatus,
+                        newValue: TicketStatus.Cancelled.ToString(),
+                        note: ErrorShared.Ticket.CancelledDueToProjectCancellationNote));
+                }
+
+                project.ChangeStatus(ProjectStatus.Cancelled);
+
+                _context.Projects.Update(project);
+                _context.Tickets.UpdateRange(activeTickets);
+                await _context.TicketHistories.AddRangeAsync(histories);
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return true;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
         // All employees that work on the project
-        public async Task<IEnumerable<Employee>?> GetEmployeesAsync(int projectId)
+        public async Task<IEnumerable<Employee>?> GetEmployeesAsync(Guid projectId)
         {
             if (!await ProjectExistsAsync(projectId))
                 throw new ArgumentException(ErrorShared.Project.ProjectNotFound);
@@ -116,7 +160,7 @@ namespace Infrastructure.Repositories
             return true;
         }
 
-        public async Task<bool> RemoveEmployeeFromProjectAsync(int projectId, int employeeId)
+        public async Task<bool> RemoveEmployeeFromProjectAsync(Guid projectId, Guid employeeId)
         {
             var projectEmployee = await _context.ProjectEmployees
                 .FirstOrDefaultAsync(pe => pe.ProjectId == projectId && pe.EmployeeId == employeeId);
@@ -133,7 +177,7 @@ namespace Infrastructure.Repositories
             return true;
         }
 
-        public async Task<bool> EmployeeHasActiveTicketsInProjectAsync(int projectId, int employeeId)
+        public async Task<bool> EmployeeHasActiveTicketsInProjectAsync(Guid projectId, Guid employeeId)
         {
             return await _context.Tickets
                 .AnyAsync(t =>
@@ -145,7 +189,7 @@ namespace Infrastructure.Repositories
         }
 
         // Change the status of the project
-        public async Task<bool> SetProjectStatusAsync(int projectId, ProjectStatus status)
+        public async Task<bool> SetProjectStatusAsync(Guid projectId, ProjectStatus status)
         {
 
             if (!await ProjectExistsAsync(projectId))
@@ -161,7 +205,7 @@ namespace Infrastructure.Repositories
             return true;
         }
         // Get all the projects that the employee works on
-        public async Task<IEnumerable<Project>?> GetAllProjectWorkedByEmployeeAsync(int employeeId)
+        public async Task<IEnumerable<Project>?> GetAllProjectWorkedByEmployeeAsync(Guid employeeId)
         {
             if (!await EmployeeExistsAsync(employeeId))
                 throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
@@ -176,24 +220,7 @@ namespace Infrastructure.Repositories
                         p.ProjectEmployees.Any(pe => pe.EmployeeId == employeeId))
                         .ToListAsync();
         }
-        // last three projects that the employee added to works on
-        public async Task<IEnumerable<String[]>?> GetAllProjectWorkedByEmployeeTopThreeAsync(int employeeId)
-        {
-            var projects = await GetRecentActiveProjectsAsync(employeeId);
-
-            return projects
-                .Select(p => new string[2]
-                {
-                    p.ProjectName,
-                    p.ProjectEmployees
-                        .Where(pe => pe.EmployeeId == employeeId)
-                        .Select(pe => pe.Role)
-                        .FirstOrDefault() ?? ErrorShared.Project.ManagerOrNoRole
-                })
-                .ToList();
-        }
-
-        public async Task<IEnumerable<Project>?> GetDashboardProjectsAsync(int employeeId)
+        public async Task<IEnumerable<Project>?> GetDashboardProjectsAsync(Guid employeeId)
         {
             if (!await EmployeeExistsAsync(employeeId))
                 throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
@@ -201,7 +228,7 @@ namespace Infrastructure.Repositories
             return await GetRecentActiveProjectsAsync(employeeId);
         }
 
-        public async Task<IEnumerable<Project>> GetRecentActiveProjectsAsync(int employeeId)
+        public async Task<IEnumerable<Project>> GetRecentActiveProjectsAsync(Guid employeeId)
         {
             var projects = await _context.Projects
                 .AsNoTracking()
@@ -231,9 +258,11 @@ namespace Infrastructure.Repositories
 
             foreach (var ticket in project.ProjectTickets)
             {
-                var ticketCreatedAt = ticket.CreatedAt.ToDateTime(TimeOnly.MinValue);
-                if (ticketCreatedAt > lastActivityAt)
-                    lastActivityAt = ticketCreatedAt;
+                if (ticket.CreatedAt > lastActivityAt)
+                    lastActivityAt = ticket.CreatedAt;
+
+                if (ticket.UpdatedAt is DateTime ticketUpdatedAt && ticketUpdatedAt > lastActivityAt)
+                    lastActivityAt = ticketUpdatedAt;
 
                 foreach (var history in ticket.TicketHistories)
                 {
@@ -252,7 +281,7 @@ namespace Infrastructure.Repositories
         }
 
         // Filter the projects that the employee works on by status
-        public async Task<IEnumerable<Project>?> GetAllProjectWorkedByEmployeeWithFilterAsync(int employeeId,
+        public async Task<IEnumerable<Project>?> GetAllProjectWorkedByEmployeeWithFilterAsync(Guid employeeId,
             ProjectStatus FilterByStatus)
         {
             if (!await EmployeeExistsAsync(employeeId))
@@ -271,15 +300,15 @@ namespace Infrastructure.Repositories
         }
 
 
-        public async Task<bool> IsManagerAsync(int projectId, int employeeId)
+        public async Task<bool> IsManagerAsync(Guid projectId, Guid employeeId)
             => await _context.Projects.Where(p => p.Id == projectId).AnyAsync(e => e.ProjectManagerId == employeeId);
-        public async Task<bool> EmployeeExistsAsync(int employeeId)
+        public async Task<bool> EmployeeExistsAsync(Guid employeeId)
             => await _context.Employees.AnyAsync(e => e.Id == employeeId && !e.IsDeleted);
-        public async Task<bool> ProjectExistsAsync(int projectId)
+        public async Task<bool> ProjectExistsAsync(Guid projectId)
             => await _context.Projects.AnyAsync(p => p.Id == projectId && p.ProjectStatus != ProjectStatus.Cancelled);
-        public async Task<bool> TicketExistsAsync(int projectId)
+        public async Task<bool> TicketExistsAsync(Guid projectId)
             => await _context.Tickets.AnyAsync(t => t.ProjectId == projectId);
-        public async Task<bool> IsEmpDeleted(int employeeId)
+        public async Task<bool> IsEmpDeleted(Guid employeeId)
         {
             return await _context.Employees
                  .Where(e => e.Id == employeeId && e.IsDeleted == true)

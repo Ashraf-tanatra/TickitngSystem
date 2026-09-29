@@ -50,6 +50,15 @@ namespace Domain.Entities
             if (string.IsNullOrWhiteSpace(phone))
                 throw new ArgumentException(ErrorShared.Employee.PhoneRequired);
 
+            if (fName.Trim().Length > 50)
+                throw new ArgumentException(ErrorShared.Employee.FirstNameTooLong);
+
+            if (lName.Trim().Length > 50)
+                throw new ArgumentException(ErrorShared.Employee.LastNameTooLong);
+
+            if (!System.Enum.IsDefined(gender))
+                throw new ArgumentException(ErrorShared.Employee.InvalidGender);
+
             if (IsDeleted)
                 throw new InvalidOperationException(ErrorShared.Employee.CannotUpdateDeletedEmployee);
 
@@ -103,7 +112,9 @@ namespace Domain.Entities
 
             FName = ErrorShared.Employee.AnonymousFirstName;
             LName = $"{ErrorShared.Employee.AnonymousLastNamePrefix} {Id}";
-            Phone = Id.ToString("D10");
+            Phone = "+999" + BitConverter
+                .ToUInt32(Id.ToByteArray(), 0)
+                .ToString("D12");
             ProfileImageUrl = null;
             Touch();
         }

@@ -1,4 +1,4 @@
-﻿using Domain.Entities;
+using Domain.Entities;
 using Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -28,7 +28,7 @@ namespace Infrastructure.Repositories
         // GET ACCOUNT BY ID
         // =========================================================
 
-        public async Task<Account?> GetByIdAsync(int id)
+        public async Task<Account?> GetByIdAsync(Guid id)
         {
             return await _context.Accounts
                 .Include(a => a.Employee)
@@ -51,7 +51,7 @@ namespace Infrastructure.Repositories
         // CHECK EMPLOYEE
         // =========================================================
 
-        public async Task<bool> EmployeeExistsAsync(int employeeId)
+        public async Task<bool> EmployeeExistsAsync(Guid employeeId)
         {
             return await _context.Employees
                 .AnyAsync(e => e.Id == employeeId);

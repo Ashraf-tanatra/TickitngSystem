@@ -1,4 +1,4 @@
-﻿using Domain.Entities;
+using Domain.Entities;
 using Domain.Enum;
 using Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -13,7 +13,7 @@ namespace Infrastructure.Repositories
         {
             _context = context;
         }
-        public async Task<IEnumerable<Ticket>> GetAllTicketsForAProjectAsync(int projectId)
+        public async Task<IEnumerable<Ticket>> GetAllTicketsForAProjectAsync(Guid projectId)
         {
             return await _context.Tickets
                 .Where(t => t.ProjectId == projectId
@@ -23,7 +23,7 @@ namespace Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<Ticket>> GetAllTicketsForAnEmployeeAsync(int employeeId)
+        public async Task<IEnumerable<Ticket>> GetAllTicketsForAnEmployeeAsync(Guid employeeId)
         {
             return await _context.Tickets
                 .Where(t => t.EmployeeId == employeeId
@@ -34,7 +34,47 @@ namespace Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task<Ticket?> GetByIdAsync(int id)
+        public async Task<IEnumerable<Ticket>> GetRecentTicketsWithActivityAsync(Guid employeeId)
+        {
+            var tickets = await _context.Tickets
+                .AsNoTracking()
+                .Where(t => t.EmployeeId == employeeId
+                    && t.TicketStatus != TicketStatus.Done
+                    && t.TicketStatus != TicketStatus.Cancelled)
+                .Include(t => t.Employee)
+                .Include(t => t.Project)
+                .Include(t => t.TicketHistories)
+                .Include(t => t.AttachmentURL)
+                .AsSplitQuery()
+                .ToListAsync();
+
+            return tickets
+                .OrderByDescending(GetLastActivityAt)
+                .ThenByDescending(t => t.TicketId)
+                .Take(3)
+                .ToList();
+        }
+
+        private static DateTime GetLastActivityAt(Ticket ticket)
+        {
+            var lastActivityAt = ticket.UpdatedAt ?? ticket.CreatedAt;
+
+            foreach (var history in ticket.TicketHistories)
+            {
+                if (history.ModifiedAt > lastActivityAt)
+                    lastActivityAt = history.ModifiedAt;
+            }
+
+            foreach (var attachment in ticket.AttachmentURL)
+            {
+                if (attachment.CreatedAt > lastActivityAt)
+                    lastActivityAt = attachment.CreatedAt;
+            }
+
+            return lastActivityAt;
+        }
+
+        public async Task<Ticket?> GetByIdAsync(Guid id)
         {
             return await _context.Tickets
                 .Include(e => e.Employee)
@@ -43,7 +83,7 @@ namespace Infrastructure.Repositories
                 .FirstOrDefaultAsync(t => t.TicketId == id);
         }
 
-        public async Task<IEnumerable<TicketHistory>> GetTicketHistoryAsync(int ticketId)
+        public async Task<IEnumerable<TicketHistory>> GetTicketHistoryAsync(Guid ticketId)
         {
             return await _context.TicketHistories
                 .Where(h => h.TicketId == ticketId)
@@ -54,12 +94,19 @@ namespace Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<TicketAttachments>> GetTicketAttachmentsAsync(int ticketId)
+        public async Task<IEnumerable<TicketAttachments>> GetTicketAttachmentsAsync(Guid ticketId)
         {
             return await _context.Attachments
                 .Where(attachment => attachment.TicketId == ticketId)
                 .OrderByDescending(attachment => attachment.CreatedAt)
                 .ToListAsync();
+        }
+
+        public async Task<TicketAttachments?> GetAttachmentByStoredFileNameAsync(string storedFileName)
+        {
+            return await _context.Attachments
+                .AsNoTracking()
+                .FirstOrDefaultAsync(attachment => attachment.StoredFileName == storedFileName);
         }
 
         public async Task CreateAsync(Ticket ticket)
@@ -99,33 +146,38 @@ namespace Infrastructure.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task<int> GetTicketTotalCountForAnEmployeeAsync(int employeeId)
+        public async Task<(int TicketCount, int InProgressCount, int NeedReviewCount)>
+            GetTicketCountsForAnEmployeeAsync(Guid employeeId)
         {
-            return await _context.Tickets
-                .CountAsync(t => t.EmployeeId == employeeId
-                && t.TicketStatus != TicketStatus.Done
-                && t.TicketStatus != TicketStatus.Cancelled);
+            var counts = await _context.Tickets
+                .Where(ticket => ticket.EmployeeId == employeeId)
+                .GroupBy(_ => 1)
+                .Select(group => new
+                {
+                    TicketCount = group.Count(ticket =>
+                        ticket.TicketStatus != TicketStatus.Done &&
+                        ticket.TicketStatus != TicketStatus.Cancelled),
+                    InProgressCount = group.Count(ticket =>
+                        ticket.TicketStatus == TicketStatus.InProgress),
+                    NeedReviewCount = group.Count(ticket =>
+                        ticket.TicketStatus == TicketStatus.NeedReview ||
+                        ticket.TicketStatus == TicketStatus.InReview)
+                })
+                .FirstOrDefaultAsync();
+
+            return counts == null
+                ? (0, 0, 0)
+                : (counts.TicketCount, counts.InProgressCount, counts.NeedReviewCount);
         }
 
-        public async Task<int> GetTicketInProgressCountForAnEmployeeAsync(int employeeId)
+        public async Task<int> GetTicketCompletedCountForAnEmployeeAsync(Guid employeeId)
         {
-            return await _context.Tickets.CountAsync(t => t.EmployeeId == employeeId && t.TicketStatus == TicketStatus.InProgress);
+            return await _context.Tickets.CountAsync(ticket =>
+                ticket.EmployeeId == employeeId &&
+                ticket.TicketStatus == TicketStatus.Completed);
         }
 
-        public async Task<int> GetTicketCompletedCountForAnEmployeeAsync(int employeeId)
-        {
-            return await _context.Tickets.CountAsync(t => t.EmployeeId == employeeId && t.TicketStatus == TicketStatus.Completed);
-        }
-
-        public async Task<int> GetTicketNeedReviewCountForAnEmployeeAsync(int employeeId)
-        {
-            return await _context.Tickets.CountAsync(t =>
-                t.EmployeeId == employeeId &&
-                (t.TicketStatus == TicketStatus.NeedReview ||
-                 t.TicketStatus == TicketStatus.InReview));
-        }
-
-        public async Task ChangeTicketStatusAsync(int ticketId, TicketStatus status)
+        public async Task ChangeTicketStatusAsync(Guid ticketId, TicketStatus status)
         {
             var ticket = await GetByIdAsync(ticketId);
 
@@ -142,7 +194,7 @@ namespace Infrastructure.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task ChangeTicketPriorityAsync(int ticketId, TicketPriority priority)
+        public async Task ChangeTicketPriorityAsync(Guid ticketId, TicketPriority priority)
         {
             var ticket = await GetByIdAsync(ticketId);
 
@@ -160,7 +212,7 @@ namespace Infrastructure.Repositories
         }
 
         public async Task AddAttachmentToTicketAsync(
-            int ticketId,
+            Guid ticketId,
             string url,
             string originalFileName,
             string storedFileName,
@@ -187,31 +239,31 @@ namespace Infrastructure.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task<bool> TicketExistsAsync(int ticketId)
+        public async Task<bool> TicketExistsAsync(Guid ticketId)
         {
             return await _context.Tickets.AnyAsync(t => t.TicketId == ticketId);
         }
 
-        public async Task<bool> EmployeeExistsAsync(int employeeId)
+        public async Task<bool> EmployeeExistsAsync(Guid employeeId)
         {
             return await _context.Employees
                 .AnyAsync(e => e.Id == employeeId && !e.IsDeleted);
         }
 
-        public async Task<bool> ProjectExistsAsync(int projectId)
+        public async Task<bool> ProjectExistsAsync(Guid projectId)
         {
             return await _context.Projects
                 .AnyAsync(p => p.Id == projectId && p.ProjectStatus != ProjectStatus.Cancelled);
         }
 
-        public async Task<bool> IsManagerAsync(int employeeId, int projectId)
+        public async Task<bool> IsManagerAsync(Guid employeeId, Guid projectId)
         {
             return await _context.Projects
                 .Where(p => p.Id == projectId && p.ProjectStatus != ProjectStatus.Cancelled)
                 .AnyAsync(x => x.ProjectManagerId == employeeId);
         }
 
-        public async Task<bool> IsEmployeeAssignedToProjectAsync(int employeeId, int projectId)
+        public async Task<bool> IsEmployeeAssignedToProjectAsync(Guid employeeId, Guid projectId)
         {
             return await _context.Projects
                 .AnyAsync(project =>

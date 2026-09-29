@@ -1,16 +1,17 @@
-﻿namespace ApplicationServices.DTOs
+namespace ApplicationServices.DTOs.Account
 {
-    namespace ApplicationServices.DTOs
+    public class LoginResponse
     {
-        public class LoginResponse
-        {
-            public int EmployeeId { get; set; }
+        public string Email { get; set; } = string.Empty;
 
-            public string? Email { get; set; }
+        public string FName { get; set; } = string.Empty;
 
-            public string? FName { get; set; }
+        public string LName { get; set; } = string.Empty;
 
-            public string? LName { get; set; }
-        }
+        public string? ProfileImageUrl { get; set; }
+
+        public string AccessToken { get; set; } = string.Empty;
+
+        public DateTime AccessTokenExpiresAtUtc { get; set; }
     }
 }

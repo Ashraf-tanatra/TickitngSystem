@@ -95,7 +95,8 @@ public static class ErrorShared
         public static class Employee
         {
             // Business Rules
-            public const int PhoneNumberLength = 10;
+            public const int MinimumPhoneNumberLength = 9;
+            public const int MaximumPhoneNumberLength = 16;
             public const int ReactivationPeriodDays = 30;
 
             // Exception Messages
@@ -107,7 +108,13 @@ public static class ErrorShared
 
             public const string PhoneRequired ="Phone is required.";
 
-            public const string InvalidPhoneNumber ="Phone number must contain exactly 10 digits.";
+            public const string InvalidPhoneNumber ="Phone number must use E.164 format, for example +970590000000.";
+
+            public const string InvalidGender = "Invalid gender.";
+
+            public const string FirstNameTooLong = "First name must be 50 characters or fewer.";
+
+            public const string LastNameTooLong = "Last name must be 50 characters or fewer.";
 
             public const string PhoneAlreadyExists ="This phone number is already in use.";
 
@@ -148,6 +155,14 @@ public static class ErrorShared
             public const string ProjectNotFound ="Project not found.";
 
             public const string ProjectNameRequired ="Project name is required.";
+
+            public const string ProjectNameTooLong = "Project name must be 125 characters or fewer.";
+
+            public const string ProjectDescriptionTooLong = "Project description must be 255 characters or fewer.";
+
+            public const string InvalidDateRange = "Project end date cannot be before the start date.";
+
+            public const string RoleTooLong = "Project role must be 50 characters or fewer.";
 
             public const string ProjectDescriptionRequired ="Project description is required.";
 
@@ -223,6 +238,12 @@ public static class ErrorShared
 
             public const string TicketTitleRequired ="Ticket title is required.";
 
+            public const string TicketTitleTooLong = "Ticket title must be 100 characters or fewer.";
+
+            public const string DescriptionTooLong = "Ticket description must be 2500 characters or fewer.";
+
+            public const string NoteTooLong = "Ticket note must be 2500 characters or fewer.";
+
             public const string ProjectNotFound ="The specified project does not exist.";
 
             public const string EmployeeNotFound ="The specified employee does not exist.";
@@ -248,6 +269,8 @@ public static class ErrorShared
             public const string HistoryActionRequired = "History action is required.";
             public const string UnassignedDueToAccountDeactivationAction = "UnassignedDueToAccountDeactivation";
             public const string UnassignedDueToAccountDeactivationNote = "The ticket was unassigned because the employee account was deactivated.";
+            public const string CancelledDueToProjectCancellationAction = "CancelledDueToProjectCancellation";
+            public const string CancelledDueToProjectCancellationNote = "The ticket was cancelled because its project was cancelled.";
             public const string UnassignedEmployeeName = "Unassigned";
             public const string SubmitForReviewAction = "SubmitForReview";
             public const string ApproveAction = "Approve";
@@ -266,6 +289,8 @@ public static class ErrorShared
             public const string AttachmentSizeInvalid = "Attachment size must be greater than zero.";
             public static string TooManyAttachments(int maxCount) => $"You can upload up to {maxCount} files at a time.";
             public static string AttachmentTooLarge(int maxSizeMb) => $"Each attachment must be {maxSizeMb}MB or smaller.";
+            public static string InvalidAttachmentType(string allowedExtensions) =>
+                $"This file type is not allowed. Allowed types: {allowedExtensions}.";
         }
 
         public static class System

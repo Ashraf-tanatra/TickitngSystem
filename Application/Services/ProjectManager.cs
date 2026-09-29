@@ -1,4 +1,5 @@
-﻿using ApplicationServices.DTOs.Project;
+using ApplicationServices.DTOs.Employee;
+using ApplicationServices.DTOs.Project;
 using ApplicationServices.Interfaces;
 using Domain.Entities;
 using Domain.Enum;
@@ -15,7 +16,7 @@ namespace ApplicationServices.Services
             _projectRepository = projectRepository;
         }
         // Make send the manager name
-        public async Task<ProjectResponse?> GetByIdAsync(int id)
+        public async Task<ProjectResponse?> GetByIdAsync(Guid id)
         {
             var project = await _projectRepository.GetByIdAsync(id);
 
@@ -25,12 +26,12 @@ namespace ApplicationServices.Services
             return MapToResponse(project);
         }
 
-        public async Task<int> GetProjectCountAsync(int employeeId)
+        public async Task<int> GetProjectCountAsync(Guid employeeId)
         {
             return await _projectRepository.GetProjectCountAsync(employeeId);
         }
 
-        public async Task<int> CreateAsync(CreateProjectRequest request)
+        public async Task<Guid> CreateAsync(CreateProjectRequest request, Guid managerId)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -38,13 +39,13 @@ namespace ApplicationServices.Services
             if (string.IsNullOrWhiteSpace(request.ProjectName))
                 throw new ArgumentException(ErrorShared.Project.ProjectNameRequired);
 
-            if (!await _projectRepository.EmployeeExistsAsync(request.ProjectManagerId))
+            if (!await _projectRepository.EmployeeExistsAsync(managerId))
                 throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
 
             var project = Project.Create(
                 request.ProjectName,
                 request.ProjectDescription,
-                request.ProjectManagerId,
+                managerId,
                 request.StartTime,
                 request.EndTime);
 
@@ -52,10 +53,13 @@ namespace ApplicationServices.Services
             return project.Id;
         }
 
-        public async Task<bool> ProjectAddEmployeeAsync(ProjectEmployeeRequest request)
+        public async Task<bool> ProjectAddEmployeeAsync(ProjectEmployeeRequest request, Guid actionByEmployeeId)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
+
+            if (!await _projectRepository.IsManagerAsync(request.ProjectId, actionByEmployeeId))
+                throw new UnauthorizedAccessException(ErrorShared.Project.OnlyManagerCanUpdate);
 
             var projectEmployee = ProjectEmployee.Create(
                 request.ProjectId,
@@ -66,7 +70,7 @@ namespace ApplicationServices.Services
             return true;
         }
 
-        public async Task<bool> RemoveEmployeeFromProjectAsync(RemoveProjectEmployeeRequest request)
+        public async Task<bool> RemoveEmployeeFromProjectAsync(RemoveProjectEmployeeRequest request, Guid actionByEmployeeId)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -77,10 +81,10 @@ namespace ApplicationServices.Services
             if (!await _projectRepository.EmployeeExistsAsync(request.EmployeeId))
                 throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
 
-            if (!await _projectRepository.EmployeeExistsAsync(request.ActionByEmployeeId))
+            if (!await _projectRepository.EmployeeExistsAsync(actionByEmployeeId))
                 throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
 
-            if (!await _projectRepository.IsManagerAsync(request.ProjectId, request.ActionByEmployeeId))
+            if (!await _projectRepository.IsManagerAsync(request.ProjectId, actionByEmployeeId))
                 throw new UnauthorizedAccessException(ErrorShared.Project.OnlyManagerCanRemoveMembers);
 
             var project = await _projectRepository.GetByIdAsync(request.ProjectId);
@@ -101,16 +105,19 @@ namespace ApplicationServices.Services
             return true;
         }
 
-        public async Task<bool> SetProjectStatusAsync(int projectId, ProjectStatus status)
+        public async Task<bool> SetProjectStatusAsync(Guid projectId, ProjectStatus status, Guid actionByEmployeeId)
         {
             if (!System.Enum.IsDefined(status))
                 throw new ArgumentException(ErrorShared.Project.InvalidStatus);
+
+            if (!await _projectRepository.IsManagerAsync(projectId, actionByEmployeeId))
+                throw new UnauthorizedAccessException(ErrorShared.Project.OnlyManagerCanUpdate);
 
             await _projectRepository.SetProjectStatusAsync(projectId, status);
             return true;
         }
 
-        public async Task<bool> UpdateAsync(int projectId, int empId, UpdateProjectRequest request)
+        public async Task<bool> UpdateAsync(Guid projectId, Guid empId, UpdateProjectRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -139,7 +146,7 @@ namespace ApplicationServices.Services
             return true;
         }
 
-        public async Task<IEnumerable<EmployeeResponse>>? GetEmployeesWorkOnProjectAsync(int projectId)
+        public async Task<IEnumerable<EmployeeResponse>>? GetEmployeesWorkOnProjectAsync(Guid projectId)
         {
             if (!await _projectRepository.ProjectExistsAsync(projectId))
                 throw new ArgumentException(ErrorShared.Project.ProjectNotFound);
@@ -152,10 +159,11 @@ namespace ApplicationServices.Services
                 FName = employee.FName,
                 LName = employee.LName,
                 Phone = employee.Phone,
-                Gender = employee.Gender
+                Gender = employee.Gender,
+                ProfileImageUrl = employee.ProfileImageUrl
             });
         }
-        public async Task<IEnumerable<ProjectResponse>>? GetAllProjectWorkedByEmployeeAsync(int employeeId)
+        public async Task<IEnumerable<ProjectResponse>>? GetAllProjectWorkedByEmployeeAsync(Guid employeeId)
         {
             if (!await _projectRepository.EmployeeExistsAsync(employeeId))
                 throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
@@ -164,25 +172,17 @@ namespace ApplicationServices.Services
             return project!.Select(project => MapToResponse(project, employeeId));
         }
 
-        public async Task<IEnumerable<string[]>>? GetAllProjectWorkedByEmployeeTopThreeAsync(int employeeId)
-        {
-            if (!await _projectRepository.EmployeeExistsAsync(employeeId))
-                throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
-
-            var emp = await _projectRepository.GetAllProjectWorkedByEmployeeTopThreeAsync(employeeId);
-            return emp ?? Array.Empty<string[]>();
-        }
-
-        public async Task<IEnumerable<ProjectResponse>>? GetDashboardProjectsAsync(int employeeId)
+        public async Task<IEnumerable<ProjectResponse>> GetDashboardProjectsAsync(Guid employeeId)
         {
             if (!await _projectRepository.EmployeeExistsAsync(employeeId))
                 throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
 
             var projects = await _projectRepository.GetDashboardProjectsAsync(employeeId);
-            return projects!.Select(project => MapToResponse(project, employeeId));
+            return projects?.Select(project => MapToResponse(project, employeeId))
+                ?? Array.Empty<ProjectResponse>();
         }
 
-        public async Task<IEnumerable<ProjectResponse>> GetRecentActiveProjectsAsync(int employeeId)
+        public async Task<IEnumerable<ProjectResponse>> GetRecentActiveProjectsAsync(Guid employeeId)
         {
             if (!await _projectRepository.EmployeeExistsAsync(employeeId))
                 throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
@@ -191,7 +191,7 @@ namespace ApplicationServices.Services
             return projects.Select(project => MapToResponse(project, employeeId));
         }
 
-        public async Task<IEnumerable<RecentActivityResponse>> GetRecentActivityAsync(int employeeId)
+        public async Task<IEnumerable<RecentActivityResponse>> GetRecentActivityAsync(Guid employeeId)
         {
             if (!await _projectRepository.EmployeeExistsAsync(employeeId))
                 throw new ArgumentException(ErrorShared.Project.EmployeeNotFound);
@@ -203,11 +203,11 @@ namespace ApplicationServices.Services
                 .ToList();
         }
 
-        public async Task<bool> DeleteAsync(int projectId, int empId) => await _projectRepository.DeleteAsync(projectId, empId);
+        public async Task<bool> DeleteAsync(Guid projectId, Guid empId) => await _projectRepository.DeleteAsync(projectId, empId);
 
-        public async Task<bool> ProjectExistsAsync(int projectId) => await _projectRepository.ProjectExistsAsync(projectId);
+        public async Task<bool> ProjectExistsAsync(Guid projectId) => await _projectRepository.ProjectExistsAsync(projectId);
 
-        public async Task<IEnumerable<ProjectResponse>>? GetAllProjectWorkedByEmployeeWithFilterAsync(int employeeId,
+        public async Task<IEnumerable<ProjectResponse>>? GetAllProjectWorkedByEmployeeWithFilterAsync(Guid employeeId,
             ProjectStatus FilterByStatus)
         {
             if (!await _projectRepository.EmployeeExistsAsync(employeeId))
@@ -220,7 +220,7 @@ namespace ApplicationServices.Services
             return project!.Select(project => MapToResponse(project, employeeId));
         }
 
-        private static ProjectResponse MapToResponse(Project project, int? employeeId = null)
+        private static ProjectResponse MapToResponse(Project project, Guid? employeeId = null)
         {
             var ticketCount = project.ProjectTickets.Count;
             var doneTicketCount = project.ProjectTickets.Count(ticket =>
@@ -233,7 +233,6 @@ namespace ApplicationServices.Services
                 ProjectName = project.ProjectName,
                 ProjectDescription = project.ProjectDescription,
                 ProjectStatus = project.ProjectStatus.ToString(),
-                ProjectManagerId = project.ProjectManagerId,
                 StartDate = project.StartedAt,
                 EndDate = project.EndAt,
                 EmployeeRole = employeeId.HasValue
@@ -267,7 +266,6 @@ namespace ApplicationServices.Services
                 TicketId = activity.TicketId,
                 ProjectName = project.ProjectName,
                 Activity = activity.Description,
-                OccurredAt = activity.OccurredAt,
                 TimeAgo = FormatTimeAgo(activity.OccurredAt)
             };
         }
@@ -280,8 +278,17 @@ namespace ApplicationServices.Services
             {
                 specificActivities.Add(new ActivityCandidate(
                     ErrorShared.RecentActivity.TicketCreated(ticket.TicketTitle),
-                    ticket.CreatedAt.ToDateTime(TimeOnly.MinValue),
+                    ticket.CreatedAt,
                     ticket.TicketId));
+
+                if (ticket.UpdatedAt is DateTime ticketUpdatedAt &&
+                    ticketUpdatedAt > ticket.CreatedAt.AddSeconds(1))
+                {
+                    specificActivities.Add(new ActivityCandidate(
+                        ErrorShared.RecentActivity.TicketUpdated(ticket.TicketTitle),
+                        ticketUpdatedAt,
+                        ticket.TicketId));
+                }
 
                 foreach (var history in ticket.TicketHistories)
                 {
@@ -393,9 +400,9 @@ namespace ApplicationServices.Services
             return result.ToString();
         }
 
-        private sealed record ActivityCandidate(string Description, DateTime OccurredAt, int? TicketId);
+        private sealed record ActivityCandidate(string Description, DateTime OccurredAt, Guid? TicketId);
 
-        private static string? GetEmployeeRole(Project project, int employeeId)
+        private static string? GetEmployeeRole(Project project, Guid employeeId)
         {
             if (project.ProjectManagerId == employeeId)
                 return ErrorShared.Project.ManagerRole;

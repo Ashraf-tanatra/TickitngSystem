@@ -66,7 +66,8 @@
         public static class Employee
         {
             // Business Rules
-            public const int PhoneNumberLength = 10;
+            public const int MinimumPhoneNumberLength = 9;
+            public const int MaximumPhoneNumberLength = 16;
 
             // Exception Messages
             public const string EmployeeNotFound =
@@ -82,7 +83,7 @@
                 "Phone is required.";
 
             public const string InvalidPhoneNumber =
-                "Phone number must contain exactly 10 digits.";
+                "Phone number must use E.164 format, for example +970590000000.";
 
             public const string PhoneAlreadyExists =
                 "This phone number is already in use.";

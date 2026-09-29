@@ -1,23 +1,24 @@
-﻿using Domain.Entities;
+using Domain.Entities;
 using Domain.Enum;
 
 namespace Domain.Interfaces
 {
     public interface ITicketRepository
     {
-        Task<Ticket?> GetByIdAsync(int id);
-        Task<IEnumerable<TicketHistory>> GetTicketHistoryAsync(int ticketId);
-        Task<IEnumerable<TicketAttachments>> GetTicketAttachmentsAsync(int ticketId);
-        Task<IEnumerable<Ticket>> GetAllTicketsForAProjectAsync(int projectId);
-        Task<IEnumerable<Ticket>> GetAllTicketsForAnEmployeeAsync(int employeeId);
+        Task<Ticket?> GetByIdAsync(Guid id);
+        Task<IEnumerable<TicketHistory>> GetTicketHistoryAsync(Guid ticketId);
+        Task<IEnumerable<TicketAttachments>> GetTicketAttachmentsAsync(Guid ticketId);
+        Task<TicketAttachments?> GetAttachmentByStoredFileNameAsync(string storedFileName);
+        Task<IEnumerable<Ticket>> GetAllTicketsForAProjectAsync(Guid projectId);
+        Task<IEnumerable<Ticket>> GetAllTicketsForAnEmployeeAsync(Guid employeeId);
+        Task<IEnumerable<Ticket>> GetRecentTicketsWithActivityAsync(Guid employeeId);
 
-        Task<int> GetTicketTotalCountForAnEmployeeAsync(int employeeId);
-        Task<int> GetTicketInProgressCountForAnEmployeeAsync(int employeeId);
-        Task<int> GetTicketCompletedCountForAnEmployeeAsync(int employeeId);
-        Task<int> GetTicketNeedReviewCountForAnEmployeeAsync(int employeeId);
+        Task<(int TicketCount, int InProgressCount, int NeedReviewCount)>
+            GetTicketCountsForAnEmployeeAsync(Guid employeeId);
+        Task<int> GetTicketCompletedCountForAnEmployeeAsync(Guid employeeId);
 
-        Task ChangeTicketStatusAsync(int ticketId, TicketStatus status);
-        Task ChangeTicketPriorityAsync(int ticketId, TicketPriority priority);
+        Task ChangeTicketStatusAsync(Guid ticketId, TicketStatus status);
+        Task ChangeTicketPriorityAsync(Guid ticketId, TicketPriority priority);
 
         Task CreateAsync(Ticket ticket);
         Task UpdateAsync(Ticket ticket);
@@ -25,17 +26,17 @@ namespace Domain.Interfaces
         Task DeleteAsync(Ticket ticket);
 
         Task AddAttachmentToTicketAsync(
-            int ticketId,
+            Guid ticketId,
             string url,
             string originalFileName,
             string storedFileName,
             string contentType,
             long sizeInBytes);
 
-        Task<bool> TicketExistsAsync(int ticketId);
-        Task<bool> EmployeeExistsAsync(int employeeId);
-        Task<bool> ProjectExistsAsync(int projectId);
-        Task<bool> IsManagerAsync(int employeeId, int projectId);
-        Task<bool> IsEmployeeAssignedToProjectAsync(int employeeId, int projectId);
+        Task<bool> TicketExistsAsync(Guid ticketId);
+        Task<bool> EmployeeExistsAsync(Guid employeeId);
+        Task<bool> ProjectExistsAsync(Guid projectId);
+        Task<bool> IsManagerAsync(Guid employeeId, Guid projectId);
+        Task<bool> IsEmployeeAssignedToProjectAsync(Guid employeeId, Guid projectId);
     }
 }

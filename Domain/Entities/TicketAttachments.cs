@@ -11,12 +11,12 @@ namespace Domain.Entities
         public string StoredFileName { get; private set; } = string.Empty;
         public string ContentType { get; private set; } = string.Empty;
         public long SizeInBytes { get; private set; }
-        public int TicketId { get; private set; }
+        public Guid TicketId { get; private set; }
         public Ticket Ticket { get; private set; } = null!;
 
-        public static TicketAttachments Create(int ticketId, string url)
+        public static TicketAttachments Create(Guid ticketId, string url)
         {
-            if (ticketId <= 0)
+            if (ticketId == Guid.Empty)
                 throw new ArgumentException(ErrorShared.Ticket.TicketNotFound);
 
             if (string.IsNullOrWhiteSpace(url))
@@ -33,14 +33,14 @@ namespace Domain.Entities
         }
 
         public static TicketAttachments Create(
-            int ticketId,
+            Guid ticketId,
             string url,
             string originalFileName,
             string storedFileName,
             string contentType,
             long sizeInBytes)
         {
-            if (ticketId <= 0)
+            if (ticketId == Guid.Empty)
                 throw new ArgumentException(ErrorShared.Ticket.TicketNotFound);
 
             if (string.IsNullOrWhiteSpace(url))

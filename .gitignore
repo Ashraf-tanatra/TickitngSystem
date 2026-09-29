@@ -369,3 +369,7 @@ Testing/
 /TickitngSystem/appsettings.json
 **/.codex-obj/
 **/.codex-build/
+
+# Generated API contract artifacts
+/tmp/
+/output/pdf/

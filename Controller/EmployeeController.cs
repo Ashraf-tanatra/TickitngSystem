@@ -1,8 +1,10 @@
-﻿using ApplicationServices.DTOs.Employee;
+using ApplicationServices.DTOs.Employee;
 using ApplicationServices.DTOs.Project;
 using ApplicationServices.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 
 namespace Controller
 {
@@ -11,7 +13,7 @@ namespace Controller
     public class EmployeeController : ControllerBase
     {
         private readonly IEmployeeManager _employeeManager;
-        private readonly string _profileImagesFolder = Path.Combine(Directory.GetCurrentDirectory(), "UploadedFiles", "ProfileImages");
+        private readonly string _profileImagesFolder;
         private const long MaxProfileImageSizeInBytes = 5 * 1024 * 1024;
         private static readonly string[] AllowedProfileImageContentTypes =
         {
@@ -21,9 +23,17 @@ namespace Controller
             "image/webp"
         };
 
-        public EmployeeController(IEmployeeManager employeeManager)
+        public EmployeeController(
+            IEmployeeManager employeeManager,
+            IConfiguration configuration)
         {
             _employeeManager = employeeManager;
+            var storageRoot = configuration["FileStorage:RootPath"];
+            _profileImagesFolder = Path.Combine(
+                string.IsNullOrWhiteSpace(storageRoot)
+                    ? Path.Combine(Directory.GetCurrentDirectory(), "UploadedFiles")
+                    : Path.GetFullPath(storageRoot),
+                "ProfileImages");
         }
 
         // =========================================================
@@ -31,7 +41,7 @@ namespace Controller
         // =========================================================
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<EmployeeResponse>>>
+        public async Task<ActionResult<IEnumerable<EmployeeSummaryResponse>>>
             GetAll()
         {
             var employees =
@@ -41,13 +51,15 @@ namespace Controller
         }
 
         // =========================================================
-        // GET BY ID
+        // GET CURRENT EMPLOYEE
         // =========================================================
 
-        [HttpGet("{id}")]
+        [HttpGet("me")]
         public async Task<ActionResult<EmployeeResponse>>
-            GetById(int id)
+            GetMe()
         {
+            var id = User.GetEmployeeId();
+
             var employee =
                 await _employeeManager.GetByIdAsync(id);
 
@@ -61,14 +73,16 @@ namespace Controller
         }
 
         // =========================================================
-        // GET PROJECTS
+        // GET CURRENT EMPLOYEE PROJECTS
         // =========================================================
 
-        [HttpGet("{id}/projects")]
+        [HttpGet("me/projects")]
         public async Task<
             ActionResult<IEnumerable<EmployeeProjectResponse>>>
-            GetProjects(int id)
+            GetMyProjects()
         {
+            var id = User.GetEmployeeId();
+
             try
             {
                 var projects =
@@ -89,12 +103,12 @@ namespace Controller
         // UPDATE
         // =========================================================
 
-        [HttpPut("{id}")]
+        [HttpPut("me")]
         public async Task<ActionResult<EmployeeResponse>>
-            Update(
-                int id,
-                [FromBody] UpdateEmployeeRequest request)
+            UpdateMe([FromBody] UpdateEmployeeRequest request)
         {
+            var id = User.GetEmployeeId();
+
             try
             {
                 var employee =
@@ -127,11 +141,13 @@ namespace Controller
             }
         }
 
-        [HttpPost("{id:int}/ProfilePhoto")]
+        [HttpPost("me/ProfilePhoto")]
         public async Task<ActionResult<EmployeeResponse>> UploadProfilePhoto(
-            int id,
-            [FromForm] IFormFile file)
+            [FromForm] IFormFile file,
+            CancellationToken cancellationToken)
         {
+            var id = User.GetEmployeeId();
+
             if (file == null || file.Length == 0)
                 return BadRequest(new
                 {
@@ -151,16 +167,29 @@ namespace Controller
                     message = ErrorShared.Employee.InvalidProfileImageType
                 });
 
+            if (!await UploadedFileSecurity.HasValidImageSignatureAsync(file, cancellationToken))
+                return BadRequest(new
+                {
+                    message = ErrorShared.Employee.InvalidProfileImageType
+                });
+
+            var previousEmployee = await _employeeManager.GetByIdAsync(id);
+            if (previousEmployee == null)
+                return NotFound(new
+                {
+                    message = ErrorShared.Employee.EmployeeNotFound
+                });
+
             if (!Directory.Exists(_profileImagesFolder))
                 Directory.CreateDirectory(_profileImagesFolder);
 
-            var extension = Path.GetExtension(file.FileName);
+            var extension = GetImageExtension(file.ContentType);
             var fileName = $"{Guid.NewGuid()}{extension}";
             var filePath = Path.Combine(_profileImagesFolder, Path.GetFileName(fileName));
 
             using (var stream = new FileStream(filePath, FileMode.Create))
             {
-                await file.CopyToAsync(stream);
+                await file.CopyToAsync(stream, cancellationToken);
             }
 
             var profileImageUrl = $"/api/Employee/{id}/ProfilePhoto/{fileName}";
@@ -171,26 +200,81 @@ namespace Controller
                     await _employeeManager.UpdateProfileImageAsync(id, profileImageUrl);
 
                 if (employee == null)
+                {
+                    System.IO.File.Delete(filePath);
                     return NotFound(new
                     {
                         message = ErrorShared.Employee.EmployeeNotFound
                     });
+                }
+
+                DeletePreviousProfileImage(previousEmployee.ProfileImageUrl, fileName);
 
                 return Ok(employee);
             }
             catch (InvalidOperationException ex)
             {
+                System.IO.File.Delete(filePath);
                 return BadRequest(new
                 {
                     message = ex.Message
                 });
             }
+            catch
+            {
+                System.IO.File.Delete(filePath);
+                throw;
+            }
         }
 
-        [HttpGet("{id:int}/ProfilePhoto/{fileName}")]
-        public IActionResult GetProfilePhoto(int id, string fileName)
+        private void DeletePreviousProfileImage(string? profileImageUrl, string currentFileName)
         {
-            var filePath = Path.Combine(_profileImagesFolder, fileName);
+            if (string.IsNullOrWhiteSpace(profileImageUrl))
+                return;
+
+            var previousFileName = Path.GetFileName(profileImageUrl);
+            if (string.IsNullOrWhiteSpace(previousFileName) ||
+                string.Equals(previousFileName, currentFileName, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            var previousFilePath = Path.Combine(_profileImagesFolder, previousFileName);
+            try
+            {
+                if (System.IO.File.Exists(previousFilePath))
+                    System.IO.File.Delete(previousFilePath);
+            }
+            catch (IOException)
+            {
+                // The profile update succeeded; stale-file cleanup can be retried later.
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // The profile update succeeded; stale-file cleanup can be retried later.
+            }
+        }
+
+        [AllowAnonymous]
+        [HttpGet("{id:guid}/ProfilePhoto/{fileName}")]
+        public async Task<IActionResult> GetProfilePhoto(Guid id, string fileName)
+        {
+            var safeFileName = Path.GetFileName(fileName);
+            if (!string.Equals(fileName, safeFileName, StringComparison.Ordinal))
+                return BadRequest();
+
+            var employee = await _employeeManager.GetByIdAsync(id);
+            var expectedFileName = Path.GetFileName(employee?.ProfileImageUrl);
+            if (employee == null ||
+                !string.Equals(expectedFileName, safeFileName, StringComparison.OrdinalIgnoreCase))
+            {
+                return NotFound(new
+                {
+                    message = ErrorShared.Employee.ProfileImageNotFound
+                });
+            }
+
+            var filePath = Path.Combine(_profileImagesFolder, safeFileName);
 
             if (!System.IO.File.Exists(filePath))
                 return NotFound(new
@@ -200,7 +284,7 @@ namespace Controller
 
             var contentType = GetImageContentType(filePath);
             var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
-            return File(fileStream, contentType, fileName);
+            return File(fileStream, contentType);
         }
 
         private static string GetImageContentType(string filePath)
@@ -216,13 +300,24 @@ namespace Controller
             };
         }
 
+        private static string GetImageExtension(string contentType) => contentType switch
+        {
+            "image/jpeg" => ".jpg",
+            "image/png" => ".png",
+            "image/gif" => ".gif",
+            "image/webp" => ".webp",
+            _ => throw new ArgumentOutOfRangeException(nameof(contentType))
+        };
+
         // =========================================================
         // DELETE
         // =========================================================
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        [HttpDelete("me")]
+        public async Task<IActionResult> DeleteMe()
         {
+            var id = User.GetEmployeeId();
+
             try
             {
                 var deleted =
@@ -251,42 +346,5 @@ namespace Controller
             }
         }
 
-        // =========================================================
-        // REACTIVATE EMPLOYEE
-        // =========================================================
-
-        [HttpPost("reactivate/{id}")]
-        public async Task<IActionResult> Reactivate(int id)
-        {
-            try
-            {
-                var result =
-                    await _employeeManager.ReactivateAsync(id);
-
-                if (!result)
-                {
-                    return NotFound(new
-                    {
-                        message = ErrorShared.Employee.EmployeeNotFound
-                    });
-                }
-
-                return Ok(new
-                {
-                    message =
-                        ErrorShared.Employee.EmployeeReactivatedSuccessfully
-                });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new
-                {
-                    message = ex.Message
-                });
-            }
-        }
-
-        
-        
     }
 }

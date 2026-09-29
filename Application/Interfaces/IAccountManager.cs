@@ -1,13 +1,10 @@
-﻿using ApplicationServices.DTOs.Account;
+using ApplicationServices.DTOs.Account;
 using Domain.Entities;
 
 namespace ApplicationServices.Interfaces
 {
     public interface IAccountManager
     {
-        Task<AccountResponse> CreateAccountAsync(
-            CreateAccountRequest request);
-
         Task<AccountResponse?> GetByEmailAsync(
             string email);
 
@@ -24,13 +21,14 @@ namespace ApplicationServices.Interfaces
             string email);
 
         Task<bool> SoftDeleteAsync(
+            Guid accountId,
             DeactivateAccountRequest request);
 
         Task<bool> ReactivateAsync(
             string email);
 
         Task<AccountResponse?> UpdateAsync(
-            int id,
+            Guid id,
             UpdateAccountRequest request);
 
         // EMAIL VERIFICATION

@@ -36,9 +36,12 @@ namespace Infrastructure.Database.Configuration
             builder.Property(x => x.DueTo)
                    .HasColumnType("DATE");
 
-            // Created Date
+            // Created and updated timestamps
             builder.Property(x => x.CreatedAt)
-                   .HasColumnType("DATE");
+                   .HasColumnType("datetime2");
+
+            builder.Property(x => x.UpdatedAt)
+                   .HasColumnType("datetime2");
 
             // Description
             builder.Property(x => x.Description)

@@ -1,4 +1,4 @@
-﻿using Domain.Entities;
+using Domain.Entities;
 
 namespace Domain.Interfaces
 {
@@ -6,7 +6,7 @@ namespace Domain.Interfaces
     {
         Task<IEnumerable<Employee>> GetAllAsync();
 
-        Task<Employee?> GetByIdAsync(int id);
+        Task<Employee?> GetByIdAsync(Guid id);
 
         Task AddAsync(Employee employee);
 
@@ -16,12 +16,12 @@ namespace Domain.Interfaces
 
         Task<bool> ExistsByPhoneExceptAsync(
             string phone,
-            int employeeId);
+            Guid employeeId);
 
         Task<IEnumerable<Project>> GetProjectsAsync(
-            int employeeId);
+            Guid employeeId);
 
-        Task<IEnumerable<Project>> GetActiveProjectsAsync(int employeeId);
-        Task<IEnumerable<Ticket>> GetEmployeeTicketsAsync(int employeeId);
+        Task<IEnumerable<Project>> GetActiveProjectsAsync(Guid employeeId);
+        Task<IEnumerable<Ticket>> GetEmployeeTicketsAsync(Guid employeeId);
     }
 }
